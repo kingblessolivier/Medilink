@@ -1,0 +1,126 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_DB: medilink
+          POSTGRES_USER: medilink
+          POSTGRES_PASSWORD: medilink
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U medilink"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+
+    env:
+      SECRET_KEY: ci-key
+      DEBUG: "True"
+      DATABASE_URL: postgis://medilink:medilink@localhost:5432/medilink
+      REDIS_URL: redis://localhost:6379/0
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      # GeoDjango native dependencies.
+      - name: Install GDAL and GEOS
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y binutils libproj-dev gdal-bin libgdal-dev
+
+      - name: Install Python dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint
+        run: ruff check .
+
+      # Hand-written migrations must stay in sync with the models.
+      - name: No missing migrations
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Tests
+        run: pytest --cov=apps --cov-report=term-missing --cov-fail-under=70
+
+      # A stale committed schema means the generated TS client is stale too.
+      - name: API schema is current
+        run: |
+          python manage.py spectacular --file ../schema.yaml
+          git diff --exit-code ../schema.yaml || {
+            echo "::error::schema.yaml is out of date. Run: python manage.py spectacular --file ../schema.yaml"
+            exit 1
+          }
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web-patient
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: web-patient/package-lock.json
+
+      - run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Translation files must have identical keys
+        run: |
+          node -e "
+            const langs = ['rw', 'en', 'fr'].map(l => [l, require('./src/i18n/' + l + '.json')]);
+            const base = new Set(Object.keys(langs[0][1]));
+            let failed = false;
+            for (const [lang, bundle] of langs) {
+              const keys = new Set(Object.keys(bundle));
+              const missing = [...base].filter(k => !keys.has(k));
+              const extra = [...keys].filter(k => !base.has(k));
+              if (missing.length || extra.length) {
+                console.error(lang, 'missing:', missing, 'extra:', extra);
+                failed = true;
+              }
+            }
+            if (failed) process.exit(1);
+            console.log('translation keys aligned across rw/en/fr');
+          "
+
+      - name: Build
+        run: npm run build
+
+      # Performance budget from docs/05: 150 KB gzipped.
+      - name: Bundle size budget
+        run: |
+          BYTES=$(gzip -c dist/assets/index-*.js | wc -c)
+          KB=$((BYTES / 1024))
+          echo "gzipped JS: ${KB} KB (budget 150 KB)"
+          if [ "$KB" -gt 150 ]; then
+            echo "::error::Bundle is ${KB} KB gzipped, over the 150 KB budget."
+            exit 1
+          fi

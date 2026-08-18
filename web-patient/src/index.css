@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    /* Minimum 16px body text - a large share of users are elderly patients. */
+    font-size: 16px;
+  }
+  body {
+    @apply bg-neutral-50 text-neutral-900 antialiased;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-xl px-4 min-h-touch
+           text-base font-medium transition-colors;
+  }
+  .btn-primary {
+    @apply btn bg-primary text-white hover:bg-teal-800;
+  }
+  .btn-secondary {
+    @apply btn border border-neutral-300 bg-white hover:bg-neutral-100;
+  }
+  .card {
+    @apply rounded-xl border border-neutral-200 bg-white p-4 shadow-sm;
+  }
+}

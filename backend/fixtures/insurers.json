@@ -1,0 +1,9 @@
+[
+  {"model": "insurance.insurer", "pk": 1, "fields": {"code": "mutuelle", "name": "Mutuelle de Sante", "is_public": true, "sort_order": 10}},
+  {"model": "insurance.insurer", "pk": 2, "fields": {"code": "rssb", "name": "RSSB", "is_public": true, "sort_order": 20}},
+  {"model": "insurance.insurer", "pk": 3, "fields": {"code": "mmi", "name": "MMI", "is_public": true, "sort_order": 30}},
+  {"model": "insurance.insurer", "pk": 4, "fields": {"code": "radiant", "name": "Radiant Insurance", "is_public": false, "sort_order": 40}},
+  {"model": "insurance.insurer", "pk": 5, "fields": {"code": "britam", "name": "Britam", "is_public": false, "sort_order": 50}},
+  {"model": "insurance.insurer", "pk": 6, "fields": {"code": "sanlam", "name": "Sanlam", "is_public": false, "sort_order": 60}},
+  {"model": "insurance.insurer", "pk": 7, "fields": {"code": "cash", "name": "Cash / no insurance", "is_public": false, "sort_order": 99}}
+]

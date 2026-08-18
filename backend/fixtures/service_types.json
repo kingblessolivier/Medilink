@@ -1,0 +1,16 @@
+[
+  {"model": "facilities.servicetype", "pk": 1, "fields": {"code": "general_consultation", "name_en": "General consultation", "name_rw": "Kwivuza rusange", "name_fr": "Consultation generale", "sort_order": 10}},
+  {"model": "facilities.servicetype", "pk": 2, "fields": {"code": "maternity", "name_en": "Maternity", "name_rw": "Kubyara", "name_fr": "Maternite", "sort_order": 20}},
+  {"model": "facilities.servicetype", "pk": 3, "fields": {"code": "antenatal", "name_en": "Antenatal care", "name_rw": "Kwipimisha inda", "name_fr": "Consultation prenatale", "sort_order": 30}},
+  {"model": "facilities.servicetype", "pk": 4, "fields": {"code": "paediatrics", "name_en": "Paediatrics", "name_rw": "Kuvura abana", "name_fr": "Pediatrie", "sort_order": 40}},
+  {"model": "facilities.servicetype", "pk": 5, "fields": {"code": "dental", "name_en": "Dental", "name_rw": "Amenyo", "name_fr": "Dentaire", "sort_order": 50}},
+  {"model": "facilities.servicetype", "pk": 6, "fields": {"code": "ophthalmology", "name_en": "Eye care", "name_rw": "Amaso", "name_fr": "Ophtalmologie", "sort_order": 60}},
+  {"model": "facilities.servicetype", "pk": 7, "fields": {"code": "laboratory", "name_en": "Laboratory", "name_rw": "Laboratwari", "name_fr": "Laboratoire", "sort_order": 70}},
+  {"model": "facilities.servicetype", "pk": 8, "fields": {"code": "imaging", "name_en": "Imaging / X-ray", "name_rw": "Gufotora imbere", "name_fr": "Imagerie / Radio", "sort_order": 80}},
+  {"model": "facilities.servicetype", "pk": 9, "fields": {"code": "pharmacy", "name_en": "Pharmacy", "name_rw": "Farumasi", "name_fr": "Pharmacie", "sort_order": 90}},
+  {"model": "facilities.servicetype", "pk": 10, "fields": {"code": "vaccination", "name_en": "Vaccination", "name_rw": "Inkingo", "name_fr": "Vaccination", "sort_order": 100}},
+  {"model": "facilities.servicetype", "pk": 11, "fields": {"code": "emergency", "name_en": "Emergency", "name_rw": "Ubutabazi bwihuse", "name_fr": "Urgences", "sort_order": 110}},
+  {"model": "facilities.servicetype", "pk": 12, "fields": {"code": "surgery", "name_en": "Surgery", "name_rw": "Kubagwa", "name_fr": "Chirurgie", "sort_order": 120}},
+  {"model": "facilities.servicetype", "pk": 13, "fields": {"code": "mental_health", "name_en": "Mental health", "name_rw": "Ubuzima bwo mu mutwe", "name_fr": "Sante mentale", "sort_order": 130}},
+  {"model": "facilities.servicetype", "pk": 14, "fields": {"code": "physiotherapy", "name_en": "Physiotherapy", "name_rw": "Kwimenyereza umubiri", "name_fr": "Kinesitherapie", "sort_order": 140}}
+]
