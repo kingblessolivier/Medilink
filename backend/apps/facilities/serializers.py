@@ -1,8 +1,10 @@
 from django.conf import settings
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from .models import Facility
 from .services import closes_at, is_open_now, opens_next
+from .wait import ALL_STATUSES
 
 
 class NearbyQuerySerializer(serializers.Serializer):
@@ -63,8 +65,29 @@ class LocationField(serializers.Serializer):
     lng = serializers.FloatField()
 
 
+class InsurerBriefSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    name = serializers.CharField()
+    note = serializers.CharField(allow_blank=True)
+
+
+class ServiceBriefSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    name_rw = serializers.CharField()
+    name_en = serializers.CharField()
+    name_fr = serializers.CharField()
+
+
 class WaitSerializer(serializers.Serializer):
-    status = serializers.CharField()
+    """The wait contract, enforced in the OpenAPI schema itself.
+
+    `status` is a ChoiceField rather than a CharField so the generated
+    TypeScript client gets a closed union and a client that forgets to
+    handle one of the four states fails to compile. There is deliberately
+    no value meaning "estimated" - we never guess a wait time.
+    """
+
+    status = serializers.ChoiceField(choices=ALL_STATUSES)
     minutes = serializers.IntegerField(allow_null=True)
     people_waiting = serializers.IntegerField(allow_null=True)
     as_of = serializers.CharField()
@@ -110,20 +133,23 @@ class FacilityNearbySerializer(serializers.ModelSerializer):
     def get_distance_m(self, obj) -> int:
         return round(obj.distance.m)
 
+    @extend_schema_field(LocationField)
     def get_location(self, obj) -> dict:
         return {"lat": obj.location.y, "lng": obj.location.x}
 
+    @extend_schema_field(serializers.ListField(child=serializers.CharField()))
     def get_insurers(self, obj) -> list:
         return [fi.insurer.code for fi in obj.insurers.all()]
 
+    @extend_schema_field(serializers.ListField(child=serializers.CharField()))
     def get_services(self, obj) -> list:
         return [fs.service_type.code for fs in obj.services.all() if fs.available]
 
-    def get_opens_at(self, obj):
+    def get_opens_at(self, obj) -> str | None:
         value = opens_next(obj)
         return value.strftime("%H:%M") if value else None
 
-    def get_closes_at(self, obj):
+    def get_closes_at(self, obj) -> str | None:
         value = closes_at(obj)
         return value.strftime("%H:%M") if value else None
 
@@ -140,6 +166,7 @@ class FacilityNearbySerializer(serializers.ModelSerializer):
         closing = datetime.combine(now.date(), value)
         return closing - now.replace(tzinfo=None) < timedelta(minutes=30)
 
+    @extend_schema_field(WaitSerializer)
     def get_wait(self, obj) -> dict:
         return self.context["waits"][obj.id]
 
@@ -188,18 +215,21 @@ class FacilityDetailSerializer(serializers.ModelSerializer):
             "verified_at",
         ]
 
+    @extend_schema_field(LocationField)
     def get_location(self, obj) -> dict:
         return {"lat": obj.location.y, "lng": obj.location.x}
 
     def get_is_open(self, obj) -> bool:
         return is_open_now(obj)
 
+    @extend_schema_field(InsurerBriefSerializer(many=True))
     def get_insurers(self, obj) -> list:
         return [
             {"code": fi.insurer.code, "name": fi.insurer.name, "note": fi.note}
             for fi in obj.insurers.all()
         ]
 
+    @extend_schema_field(ServiceBriefSerializer(many=True))
     def get_services(self, obj) -> list:
         return [
             {
@@ -212,6 +242,7 @@ class FacilityDetailSerializer(serializers.ModelSerializer):
             if fs.available
         ]
 
+    @extend_schema_field(WaitSerializer)
     def get_wait(self, obj) -> dict:
         return self.context["waits"][obj.id]
 
@@ -222,3 +253,44 @@ class FacilityDetailSerializer(serializers.ModelSerializer):
             "https://www.google.com/maps/dir/?api=1&destination="
             f"{obj.location.y},{obj.location.x}"
         )
+
+
+# --------------------------------------------------------------------------
+# Response envelopes
+#
+# These exist so drf-spectacular can describe response bodies. Without them the
+# generated OpenAPI schema has no response shapes, the generated TypeScript
+# client is empty, and the CI contract check becomes a no-op. See docs/01 s9.
+# --------------------------------------------------------------------------
+
+
+class NearbyQueryEchoSerializer(serializers.Serializer):
+    lat = serializers.FloatField()
+    lng = serializers.FloatField()
+    radius = serializers.IntegerField()
+    radius_expanded = serializers.BooleanField()
+    insurer = serializers.CharField(allow_null=True)
+    service = serializers.CharField(allow_null=True)
+    open_now = serializers.BooleanField()
+
+
+class NearbyResponseSerializer(serializers.Serializer):
+    as_of = serializers.CharField()
+    query = NearbyQueryEchoSerializer()
+    count = serializers.IntegerField()
+    results = FacilityNearbySerializer(many=True)
+
+
+class ServiceTypeSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    name_rw = serializers.CharField()
+    name_en = serializers.CharField()
+    name_fr = serializers.CharField()
+
+
+class ServiceTypeListSerializer(serializers.Serializer):
+    results = ServiceTypeSerializer(many=True)
+
+
+class DistrictListSerializer(serializers.Serializer):
+    results = serializers.ListField(child=serializers.CharField())

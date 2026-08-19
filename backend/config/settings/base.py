@@ -1,5 +1,6 @@
 """Base settings shared by every environment."""
 
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -33,6 +34,10 @@ INSTALLED_APPS = [
     # Local - Phase 0
     "apps.facilities",
     "apps.insurance",
+    # Local - Phase 1
+    "apps.patients",
+    "apps.staff",
+    "apps.queueing",
 ]
 
 MIDDLEWARE = [
@@ -113,20 +118,42 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
-    # Phase 0 is entirely public - no accounts exist yet.
+    # Patient-facing discovery is public; staff endpoints opt in with
+    # IsAuthenticated + IsFacilityStaff.
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.AnonRateThrottle"],
-    "DEFAULT_THROTTLE_RATES": {"anon": "60/min"},
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    # Staff hammer these endpoints all day; patients do not.
+    "DEFAULT_THROTTLE_RATES": {"anon": "60/min", "user": "600/min"},
     "EXCEPTION_HANDLER": "config.exceptions.rfc7807_exception_handler",
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=12),  # covers a full shift
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
+    "ROTATE_REFRESH_TOKENS": True,
 }
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "MediLink Rwanda API",
-    "DESCRIPTION": "Find nearby health facilities and check insurance acceptance.",
-    "VERSION": "0.1.0",
+    "DESCRIPTION": "Nearby facilities, insurance acceptance, and live queues.",
+    "VERSION": "0.2.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "SCHEMA_PATH_PREFIX": "/api/v1",
+    # Two different fields are called "status". Without explicit names,
+    # drf-spectacular invents a hash suffix (StatusC95Enum) that can change
+    # between runs and churn the committed schema.yaml.
+    "ENUM_NAME_OVERRIDES": {
+        "WaitStatusEnum": "apps.facilities.wait.ALL_STATUSES",
+        "QueueEntryStatusEnum": "apps.queueing.models.QueueEntry.Status",
+    },
 }
 
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
@@ -144,3 +171,7 @@ MIN_RESULTS_BEFORE_EXPANDING = 3
 
 # Never publish a wait estimate derived from fewer samples than this.
 MIN_SERVICE_TIME_SAMPLES = env("MIN_SERVICE_TIME_SAMPLES")
+
+# Pepper for national-ID hashing. Never stored in the database, so a dump
+# alone cannot brute-force the short, structured ID space. See docs/08.
+NATIONAL_ID_PEPPER = env("NATIONAL_ID_PEPPER", default="")

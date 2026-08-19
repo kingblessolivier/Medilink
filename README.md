@@ -4,7 +4,7 @@ A multi-channel platform that makes healthcare access predictable: find a nearby
 facility, confirm it accepts your insurance, book a slot, and track the queue
 remotely so you leave home at the right time.
 
-**Sector:** Health · **Country:** Rwanda · **Status:** Phase 0 (in development)
+**Sector:** Health · **Country:** Rwanda · **Status:** Phases 0-1 built, Phase 2 next
 
 ---
 
@@ -75,21 +75,36 @@ the build order in [docs/09-roadmap-and-milestones.md](docs/09-roadmap-and-miles
 
 ## Status
 
-**Phase 0 (Facility Directory) is implemented and running.** Phases 1-4 are
-specified in the docs but not yet built.
+**Phases 0 and 1 are implemented and running.** Phases 2-4 are specified in the
+docs but not yet built.
 
 | Component | State |
 |---|---|
-| `facilities` + `insurance` apps, migrations, Django admin | Done |
-| `GET /facilities/nearby`, `/facilities/{slug}`, `/insurers`, `/service-types`, `/districts` | Done |
-| Patient PWA: home (state A), search, facility detail, rw/en/fr | Done |
-| Backend test suite | 24 tests, all passing |
-| Frontend bundle | 71 KB gzipped (budget 150 KB) |
+| **Phase 0** `facilities` + `insurance`, geo search, Django admin verification | Done |
+| **Phase 0** Patient PWA: home (state A), search, facility detail, rw/en/fr | Done |
+| **Phase 1** `patients`, `staff`, `queueing`: check-in, board, transitions, offline sync | Done |
+| **Phase 1** Live ETA and wait times from rolling median service statistics | Done |
+| **Phase 1** Provider reception app: keyboard-first check-in, offline queue | Done |
+| Backend test suite | 70 tests, all passing |
+| Bundles | patient 71 KB, provider 62 KB gzipped (budget 150 KB) |
 | Facility data | 25 seed facilities, **coordinates approximate - not field verified** |
 
-The last row is the gate on Phase 0. See
-[backend/fixtures/README.md](backend/fixtures/README.md) for the verification
-procedure.
+The last row is the outstanding gate on Phase 0. See
+[backend/fixtures/README.md](backend/fixtures/README.md) for the on-site
+verification procedure. Phase 1's real gate is a pilot facility running
+reception unaided for five working days - see
+[docs/09](docs/09-roadmap-and-milestones.md).
+
+## Branching
+
+`dev` is where work lands, via pull request. `main` is deployment only.
+
+```bash
+git switch dev && git pull
+git switch -c feat/my-change
+# ... work ...
+gh pr create --base dev
+```
 
 ## Quick start
 
@@ -113,8 +128,24 @@ python manage.py runserver
 ```
 
 ```bash
-# 3. Patient app
-cd web-patient && npm install && npm run dev           # http://localhost:5173
+# 3. Frontends
+cd web-patient  && npm install && npm run dev          # http://localhost:5173
+cd web-provider && npm install && npm run dev          # http://localhost:5174
+```
+
+The provider app needs a staff account. Create one after `createsuperuser`:
+
+```bash
+python manage.py shell -c "
+from django.contrib.auth.models import User
+from apps.facilities.models import Facility
+from apps.staff.models import StaffMember
+u, _ = User.objects.get_or_create(username='reception')
+u.set_password('choose-a-password'); u.save()
+StaffMember.objects.update_or_create(
+    user=u,
+    defaults={'facility': Facility.objects.first(), 'role': 'receptionist'},
+)"
 ```
 
 Verify the whole stack in one command:
@@ -129,6 +160,20 @@ look wrong, stop and fix the coordinate order before writing anything else -
 
 Useful URLs: `/admin/` (facility verification), `/api/docs/` (Swagger UI).
 
+### API contract
+
+`backend/schema.yaml` is committed and is the single source of truth for both
+frontends. Never hand-write TypeScript API types:
+
+```bash
+cd backend && python manage.py spectacular --file schema.yaml --fail-on-warn
+cd ../web-patient  && npm run gen:api
+cd ../web-provider && npm run gen:api
+```
+
+CI regenerates all three and fails on any diff, so a backend rename breaks the
+build rather than the reception desk.
+
 ## Repository layout
 
 ```
@@ -138,12 +183,13 @@ medilink/
 │   └── apps/
 │       ├── facilities/         # directory, geo search, verification
 │       ├── insurance/          # insurers, facility acceptance
-│       ├── scheduling/         # slot templates, appointments
-│       ├── queueing/           # check-in, live position, ETA
 │       ├── patients/           # phone-based identity
-│       ├── gateway/            # USSD + WhatsApp webhooks
-│       ├── notifications/      # SMS, web push, Celery tasks
-│       └── triage/             # Phase 4, rule-based symptom router
+│       ├── staff/              # facility scoping and roles
+│       ├── queueing/           # check-in, live position, ETA, offline sync
+│       ├── scheduling/         # Phase 2 - slot templates, appointments
+│       ├── notifications/      # Phase 2 - SMS, web push, Celery tasks
+│       ├── gateway/            # Phase 3 - USSD + WhatsApp webhooks
+│       └── triage/             # Phase 4 - rule-based symptom router
 ├── web-provider/               # React - reception desk & facility admin
 ├── web-patient/                # React PWA - patient-facing
 ├── infra/                      # docker-compose, deployment
