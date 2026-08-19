@@ -4,6 +4,141 @@ info:
   version: 0.2.0
   description: Nearby facilities, insurance acceptance, and live queues.
 paths:
+  /api/v1/appointments:
+    get:
+      operationId: appointments_list
+      summary: The signed-in patient's appointments
+      parameters:
+      - in: query
+        name: status
+        schema:
+          type: string
+        description: upcoming | past | all
+      tags:
+      - appointments
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Appointment'
+          description: ''
+  /api/v1/appointments/{id}/cancel:
+    post:
+      operationId: appointments_cancel_create
+      summary: Cancel an appointment
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - appointments
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+          description: ''
+  /api/v1/appointments/create:
+    post:
+      operationId: appointments_create_create
+      summary: Book an appointment
+      tags:
+      - appointments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Booking'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Booking'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Booking'
+        required: true
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+          description: ''
+  /api/v1/auth/otp/request:
+    post:
+      operationId: auth_otp_request_create
+      description: Always returns 204, whether or not the number is known - the response
+        must not reveal which numbers are registered.
+      summary: Request a sign-in code
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OTPRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OTPRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OTPRequest'
+        required: true
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/v1/auth/otp/verify:
+    post:
+      operationId: auth_otp_verify_create
+      summary: Exchange a sign-in code for tokens
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OTPVerify'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OTPVerify'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OTPVerify'
+        required: true
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+          description: ''
   /api/v1/auth/token:
     post:
       operationId: auth_token_create
@@ -68,6 +203,7 @@ paths:
       tags:
       - districts
       security:
+      - patientJWT: []
       - jwtAuth: []
       - cookieAuth: []
       - {}
@@ -91,6 +227,7 @@ paths:
       tags:
       - facilities
       security:
+      - patientJWT: []
       - jwtAuth: []
       - cookieAuth: []
       - {}
@@ -100,6 +237,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FacilityDetail'
+          description: ''
+  /api/v1/facilities/{slug}/slots:
+    get:
+      operationId: facilities_slots_retrieve
+      summary: Bookable slots for a facility and service
+      parameters:
+      - in: query
+        name: date_from
+        schema:
+          type: string
+      - in: query
+        name: date_to
+        schema:
+          type: string
+      - in: query
+        name: service
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - facilities
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlotDays'
           description: ''
   /api/v1/facilities/nearby:
     get:
@@ -154,6 +328,7 @@ paths:
       tags:
       - facilities
       security:
+      - patientJWT: []
       - jwtAuth: []
       - cookieAuth: []
       - {}
@@ -172,6 +347,7 @@ paths:
       tags:
       - insurers
       security:
+      - patientJWT: []
       - jwtAuth: []
       - cookieAuth: []
       - {}
@@ -182,6 +358,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/InsurerList'
           description: ''
+  /api/v1/me:
+    get:
+      operationId: me_retrieve
+      summary: The signed-in patient
+      tags:
+      - me
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+          description: ''
+    patch:
+      operationId: me_partial_update
+      summary: Update the signed-in patient
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPatient'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPatient'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPatient'
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+          description: ''
   /api/v1/queue/board:
     get:
       operationId: queue_board_retrieve
@@ -190,6 +410,7 @@ paths:
       tags:
       - queue
       security:
+      - patientJWT: []
       - jwtAuth: []
       - cookieAuth: []
       responses:
@@ -198,6 +419,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Board'
+          description: ''
+  /api/v1/queue/current:
+    get:
+      operationId: queue_current_retrieve
+      description: |-
+        What the patient home screen calls on load to choose between
+        state A (nothing active) and state B (in a queue).
+
+        204 when there is nothing active - an empty body, not an error.
+      summary: The signed-in patient's active queue entry
+      tags:
+      - queue
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueEntryPublic'
           description: ''
   /api/v1/queue/entries:
     post:
@@ -221,6 +464,7 @@ paths:
               $ref: '#/components/schemas/CheckIn'
         required: true
       security:
+      - patientJWT: []
       - jwtAuth: []
       - cookieAuth: []
       responses:
@@ -234,10 +478,11 @@ paths:
     get:
       operationId: queue_entries_retrieve
       description: |-
-        Polled by the patient every 20 seconds in Phase 2.
+        Polled by the patient every 20 seconds.
 
-        Public by ticket id for now; Phase 2 binds it to the patient's JWT so that
-        an enumerated id cannot reveal someone else's position.
+        Scoped to the caller: a patient sees only their own entry, and facility
+        staff see only entries at their own facility. Without this, an enumerated
+        id reveals a stranger's position in a health queue.
       summary: One queue entry (patient-facing view)
       parameters:
       - in: path
@@ -248,9 +493,9 @@ paths:
       tags:
       - queue
       security:
+      - patientJWT: []
       - jwtAuth: []
       - cookieAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -276,6 +521,7 @@ paths:
       tags:
       - queue
       security:
+      - patientJWT: []
       - jwtAuth: []
       - cookieAuth: []
       responses:
@@ -310,6 +556,7 @@ paths:
               $ref: '#/components/schemas/Sync'
         required: true
       security:
+      - patientJWT: []
       - jwtAuth: []
       - cookieAuth: []
       responses:
@@ -329,6 +576,7 @@ paths:
       tags:
       - service-types
       security:
+      - patientJWT: []
       - jwtAuth: []
       - cookieAuth: []
       - {}
@@ -349,6 +597,7 @@ paths:
       tags:
       - staff
       security:
+      - patientJWT: []
       - jwtAuth: []
       - cookieAuth: []
       responses:
@@ -360,6 +609,69 @@ paths:
           description: ''
 components:
   schemas:
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        reference:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/AppointmentStatusEnum'
+          readOnly: true
+        facility:
+          allOf:
+          - $ref: '#/components/schemas/AppointmentFacility'
+          readOnly: true
+        service:
+          type: string
+          readOnly: true
+        slot_start:
+          type: string
+          format: date-time
+          readOnly: true
+        slot_end:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - facility
+      - id
+      - reference
+      - service
+      - slot_end
+      - slot_start
+      - status
+    AppointmentFacility:
+      type: object
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        phone:
+          type: string
+      required:
+      - name
+      - phone
+      - slug
+    AppointmentStatusEnum:
+      enum:
+      - booked
+      - arrived
+      - served
+      - no_show
+      - cancelled
+      type: string
+      description: |-
+        * `booked` - Booked
+        * `arrived` - Arrived
+        * `served` - Served
+        * `no_show` - No show
+        * `cancelled` - Cancelled
     Board:
       type: object
       properties:
@@ -385,6 +697,22 @@ components:
       required:
       - name
       - slug
+    Booking:
+      type: object
+      properties:
+        facility:
+          type: string
+          pattern: ^[-a-zA-Z0-9_]+$
+        service:
+          type: string
+          pattern: ^[-a-zA-Z0-9_]+$
+        slot_start:
+          type: string
+          format: date-time
+      required:
+      - facility
+      - service
+      - slot_start
     CheckIn:
       type: object
       description: |-
@@ -691,6 +1019,16 @@ components:
             $ref: '#/components/schemas/Insurer'
       required:
       - results
+    LanguageEnum:
+      enum:
+      - rw
+      - en
+      - fr
+      type: string
+      description: |-
+        * `rw` - Kinyarwanda
+        * `en` - English
+        * `fr` - Francais
     LevelEnum:
       enum:
       - health_post
@@ -766,6 +1104,27 @@ components:
       - count
       - query
       - results
+    OTPRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          maxLength: 20
+      required:
+      - phone
+    OTPVerify:
+      type: object
+      properties:
+        phone:
+          type: string
+          maxLength: 20
+        code:
+          type: string
+          maxLength: 6
+          minLength: 6
+      required:
+      - code
+      - phone
     OpeningHours:
       type: object
       properties:
@@ -791,6 +1150,54 @@ components:
         * `public` - Public
         * `private` - Private
         * `faith_based` - Faith-based
+    PatchedPatient:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        phone:
+          type: string
+          readOnly: true
+        full_name:
+          type: string
+          maxLength: 150
+        language:
+          $ref: '#/components/schemas/LanguageEnum'
+        insurer:
+          type: string
+          nullable: true
+        home_location:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          readOnly: true
+    Patient:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        phone:
+          type: string
+          readOnly: true
+        full_name:
+          type: string
+          maxLength: 150
+        language:
+          $ref: '#/components/schemas/LanguageEnum'
+        insurer:
+          type: string
+          nullable: true
+        home_location:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          readOnly: true
+      required:
+      - home_location
+      - id
+      - phone
     QueueEntry:
       type: object
       description: Staff-facing view of one entry.
@@ -888,6 +1295,19 @@ components:
           type: string
           nullable: true
           readOnly: true
+        travel_minutes:
+          type: integer
+          nullable: true
+          readOnly: true
+        leave_by:
+          type: string
+          nullable: true
+          description: |-
+            The sentence the whole product exists for.
+
+            Null when we cannot compute it - the client then hides the line
+            entirely rather than showing a time somebody might act on.
+          readOnly: true
         joined_at:
           type: string
           format: date-time
@@ -902,11 +1322,13 @@ components:
       - facility
       - id
       - joined_at
+      - leave_by
       - people_ahead
       - position
       - service
       - status
       - ticket_code
+      - travel_minutes
     QueueEntryStatusEnum:
       enum:
       - waiting
@@ -1010,6 +1432,55 @@ components:
             $ref: '#/components/schemas/ServiceType'
       required:
       - results
+    Slot:
+      type: object
+      properties:
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        remaining:
+          type: integer
+        capacity:
+          type: integer
+      required:
+      - capacity
+      - end
+      - remaining
+      - start
+    SlotDay:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        slots:
+          type: array
+          items:
+            $ref: '#/components/schemas/Slot'
+      required:
+      - date
+      - slots
+    SlotDays:
+      type: object
+      properties:
+        facility:
+          type: string
+        service:
+          type: string
+        as_of:
+          type: string
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/SlotDay'
+      required:
+      - as_of
+      - days
+      - facility
+      - service
     StaffFacility:
       type: object
       properties:
@@ -1143,6 +1614,19 @@ components:
       - password
       - refresh
       - username
+    TokenPair:
+      type: object
+      properties:
+        access:
+          type: string
+        refresh:
+          type: string
+        patient:
+          $ref: '#/components/schemas/Patient'
+      required:
+      - access
+      - patient
+      - refresh
     TokenRefresh:
       type: object
       properties:
@@ -1214,3 +1698,9 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    patientJWT:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 'Patient token from POST /auth/otp/verify. Structurally separate
+        from staff tokens: it can never satisfy a staff permission.'

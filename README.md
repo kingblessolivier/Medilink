@@ -4,7 +4,7 @@ A multi-channel platform that makes healthcare access predictable: find a nearby
 facility, confirm it accepts your insurance, book a slot, and track the queue
 remotely so you leave home at the right time.
 
-**Sector:** Health · **Country:** Rwanda · **Status:** Phases 0-1 built, Phase 2 next
+**Sector:** Health · **Country:** Rwanda · **Status:** Phases 0-2 built, Phase 3 next
 
 ---
 
@@ -75,25 +75,43 @@ the build order in [docs/09-roadmap-and-milestones.md](docs/09-roadmap-and-miles
 
 ## Status
 
-**Phases 0 and 1 are implemented and running.** Phases 2-4 are specified in the
-docs but not yet built.
+**Phases 0, 1 and 2 are implemented and running.** Phases 3-4 are specified in
+the docs but not yet built.
 
 | Component | State |
 |---|---|
 | **Phase 0** `facilities` + `insurance`, geo search, Django admin verification | Done |
 | **Phase 0** Patient PWA: home (state A), search, facility detail, rw/en/fr | Done |
 | **Phase 1** `patients`, `staff`, `queueing`: check-in, board, transitions, offline sync | Done |
-| **Phase 1** Live ETA and wait times from rolling median service statistics | Done |
+| **Phase 1** Live ETA from rolling median service statistics | Done |
 | **Phase 1** Provider reception app: keyboard-first check-in, offline queue | Done |
-| Backend test suite | 70 tests, all passing |
-| Bundles | patient 71 KB, provider 62 KB gzipped (budget 150 KB) |
+| **Phase 2** Patient auth: phone + SMS code, tokens separate from staff identity | Done |
+| **Phase 2** `scheduling`: slot templates, booking with capacity locking, cancellation | Done |
+| **Phase 2** `notifications`: SMS leave-now, called, appointment reminders | Done |
+| **Phase 2** `leave_by` - the sentence the product exists for | Done |
+| **Phase 2** Patient app: home states B and C, booking, visits, profile | Done |
+| **Phase 3** USSD and WhatsApp | Not built |
+| **Phase 4** Triage | Not built, and gated on docs/08 section 8 |
+| Backend test suite | 133 tests, 91% coverage |
+| Bundles | patient 79 KB, provider 62 KB gzipped (budget 150 KB) |
 | Facility data | 25 seed facilities, **coordinates approximate - not field verified** |
 
-The last row is the outstanding gate on Phase 0. See
-[backend/fixtures/README.md](backend/fixtures/README.md) for the on-site
-verification procedure. Phase 1's real gate is a pilot facility running
-reception unaided for five working days - see
+Two gates remain open and neither is code. Facility coordinates must be
+captured on site before a facility is marked verified - see
+[backend/fixtures/README.md](backend/fixtures/README.md). And a pilot facility
+must run reception unaided for five working days, with a stopwatch baseline
+recorded first, or the wait-time reduction cannot be proved. See
 [docs/09](docs/09-roadmap-and-milestones.md).
+
+### Notifications in development
+
+`ConsoleSMSBackend` prints messages instead of sending them, so no developer
+machine ever texts a real patient. Production refuses to start with it: see
+`config/settings/prod.py`. Send what is due with:
+
+```bash
+python manage.py send_due_notifications      # cron every minute during the pilot
+```
 
 ## Branching
 
@@ -186,8 +204,8 @@ medilink/
 │       ├── patients/           # phone-based identity
 │       ├── staff/              # facility scoping and roles
 │       ├── queueing/           # check-in, live position, ETA, offline sync
-│       ├── scheduling/         # Phase 2 - slot templates, appointments
-│       ├── notifications/      # Phase 2 - SMS, web push, Celery tasks
+│       ├── scheduling/         # slot templates, booking, cancellation
+│       ├── notifications/      # SMS dispatch, reminders, scheduled tasks
 │       ├── gateway/            # Phase 3 - USSD + WhatsApp webhooks
 │       └── triage/             # Phase 4 - rule-based symptom router
 ├── web-provider/               # React - reception desk & facility admin

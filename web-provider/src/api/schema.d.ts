@@ -4,6 +4,94 @@
  */
 
 export interface paths {
+    "/api/v1/appointments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The signed-in patient's appointments */
+        get: operations["appointments_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/appointments/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel an appointment */
+        post: operations["appointments_cancel_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/appointments/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Book an appointment */
+        post: operations["appointments_create_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/otp/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request a sign-in code
+         * @description Always returns 204, whether or not the number is known - the response must not reveal which numbers are registered.
+         */
+        post: operations["auth_otp_request_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/otp/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Exchange a sign-in code for tokens */
+        post: operations["auth_otp_verify_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/token": {
         parameters: {
             query?: never;
@@ -82,6 +170,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/facilities/{slug}/slots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bookable slots for a facility and service */
+        get: operations["facilities_slots_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/facilities/nearby": {
         parameters: {
             query?: never;
@@ -122,6 +227,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The signed-in patient */
+        get: operations["me_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update the signed-in patient */
+        patch: operations["me_partial_update"];
+        trace?: never;
+    };
     "/api/v1/queue/board": {
         parameters: {
             query?: never;
@@ -134,6 +257,29 @@ export interface paths {
          * @description Everything the reception screen needs, grouped by service.
          */
         get: operations["queue_board_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/queue/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The signed-in patient's active queue entry
+         * @description What the patient home screen calls on load to choose between
+         *     state A (nothing active) and state B (in a queue).
+         *
+         *     204 when there is nothing active - an empty body, not an error.
+         */
+        get: operations["queue_current_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -171,10 +317,11 @@ export interface paths {
         };
         /**
          * One queue entry (patient-facing view)
-         * @description Polled by the patient every 20 seconds in Phase 2.
+         * @description Polled by the patient every 20 seconds.
          *
-         *     Public by ticket id for now; Phase 2 binds it to the patient's JWT so that
-         *     an enumerated id cannot reveal someone else's position.
+         *     Scoped to the caller: a patient sees only their own entry, and facility
+         *     staff see only entries at their own facility. Without this, an enumerated
+         *     id reveals a stranger's position in a health queue.
          */
         get: operations["queue_entries_retrieve"];
         put?: never;
@@ -272,6 +419,31 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        Appointment: {
+            readonly id: number;
+            readonly reference: string;
+            readonly status: components["schemas"]["AppointmentStatusEnum"];
+            readonly facility: components["schemas"]["AppointmentFacility"];
+            readonly service: string;
+            /** Format: date-time */
+            readonly slot_start: string;
+            /** Format: date-time */
+            readonly slot_end: string;
+        };
+        AppointmentFacility: {
+            name: string;
+            slug: string;
+            phone: string;
+        };
+        /**
+         * @description * `booked` - Booked
+         *     * `arrived` - Arrived
+         *     * `served` - Served
+         *     * `no_show` - No show
+         *     * `cancelled` - Cancelled
+         * @enum {string}
+         */
+        AppointmentStatusEnum: "booked" | "arrived" | "served" | "no_show" | "cancelled";
         Board: {
             facility: components["schemas"]["BoardFacility"];
             as_of: string;
@@ -280,6 +452,12 @@ export interface components {
         BoardFacility: {
             name: string;
             slug: string;
+        };
+        Booking: {
+            facility: string;
+            service: string;
+            /** Format: date-time */
+            slot_start: string;
         };
         /**
          * @description Minimal on purpose.
@@ -388,6 +566,13 @@ export interface components {
             results: components["schemas"]["Insurer"][];
         };
         /**
+         * @description * `rw` - Kinyarwanda
+         *     * `en` - English
+         *     * `fr` - Francais
+         * @enum {string}
+         */
+        LanguageEnum: "rw" | "en" | "fr";
+        /**
          * @description * `health_post` - Health post
          *     * `health_centre` - Health centre
          *     * `district_hospital` - District hospital
@@ -420,6 +605,13 @@ export interface components {
             count: number;
             results: components["schemas"]["FacilityNearby"][];
         };
+        OTPRequest: {
+            phone: string;
+        };
+        OTPVerify: {
+            phone: string;
+            code: string;
+        };
         OpeningHours: {
             weekday: number;
             /** Format: time */
@@ -434,6 +626,26 @@ export interface components {
          * @enum {string}
          */
         OwnershipEnum: "public" | "private" | "faith_based";
+        PatchedPatient: {
+            readonly id?: number;
+            readonly phone?: string;
+            full_name?: string;
+            language?: components["schemas"]["LanguageEnum"];
+            insurer?: string | null;
+            readonly home_location?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        Patient: {
+            readonly id: number;
+            readonly phone: string;
+            full_name?: string;
+            language?: components["schemas"]["LanguageEnum"];
+            insurer?: string | null;
+            readonly home_location: {
+                [key: string]: unknown;
+            } | null;
+        };
         /** @description Staff-facing view of one entry. */
         QueueEntry: {
             readonly id: number;
@@ -476,6 +688,14 @@ export interface components {
             readonly people_ahead: number;
             readonly eta_minutes: number | null;
             readonly eta_confidence: string | null;
+            readonly travel_minutes: number | null;
+            /**
+             * @description The sentence the whole product exists for.
+             *
+             *     Null when we cannot compute it - the client then hides the line
+             *     entirely rather than showing a time somebody might act on.
+             */
+            readonly leave_by: string | null;
             /** Format: date-time */
             readonly joined_at: string;
             readonly as_of: string;
@@ -521,6 +741,25 @@ export interface components {
         };
         ServiceTypeList: {
             results: components["schemas"]["ServiceType"][];
+        };
+        Slot: {
+            /** Format: date-time */
+            start: string;
+            /** Format: date-time */
+            end: string;
+            remaining: number;
+            capacity: number;
+        };
+        SlotDay: {
+            /** Format: date */
+            date: string;
+            slots: components["schemas"]["Slot"][];
+        };
+        SlotDays: {
+            facility: string;
+            service: string;
+            as_of: string;
+            days: components["schemas"]["SlotDay"][];
         };
         StaffFacility: {
             id: number;
@@ -572,6 +811,11 @@ export interface components {
             readonly access: string;
             readonly refresh: string;
         };
+        TokenPair: {
+            access: string;
+            refresh: string;
+            patient: components["schemas"]["Patient"];
+        };
         TokenRefresh: {
             readonly access: string;
             refresh: string;
@@ -616,6 +860,123 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    appointments_list: {
+        parameters: {
+            query?: {
+                /** @description upcoming | past | all */
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Appointment"][];
+                };
+            };
+        };
+    };
+    appointments_cancel_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Appointment"];
+                };
+            };
+        };
+    };
+    appointments_create_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Booking"];
+                "application/x-www-form-urlencoded": components["schemas"]["Booking"];
+                "multipart/form-data": components["schemas"]["Booking"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Appointment"];
+                };
+            };
+        };
+    };
+    auth_otp_request_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OTPRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["OTPRequest"];
+                "multipart/form-data": components["schemas"]["OTPRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    auth_otp_verify_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OTPVerify"];
+                "application/x-www-form-urlencoded": components["schemas"]["OTPVerify"];
+                "multipart/form-data": components["schemas"]["OTPVerify"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenPair"];
+                };
+            };
+        };
+    };
     auth_token_create: {
         parameters: {
             query?: never;
@@ -706,6 +1067,31 @@ export interface operations {
             };
         };
     };
+    facilities_slots_retrieve: {
+        parameters: {
+            query: {
+                date_from?: string;
+                date_to?: string;
+                service: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SlotDays"];
+                };
+            };
+        };
+    };
     facilities_nearby_retrieve: {
         parameters: {
             query: {
@@ -756,6 +1142,50 @@ export interface operations {
             };
         };
     };
+    me_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Patient"];
+                };
+            };
+        };
+    };
+    me_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPatient"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPatient"];
+                "multipart/form-data": components["schemas"]["PatchedPatient"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Patient"];
+                };
+            };
+        };
+    };
     queue_board_retrieve: {
         parameters: {
             query?: never;
@@ -771,6 +1201,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Board"];
+                };
+            };
+        };
+    };
+    queue_current_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueueEntryPublic"];
                 };
             };
         };

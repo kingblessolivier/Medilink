@@ -1,13 +1,16 @@
+import logging
+
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.facilities.models import ServiceType
+from apps.patients.auth import IsPatient, current_patient
 from apps.staff.permissions import IsFacilityStaff, IsQueueManager, active_staff
 
 from .models import QueueEntry
@@ -21,6 +24,8 @@ from .serializers import (
     SyncSerializer,
 )
 from .services import TRANSITIONS, QueueError, check_in, eta_for
+
+logger = logging.getLogger(__name__)
 
 
 def _conflict(message):
@@ -155,6 +160,16 @@ def transition(request, pk, action):
         handler(entry)
     except QueueError as exc:
         return _conflict(exc)
+
+    if action == "call":
+        # Best effort: a failed SMS must never fail the receptionist's action.
+        from apps.notifications.tasks import send_called_notification
+
+        try:
+            send_called_notification(entry)
+        except Exception:  # noqa: BLE001
+            logger.exception("called_notification_failed", extra={"entry": entry.pk})
+
     return Response(QueueEntrySerializer(entry).data)
 
 
@@ -163,16 +178,49 @@ def transition(request, pk, action):
     responses=QueueEntryPublicSerializer,
 )
 @api_view(["GET"])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def entry_detail(request, pk):
-    """Polled by the patient every 20 seconds in Phase 2.
+    """Polled by the patient every 20 seconds.
 
-    Public by ticket id for now; Phase 2 binds it to the patient's JWT so that
-    an enumerated id cannot reveal someone else's position.
+    Scoped to the caller: a patient sees only their own entry, and facility
+    staff see only entries at their own facility. Without this, an enumerated
+    id reveals a stranger's position in a health queue.
     """
-    entry = get_object_or_404(
-        QueueEntry.objects.select_related("facility", "service_type"), pk=pk
+    queryset = QueueEntry.objects.select_related("facility", "service_type", "patient")
+
+    patient = getattr(request.user, "patient", None)
+    if patient is not None:
+        entry = get_object_or_404(queryset, pk=pk, patient=patient)
+    else:
+        staff = active_staff(request)
+        entry = get_object_or_404(queryset, pk=pk, facility_id=staff.facility_id)
+
+    return Response(QueueEntryPublicSerializer(entry).data)
+
+
+@extend_schema(
+    summary="The signed-in patient's active queue entry",
+    responses=QueueEntryPublicSerializer,
+)
+@api_view(["GET"])
+@permission_classes([IsPatient])
+def current_entry(request):
+    """What the patient home screen calls on load to choose between
+    state A (nothing active) and state B (in a queue).
+
+    204 when there is nothing active - an empty body, not an error.
+    """
+    patient = current_patient(request)
+    entry = (
+        QueueEntry.objects.filter(
+            patient=patient, status__in=QueueEntry.OPEN_STATUSES
+        )
+        .select_related("facility", "service_type", "patient")
+        .order_by("-joined_at")
+        .first()
     )
+    if entry is None:
+        return Response(status=status.HTTP_204_NO_CONTENT)
     return Response(QueueEntryPublicSerializer(entry).data)
 
 

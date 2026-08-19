@@ -73,3 +73,27 @@ class Patient(models.Model):
         return cls.objects.get_or_create(
             phone=normalise_phone(raw_phone), defaults=defaults
         )
+
+
+class OTPCode(models.Model):
+    """A one-time sign-in code.
+
+    Only the hash is stored, so a database dump does not hand over live codes.
+    """
+
+    phone = models.CharField(max_length=20)
+    code_hash = models.CharField(max_length=64)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    consumed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(
+                fields=["phone", "consumed_at"], name="otp_phone_open_idx"
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"OTP for {self.phone} ({'used' if self.consumed_at else 'open'})"

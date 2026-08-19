@@ -8,7 +8,9 @@ api_v1 = [
     path("", include("apps.insurance.urls")),
     path("", include("apps.queueing.urls")),
     path("", include("apps.staff.urls")),
-    # Staff sign-in. Patient OTP auth arrives in Phase 2.
+    path("", include("apps.patients.urls")),
+    path("", include("apps.scheduling.urls")),
+    # Staff sign-in. Patients use the OTP endpoints in apps.patients.urls.
     path("auth/token", TokenObtainPairView.as_view(), name="token-obtain"),
     path("auth/token/refresh", TokenRefreshView.as_view(), name="token-refresh"),
 ]

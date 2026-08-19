@@ -66,9 +66,17 @@ Reply format is plain text:
 | Character set | GSM-7 basic | **No accented characters** |
 | Cost | Per session, billed to us or the user | Fewer steps is literally cheaper |
 
-**The GSM-7 constraint bites in Kinyarwanda and French.** Write `Consultation
-generale`, not `Consultation générale`. Add a sanitiser and a test that asserts
-every USSD string is GSM-7 safe.
+**The GSM-7 constraint bites in French, and it is subtler than "no accents".**
+The GSM-7 basic table *does* include `à è é ì ò ù ä ö ñ ü Ç`, so `générale` is
+safe. It does **not** include `â ê î ô û ë ï`, which the network silently turns
+into `?`. A further set (`^ { } [ ] ~ | €`) lives in the extension table and
+costs **two** characters each, so a 160-character screen can overflow while
+looking short.
+
+Do not rely on memory for this: run every string through the sanitiser in
+`apps/notifications/sms.py::to_gsm7`, which folds unsupported accents to their
+base letter, and keep the test that asserts every string is GSM-7 safe and
+within the length budget.
 
 ## 3. The menu tree
 

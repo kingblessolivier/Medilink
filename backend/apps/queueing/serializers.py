@@ -123,6 +123,8 @@ class QueueEntryPublicSerializer(serializers.ModelSerializer):
     people_ahead = serializers.SerializerMethodField()
     eta_minutes = serializers.SerializerMethodField()
     eta_confidence = serializers.SerializerMethodField()
+    travel_minutes = serializers.SerializerMethodField()
+    leave_by = serializers.SerializerMethodField()
     as_of = serializers.SerializerMethodField()
 
     class Meta:
@@ -137,6 +139,8 @@ class QueueEntryPublicSerializer(serializers.ModelSerializer):
             "people_ahead",
             "eta_minutes",
             "eta_confidence",
+            "travel_minutes",
+            "leave_by",
             "joined_at",
             "as_of",
         ]
@@ -172,6 +176,30 @@ class QueueEntryPublicSerializer(serializers.ModelSerializer):
 
     def get_eta_confidence(self, obj) -> str | None:
         return self._eta(obj)["eta_confidence"]
+
+    def get_travel_minutes(self, obj) -> int | None:
+        from .travel import travel_minutes
+
+        if not obj.patient_id or not obj.patient:
+            return None
+        return travel_minutes(obj.patient.home_location, obj.facility.location)
+
+    def get_leave_by(self, obj) -> str | None:
+        """The sentence the whole product exists for.
+
+        Null when we cannot compute it - the client then hides the line
+        entirely rather than showing a time somebody might act on.
+        """
+        from django.utils import timezone
+
+        from .travel import leave_by
+
+        depart = leave_by(
+            now=timezone.localtime(),
+            eta_minutes=self._eta(obj)["eta_minutes"],
+            travel=self.get_travel_minutes(obj),
+        )
+        return depart.isoformat() if depart else None
 
     def get_as_of(self, obj) -> str:
         from django.utils import timezone
