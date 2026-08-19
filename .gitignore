@@ -28,6 +28,4 @@ dist-ssr/
 .idea/
 .DS_Store
 
-# Generated API client
-schema.yaml
 .ruff_cache/

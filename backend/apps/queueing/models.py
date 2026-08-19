@@ -1,0 +1,121 @@
+from django.db import models
+from django.utils import timezone
+
+
+class QueueEntry(models.Model):
+    class Status(models.TextChoices):
+        WAITING = "waiting", "Waiting"
+        CALLED = "called", "Called"
+        SERVED = "served", "Served"
+        LEFT = "left", "Left without being seen"
+        CANCELLED = "cancelled", "Cancelled"
+
+    OPEN_STATUSES = (Status.WAITING, Status.CALLED)
+
+    facility = models.ForeignKey(
+        "facilities.Facility", related_name="queue_entries", on_delete=models.PROTECT
+    )
+    service_type = models.ForeignKey(
+        "facilities.ServiceType", on_delete=models.PROTECT
+    )
+    patient = models.ForeignKey(
+        "patients.Patient",
+        null=True,
+        blank=True,
+        related_name="queue_entries",
+        on_delete=models.SET_NULL,
+    )
+
+    # Walk-in patients may have no phone and therefore no Patient record.
+    walk_in_name = models.CharField(max_length=150, blank=True)
+
+    joined_at = models.DateTimeField(default=timezone.now)
+    called_at = models.DateTimeField(null=True, blank=True)
+    served_at = models.DateTimeField(null=True, blank=True)
+    closed_at = models.DateTimeField(null=True, blank=True)
+
+    status = models.CharField(
+        max_length=12, choices=Status.choices, default=Status.WAITING
+    )
+    checked_in_by = models.ForeignKey(
+        "auth.User", null=True, blank=True, on_delete=models.SET_NULL
+    )
+    ticket_code = models.CharField(max_length=8, blank=True)
+
+    # Reception networks drop constantly. A retry after a timeout must return
+    # the original entry rather than creating a duplicate.
+    idempotency_key = models.CharField(max_length=64, blank=True)
+
+    class Meta:
+        verbose_name_plural = "queue entries"
+        ordering = ["joined_at"]
+        indexes = [
+            # Drives the position COUNT - the hottest query in the system.
+            models.Index(
+                fields=["facility", "service_type", "status", "joined_at"],
+                name="queue_position_idx",
+            ),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["facility", "idempotency_key"],
+                condition=models.Q(idempotency_key__gt=""),
+                name="unique_idempotency_key_per_facility",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        who = self.patient or self.walk_in_name or "unknown"
+        return f"{self.ticket_code or self.pk} - {who} ({self.status})"
+
+    @property
+    def display_name(self) -> str:
+        if self.patient_id and self.patient:
+            return self.patient.full_name or self.patient.phone
+        return self.walk_in_name or "Walk-in"
+
+    def position(self) -> int:
+        """Live position. Computed, never stored.
+
+        A stored position column goes stale the instant anyone is served and
+        forces a rewrite of every row in the queue.
+        """
+        if self.status != self.Status.WAITING:
+            return 0
+        ahead = QueueEntry.objects.filter(
+            facility_id=self.facility_id,
+            service_type_id=self.service_type_id,
+            status=self.Status.WAITING,
+            joined_at__lt=self.joined_at,
+        ).count()
+        return ahead + 1
+
+    def waited_minutes(self, now=None) -> int:
+        end = self.served_at or self.called_at or (now or timezone.now())
+        return max(0, int((end - self.joined_at).total_seconds() // 60))
+
+
+class ServiceTimeStat(models.Model):
+    """Rolling median of how long a patient actually takes, per hour of day.
+
+    Median, not mean: one patient who takes ninety minutes must not drag the
+    estimate for everyone behind them.
+    """
+
+    facility = models.ForeignKey("facilities.Facility", on_delete=models.CASCADE)
+    service_type = models.ForeignKey(
+        "facilities.ServiceType", on_delete=models.CASCADE
+    )
+    hour_of_day = models.SmallIntegerField()
+    median_minutes = models.FloatField()
+    sample_size = models.PositiveIntegerField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("facility", "service_type", "hour_of_day")
+
+    def __str__(self) -> str:
+        return (
+            f"{self.facility.name} {self.service_type.code} @{self.hour_of_day}h: "
+            f"{self.median_minutes:.0f} min (n={self.sample_size})"
+        )

@@ -1,0 +1,1216 @@
+openapi: 3.0.3
+info:
+  title: MediLink Rwanda API
+  version: 0.2.0
+  description: Nearby facilities, insurance acceptance, and live queues.
+paths:
+  /api/v1/auth/token:
+    post:
+      operationId: auth_token_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/v1/auth/token/refresh:
+    post:
+      operationId: auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/v1/districts:
+    get:
+      operationId: districts_retrieve
+      description: |-
+        Drives the fallback picker when geolocation is denied or out of bounds,
+        and the first USSD menu in Phase 3.
+      summary: Districts with verified facilities
+      tags:
+      - districts
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DistrictList'
+          description: ''
+  /api/v1/facilities/{slug}:
+    get:
+      operationId: facilities_retrieve
+      summary: Facility detail
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - facilities
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityDetail'
+          description: ''
+  /api/v1/facilities/nearby:
+    get:
+      operationId: facilities_nearby_retrieve
+      description: Verified facilities near a coordinate, ranked by (tier, distance).
+        Results are never ranked by wait time - only a minority of facilities report
+        queue data, so ranking on it would bury good facilities that simply do not
+        report.
+      summary: Nearby facilities
+      parameters:
+      - in: query
+        name: insurer
+        schema:
+          type: string
+        description: Insurer code, e.g. mutuelle
+      - in: query
+        name: lat
+        schema:
+          type: number
+          format: double
+        required: true
+      - in: query
+        name: level
+        schema:
+          type: array
+          items:
+            type: string
+      - in: query
+        name: limit
+        schema:
+          type: integer
+      - in: query
+        name: lng
+        schema:
+          type: number
+          format: double
+        required: true
+      - in: query
+        name: open_now
+        schema:
+          type: boolean
+      - in: query
+        name: radius
+        schema:
+          type: integer
+        description: Metres. Default 5000, max 50000.
+      - in: query
+        name: service
+        schema:
+          type: string
+        description: Service type code
+      tags:
+      - facilities
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NearbyResponse'
+          description: ''
+  /api/v1/insurers:
+    get:
+      operationId: insurers_retrieve
+      description: Reference list. Changes perhaps twice a year - cache for 24h client-side.
+      summary: Insurers
+      tags:
+      - insurers
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsurerList'
+          description: ''
+  /api/v1/queue/board:
+    get:
+      operationId: queue_board_retrieve
+      description: Everything the reception screen needs, grouped by service.
+      summary: Queue board for the caller's facility
+      tags:
+      - queue
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Board'
+          description: ''
+  /api/v1/queue/entries:
+    post:
+      operationId: queue_entries_create
+      description: 'The most performance-sensitive write in the system. Send an Idempotency-Key
+        header: a retry after a network timeout must return the original entry, not
+        create a duplicate.'
+      summary: Check a patient in
+      tags:
+      - queue
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckIn'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CheckIn'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CheckIn'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckInResponse'
+          description: ''
+  /api/v1/queue/entries/{id}:
+    get:
+      operationId: queue_entries_retrieve
+      description: |-
+        Polled by the patient every 20 seconds in Phase 2.
+
+        Public by ticket id for now; Phase 2 binds it to the patient's JWT so that
+        an enumerated id cannot reveal someone else's position.
+      summary: One queue entry (patient-facing view)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - queue
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueEntryPublic'
+          description: ''
+  /api/v1/queue/entries/{id}/{action}:
+    post:
+      operationId: queue_entry_transition
+      summary: 'Move a queue entry: call, serve, skip or cancel'
+      parameters:
+      - in: path
+        name: action
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - queue
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueEntry'
+          description: ''
+  /api/v1/queue/sync:
+    post:
+      operationId: queue_sync_create
+      description: |-
+        Apply queued offline actions, oldest client timestamp first.
+
+        Per-item results, so one rejected action does not fail the whole batch -
+        a receptionist reconnecting after an hour must not lose the other 39
+        check-ins because one patient was a duplicate.
+      summary: Replay actions recorded while the reception client was offline
+      tags:
+      - queue
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Sync'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Sync'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Sync'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+          description: ''
+  /api/v1/service-types:
+    get:
+      operationId: service_types_retrieve
+      description: |-
+        Small, cacheable reference list. Includes all three language names so
+        that USSD and WhatsApp can render without a second call.
+      summary: Service types
+      tags:
+      - service-types
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceTypeList'
+          description: ''
+  /api/v1/staff/me:
+    get:
+      operationId: staff_me_retrieve
+      description: |-
+        The reception client calls this on load to learn which facility it is
+        operating, and which services that facility offers.
+      summary: The signed-in staff member and their facility
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffMe'
+          description: ''
+components:
+  schemas:
+    Board:
+      type: object
+      properties:
+        facility:
+          $ref: '#/components/schemas/BoardFacility'
+        as_of:
+          type: string
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceGroup'
+      required:
+      - as_of
+      - facility
+      - services
+    BoardFacility:
+      type: object
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+      required:
+      - name
+      - slug
+    CheckIn:
+      type: object
+      description: |-
+        Minimal on purpose.
+
+        Target is under 10 seconds of human time per check-in, so the payload is a
+        service plus one identifier. `facility` is never accepted from the client -
+        it is derived from the authenticated staff member, so a receptionist cannot
+        check a patient into another facility.
+      properties:
+        service:
+          type: string
+          pattern: ^[-a-zA-Z0-9_]+$
+        phone:
+          type: string
+        walk_in_name:
+          type: string
+          maxLength: 150
+        client_recorded_at:
+          type: string
+          format: date-time
+      required:
+      - service
+    CheckInResponse:
+      type: object
+      description: The check-in response is an entry plus its live ETA fields.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        ticket_code:
+          type: string
+          readOnly: true
+        display_name:
+          type: string
+          description: |-
+            Masked too.
+
+            The model's display_name property falls back to the raw phone when a
+            patient has no name on file. Masking `phone` while echoing the same
+            number in `display_name` would defeat the point, so the fallback is
+            masked here as well.
+          readOnly: true
+        phone:
+          type: string
+          description: |-
+            Masked. A queue board is readable across a reception desk, and a
+            full phone number on screen is a needless disclosure.
+          readOnly: true
+        service:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/QueueEntryStatusEnum'
+          readOnly: true
+        position:
+          type: integer
+          readOnly: true
+        joined_at:
+          type: string
+          format: date-time
+          readOnly: true
+        called_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        waited_minutes:
+          type: integer
+          readOnly: true
+        eta_minutes:
+          type: integer
+          nullable: true
+        eta_confidence:
+          type: string
+          nullable: true
+        people_ahead:
+          type: integer
+      required:
+      - called_at
+      - display_name
+      - eta_confidence
+      - eta_minutes
+      - id
+      - joined_at
+      - people_ahead
+      - phone
+      - position
+      - service
+      - status
+      - ticket_code
+      - waited_minutes
+    DistrictList:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: string
+      required:
+      - results
+    FacilityDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        slug:
+          type: string
+          maxLength: 220
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          maxLength: 200
+        level:
+          $ref: '#/components/schemas/LevelEnum'
+        ownership:
+          $ref: '#/components/schemas/OwnershipEnum'
+        province:
+          type: string
+          maxLength: 50
+        district:
+          type: string
+          maxLength: 50
+        sector:
+          type: string
+          maxLength: 50
+        address:
+          type: string
+          maxLength: 255
+        location:
+          allOf:
+          - $ref: '#/components/schemas/LocationField'
+          readOnly: true
+        phone:
+          type: string
+          maxLength: 20
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        is_open:
+          type: boolean
+          readOnly: true
+        opening_hours:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpeningHours'
+          readOnly: true
+        insurers:
+          type: array
+          items:
+            $ref: '#/components/schemas/InsurerBrief'
+          readOnly: true
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceBrief'
+          readOnly: true
+        wait:
+          allOf:
+          - $ref: '#/components/schemas/Wait'
+          readOnly: true
+        directions_url:
+          type: string
+          readOnly: true
+        verified_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - directions_url
+      - district
+      - id
+      - insurers
+      - is_open
+      - level
+      - location
+      - name
+      - opening_hours
+      - ownership
+      - services
+      - slug
+      - wait
+    FacilityNearby:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        slug:
+          type: string
+          maxLength: 220
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          maxLength: 200
+        level:
+          $ref: '#/components/schemas/LevelEnum'
+        ownership:
+          $ref: '#/components/schemas/OwnershipEnum'
+        district:
+          type: string
+          maxLength: 50
+        sector:
+          type: string
+          maxLength: 50
+        location:
+          allOf:
+          - $ref: '#/components/schemas/LocationField'
+          readOnly: true
+        distance_m:
+          type: integer
+          readOnly: true
+        phone:
+          type: string
+          maxLength: 20
+        is_open:
+          type: boolean
+          readOnly: true
+        opens_at:
+          type: string
+          nullable: true
+          readOnly: true
+        closes_at:
+          type: string
+          nullable: true
+          readOnly: true
+        closing_soon:
+          type: boolean
+          description: A patient must not travel to a door that shuts on arrival.
+          readOnly: true
+        accepts_insurer:
+          type: boolean
+          readOnly: true
+        insurers:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        services:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        wait:
+          allOf:
+          - $ref: '#/components/schemas/Wait'
+          readOnly: true
+        bookable:
+          type: boolean
+          readOnly: true
+      required:
+      - accepts_insurer
+      - bookable
+      - closes_at
+      - closing_soon
+      - distance_m
+      - district
+      - id
+      - insurers
+      - is_open
+      - level
+      - location
+      - name
+      - opens_at
+      - ownership
+      - services
+      - slug
+      - wait
+    Insurer:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        is_public:
+          type: boolean
+      required:
+      - code
+      - is_public
+      - name
+    InsurerBrief:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        note:
+          type: string
+      required:
+      - code
+      - name
+      - note
+    InsurerList:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Insurer'
+      required:
+      - results
+    LevelEnum:
+      enum:
+      - health_post
+      - health_centre
+      - district_hospital
+      - referral_hospital
+      - clinic
+      - pharmacy
+      type: string
+      description: |-
+        * `health_post` - Health post
+        * `health_centre` - Health centre
+        * `district_hospital` - District hospital
+        * `referral_hospital` - Referral hospital
+        * `clinic` - Clinic / polyclinic
+        * `pharmacy` - Pharmacy
+    LocationField:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+      required:
+      - lat
+      - lng
+    NearbyQueryEcho:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+        radius:
+          type: integer
+        radius_expanded:
+          type: boolean
+        insurer:
+          type: string
+          nullable: true
+        service:
+          type: string
+          nullable: true
+        open_now:
+          type: boolean
+      required:
+      - insurer
+      - lat
+      - lng
+      - open_now
+      - radius
+      - radius_expanded
+      - service
+    NearbyResponse:
+      type: object
+      properties:
+        as_of:
+          type: string
+        query:
+          $ref: '#/components/schemas/NearbyQueryEcho'
+        count:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FacilityNearby'
+      required:
+      - as_of
+      - count
+      - query
+      - results
+    OpeningHours:
+      type: object
+      properties:
+        weekday:
+          type: integer
+        opens_at:
+          type: string
+          format: time
+        closes_at:
+          type: string
+          format: time
+      required:
+      - closes_at
+      - opens_at
+      - weekday
+    OwnershipEnum:
+      enum:
+      - public
+      - private
+      - faith_based
+      type: string
+      description: |-
+        * `public` - Public
+        * `private` - Private
+        * `faith_based` - Faith-based
+    QueueEntry:
+      type: object
+      description: Staff-facing view of one entry.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        ticket_code:
+          type: string
+          readOnly: true
+        display_name:
+          type: string
+          description: |-
+            Masked too.
+
+            The model's display_name property falls back to the raw phone when a
+            patient has no name on file. Masking `phone` while echoing the same
+            number in `display_name` would defeat the point, so the fallback is
+            masked here as well.
+          readOnly: true
+        phone:
+          type: string
+          description: |-
+            Masked. A queue board is readable across a reception desk, and a
+            full phone number on screen is a needless disclosure.
+          readOnly: true
+        service:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/QueueEntryStatusEnum'
+          readOnly: true
+        position:
+          type: integer
+          readOnly: true
+        joined_at:
+          type: string
+          format: date-time
+          readOnly: true
+        called_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        waited_minutes:
+          type: integer
+          readOnly: true
+      required:
+      - called_at
+      - display_name
+      - id
+      - joined_at
+      - phone
+      - position
+      - service
+      - status
+      - ticket_code
+      - waited_minutes
+    QueueEntryPublic:
+      type: object
+      description: |-
+        Patient-facing view - no other patient's details, ever.
+
+        Phase 2 adds leave_by and travel_minutes here.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        facility:
+          allOf:
+          - $ref: '#/components/schemas/QueueFacility'
+          readOnly: true
+        service:
+          type: string
+          readOnly: true
+        ticket_code:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/QueueEntryStatusEnum'
+          readOnly: true
+        position:
+          type: integer
+          readOnly: true
+        people_ahead:
+          type: integer
+          readOnly: true
+        eta_minutes:
+          type: integer
+          nullable: true
+          readOnly: true
+        eta_confidence:
+          type: string
+          nullable: true
+          readOnly: true
+        joined_at:
+          type: string
+          format: date-time
+          readOnly: true
+        as_of:
+          type: string
+          readOnly: true
+      required:
+      - as_of
+      - eta_confidence
+      - eta_minutes
+      - facility
+      - id
+      - joined_at
+      - people_ahead
+      - position
+      - service
+      - status
+      - ticket_code
+    QueueEntryStatusEnum:
+      enum:
+      - waiting
+      - called
+      - served
+      - left
+      - cancelled
+      type: string
+      description: |-
+        * `waiting` - Waiting
+        * `called` - Called
+        * `served` - Served
+        * `left` - Left without being seen
+        * `cancelled` - Cancelled
+    QueueFacility:
+      type: object
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        location:
+          $ref: '#/components/schemas/QueueLocation'
+      required:
+      - location
+      - name
+      - slug
+    QueueLocation:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+      required:
+      - lat
+      - lng
+    ServiceBrief:
+      type: object
+      properties:
+        code:
+          type: string
+        name_rw:
+          type: string
+        name_en:
+          type: string
+        name_fr:
+          type: string
+      required:
+      - code
+      - name_en
+      - name_fr
+      - name_rw
+    ServiceGroup:
+      type: object
+      properties:
+        service:
+          type: string
+        service_name_rw:
+          type: string
+        service_name_en:
+          type: string
+        waiting:
+          type: array
+          items:
+            $ref: '#/components/schemas/QueueEntry'
+        called:
+          type: array
+          items:
+            $ref: '#/components/schemas/QueueEntry'
+      required:
+      - called
+      - service
+      - service_name_en
+      - service_name_rw
+      - waiting
+    ServiceType:
+      type: object
+      properties:
+        code:
+          type: string
+        name_rw:
+          type: string
+        name_en:
+          type: string
+        name_fr:
+          type: string
+      required:
+      - code
+      - name_en
+      - name_fr
+      - name_rw
+    ServiceTypeList:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceType'
+      required:
+      - results
+    StaffFacility:
+      type: object
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        name:
+          type: string
+        district:
+          type: string
+        reports_queue:
+          type: boolean
+      required:
+      - district
+      - id
+      - name
+      - reports_queue
+      - slug
+    StaffMe:
+      type: object
+      properties:
+        username:
+          type: string
+        role:
+          type: string
+        can_manage_queue:
+          type: boolean
+        facility:
+          $ref: '#/components/schemas/StaffFacility'
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaffService'
+      required:
+      - can_manage_queue
+      - facility
+      - role
+      - services
+      - username
+    StaffService:
+      type: object
+      properties:
+        code:
+          type: string
+        name_rw:
+          type: string
+        name_en:
+          type: string
+      required:
+      - code
+      - name_en
+      - name_rw
+    Sync:
+      type: object
+      properties:
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyncAction'
+      required:
+      - actions
+    SyncAction:
+      type: object
+      properties:
+        key:
+          type: string
+          maxLength: 64
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        client_recorded_at:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: {}
+      required:
+      - client_recorded_at
+      - key
+      - type
+    SyncResponse:
+      type: object
+      properties:
+        applied:
+          type: integer
+        rejected:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyncResultRow'
+      required:
+      - applied
+      - rejected
+      - results
+    SyncResultRow:
+      type: object
+      properties:
+        key:
+          type: string
+        ok:
+          type: boolean
+        created:
+          type: boolean
+        entry_id:
+          type: integer
+        ticket_code:
+          type: string
+        error:
+          type: string
+      required:
+      - key
+      - ok
+    TokenObtainPair:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - password
+      - refresh
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TypeEnum:
+      enum:
+      - check_in
+      - call
+      - serve
+      - skip
+      - cancel
+      type: string
+      description: |-
+        * `check_in` - check_in
+        * `call` - call
+        * `serve` - serve
+        * `skip` - skip
+        * `cancel` - cancel
+    Wait:
+      type: object
+      description: |-
+        The wait contract, enforced in the OpenAPI schema itself.
+
+        `status` is a ChoiceField rather than a CharField so the generated
+        TypeScript client gets a closed union and a client that forgets to
+        handle one of the four states fails to compile. There is deliberately
+        no value meaning "estimated" - we never guess a wait time.
+      properties:
+        status:
+          $ref: '#/components/schemas/WaitStatusEnum'
+        minutes:
+          type: integer
+          nullable: true
+        people_waiting:
+          type: integer
+          nullable: true
+        as_of:
+          type: string
+      required:
+      - as_of
+      - minutes
+      - people_waiting
+      - status
+    WaitStatusEnum:
+      enum:
+      - available
+      - not_reported
+      - insufficient_data
+      - closed
+      type: string
+      description: |-
+        * `available` - available
+        * `not_reported` - not_reported
+        * `insufficient_data` - insufficient_data
+        * `closed` - closed
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

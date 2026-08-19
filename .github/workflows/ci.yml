@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
 
 jobs:
@@ -43,6 +43,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
 
       # GeoDjango native dependencies.
       - name: Install GDAL and GEOS
@@ -56,27 +57,33 @@ jobs:
       - name: Lint
         run: ruff check .
 
-      # Hand-written migrations must stay in sync with the models.
+      # Migrations are partly hand-written; they must match the models.
       - name: No missing migrations
         run: python manage.py makemigrations --check --dry-run
 
       - name: Tests
         run: pytest --cov=apps --cov-report=term-missing --cov-fail-under=70
 
-      # A stale committed schema means the generated TS client is stale too.
+      # The committed schema is the contract both frontends generate from.
+      # A stale one means a stale TypeScript client.
       - name: API schema is current
         run: |
-          python manage.py spectacular --file ../schema.yaml
-          git diff --exit-code ../schema.yaml || {
-            echo "::error::schema.yaml is out of date. Run: python manage.py spectacular --file ../schema.yaml"
+          python manage.py spectacular --file schema.yaml --fail-on-warn
+          git diff --exit-code schema.yaml || {
+            echo "::error::backend/schema.yaml is out of date. Run: python manage.py spectacular --file schema.yaml"
             exit 1
           }
 
   frontend:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [web-patient, web-provider]
+
     defaults:
       run:
-        working-directory: web-patient
+        working-directory: ${{ matrix.app }}
 
     steps:
       - uses: actions/checkout@v4
@@ -85,36 +92,28 @@ jobs:
         with:
           node-version: "20"
           cache: npm
-          cache-dependency-path: web-patient/package-lock.json
+          cache-dependency-path: ${{ matrix.app }}/package-lock.json
 
       - run: npm ci
+
+      # Regenerate from the committed schema; any diff means the client is
+      # stale and a backend rename would otherwise fail at a reception desk.
+      - name: Generated API client is current
+        run: |
+          npm run gen:api
+          git diff --exit-code src/api/schema.d.ts || {
+            echo "::error::${{ matrix.app }}/src/api/schema.d.ts is stale. Run: npm run gen:api"
+            exit 1
+          }
 
       - name: Type check
         run: npm run typecheck
 
-      - name: Translation files must have identical keys
-        run: |
-          node -e "
-            const langs = ['rw', 'en', 'fr'].map(l => [l, require('./src/i18n/' + l + '.json')]);
-            const base = new Set(Object.keys(langs[0][1]));
-            let failed = false;
-            for (const [lang, bundle] of langs) {
-              const keys = new Set(Object.keys(bundle));
-              const missing = [...base].filter(k => !keys.has(k));
-              const extra = [...keys].filter(k => !base.has(k));
-              if (missing.length || extra.length) {
-                console.error(lang, 'missing:', missing, 'extra:', extra);
-                failed = true;
-              }
-            }
-            if (failed) process.exit(1);
-            console.log('translation keys aligned across rw/en/fr');
-          "
-
       - name: Build
-        run: npm run build
+        run: npx vite build
 
-      # Performance budget from docs/05: 150 KB gzipped.
+      # Performance budget from docs/05. The patient app runs on low-end
+      # Android over 3G, so its budget is the one that really matters.
       - name: Bundle size budget
         run: |
           BYTES=$(gzip -c dist/assets/index-*.js | wc -c)
@@ -124,3 +123,35 @@ jobs:
             echo "::error::Bundle is ${KB} KB gzipped, over the 150 KB budget."
             exit 1
           fi
+
+  translations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Kinyarwanda is the default language, not an afterthought. A missing key
+      # silently falls back to Kinyarwanda text inside an English page.
+      - name: Translation files must have identical keys
+        working-directory: web-patient
+        run: |
+          node -e "
+            const fs = require('fs');
+            const load = (l) => JSON.parse(fs.readFileSync('./src/i18n/' + l + '.json', 'utf8'));
+            const langs = ['rw', 'en', 'fr'].map((l) => [l, load(l)]);
+            const base = new Set(Object.keys(langs[0][1]));
+            let failed = false;
+            for (const [lang, bundle] of langs) {
+              const keys = new Set(Object.keys(bundle));
+              const missing = [...base].filter((k) => !keys.has(k));
+              const extra = [...keys].filter((k) => !base.has(k));
+              if (missing.length || extra.length) {
+                console.error(lang, 'missing:', missing, 'extra:', extra);
+                failed = true;
+              }
+            }
+            if (failed) process.exit(1);
+            console.log('translation keys aligned across rw/en/fr');
+          "

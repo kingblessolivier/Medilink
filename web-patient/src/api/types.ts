@@ -1,97 +1,43 @@
-// Hand-written for Phase 0 bootstrap ONLY.
-//
-// Replace with generated types before this grows:
-//   npm run gen:api        (openapi-typescript against /api/schema/)
-// and wire the regeneration into CI, so a backend field rename breaks the
-// build rather than the reception desk. See docs/01 section 9.
+/**
+ * App-facing type aliases, DERIVED from the generated OpenAPI schema.
+ *
+ * `schema.d.ts` is generated - never edit it by hand:
+ *     npm run gen:api        (openapi-typescript over backend/schema.yaml)
+ *
+ * CI regenerates it and fails on any diff, so a backend field rename breaks
+ * the build rather than the reception desk. See docs/01 section 9.
+ *
+ * Everything below is an alias onto a generated type. If you find yourself
+ * hand-writing a shape here, fix the backend serializer instead.
+ */
 
-export type WaitStatus =
-  | "available"
-  | "not_reported"
-  | "insufficient_data"
-  | "closed"
+import type { components } from "./schema"
 
-export type Wait = {
-  status: WaitStatus
-  minutes: number | null
-  people_waiting: number | null
-  as_of: string
-}
+type Schemas = components["schemas"]
+
+export type Facility = Schemas["FacilityNearby"]
+export type NearbyResponse = Schemas["NearbyResponse"]
+export type FacilityDetail = Schemas["FacilityDetail"]
+export type OpeningHours = Schemas["OpeningHours"]
+export type Insurer = Schemas["Insurer"]
+export type ServiceType = Schemas["ServiceType"]
+export type QueueEntryPublic = Schemas["QueueEntryPublic"]
+
+/**
+ * The four wait states, derived from the schema enum - so a client that
+ * forgets to handle one of them fails to compile.
+ *
+ *   available          live data, sufficient sample  -> "About 40 min"
+ *   not_reported       facility runs no reception tool
+ *   insufficient_data  runs it, but under the sample gate
+ *   closed             facility closed right now
+ *
+ * There is deliberately no value meaning "estimated": we never guess.
+ */
+export type WaitStatus = Schemas["WaitStatusEnum"]
+
+export type Wait = Facility["wait"]
 
 export type Coordinates = { lat: number; lng: number }
-
-export type Facility = {
-  id: number
-  slug: string
-  name: string
-  level: string
-  ownership: string
-  district: string
-  sector: string
-  location: Coordinates
-  distance_m: number
-  phone: string
-  is_open: boolean
-  opens_at: string | null
-  closes_at: string | null
-  closing_soon: boolean
-  accepts_insurer: boolean
-  insurers: string[]
-  services: string[]
-  wait: Wait
-  bookable: boolean
-}
-
-export type NearbyResponse = {
-  as_of: string
-  query: {
-    lat: number
-    lng: number
-    radius: number
-    radius_expanded: boolean
-    insurer: string | null
-    service: string | null
-    open_now: boolean
-  }
-  count: number
-  results: Facility[]
-}
-
-export type OpeningHours = {
-  weekday: number
-  opens_at: string
-  closes_at: string
-}
-
-export type FacilityDetail = {
-  id: number
-  slug: string
-  name: string
-  level: string
-  ownership: string
-  province: string
-  district: string
-  sector: string
-  address: string
-  location: Coordinates
-  phone: string
-  email: string
-  is_open: boolean
-  opening_hours: OpeningHours[]
-  insurers: { code: string; name: string; note: string }[]
-  services: { code: string; name_rw: string; name_en: string; name_fr: string }[]
-  wait: Wait
-  directions_url: string
-  verified_at: string | null
-}
-
-export type Insurer = { code: string; name: string; is_public: boolean }
-
-export type ServiceType = {
-  code: string
-  name_rw: string
-  name_en: string
-  name_fr: string
-}
 
 export type ApiError = { type: string; detail: string; field?: string }
