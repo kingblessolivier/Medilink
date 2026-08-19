@@ -22,6 +22,14 @@ export type OpeningHours = Schemas["OpeningHours"]
 export type Insurer = Schemas["Insurer"]
 export type ServiceType = Schemas["ServiceType"]
 export type QueueEntryPublic = Schemas["QueueEntryPublic"]
+export type Appointment = Schemas["Appointment"]
+export type SlotDays = Schemas["SlotDays"]
+export type SlotDay = Schemas["SlotDay"]
+export type Slot = Schemas["Slot"]
+export type Patient = Schemas["Patient"]
+export type TokenPair = Schemas["TokenPair"]
+export type AppointmentStatus = Appointment["status"]
+export type QueueStatus = QueueEntryPublic["status"]
 
 /**
  * The four wait states, derived from the schema enum - so a client that

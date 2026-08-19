@@ -26,3 +26,8 @@ LOGGING = {
     "root": {"handlers": ["console"], "level": "WARNING"},
     "loggers": {"apps": {"level": "INFO", "propagate": True}},
 }
+
+# A console SMS backend in production means patients are never told to leave
+# home - silently. Fail at startup instead.
+if SMS_BACKEND.endswith("ConsoleSMSBackend"):  # noqa: F405
+    SMS_BACKEND = "apps.notifications.sms.UnconfiguredSMSBackend"

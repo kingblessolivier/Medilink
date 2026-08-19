@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     "apps.patients",
     "apps.staff",
     "apps.queueing",
+    # Local - Phase 2
+    "apps.scheduling",
+    "apps.notifications",
 ]
 
 MIDDLEWARE = [
@@ -121,7 +124,11 @@ REST_FRAMEWORK = {
     # Patient-facing discovery is public; staff endpoints opt in with
     # IsAuthenticated + IsFacilityStaff.
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],
+    # Patient tokens are checked first and are structurally separate from
+    # staff users: a PatientPrincipal has no `staffmember`, so it can never
+    # satisfy IsFacilityStaff even if a view forgets to check.
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "apps.patients.auth.PatientJWTAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
@@ -130,8 +137,13 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
     ],
-    # Staff hammer these endpoints all day; patients do not.
-    "DEFAULT_THROTTLE_RATES": {"anon": "60/min", "user": "600/min"},
+    # Staff hammer these endpoints all day; patients do not. The patient
+    # queue view is polled every 20 s, which is 3/min per entry.
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "60/min",
+        "user": "600/min",
+        "otp": "3/15min",
+    },
     "EXCEPTION_HANDLER": "config.exceptions.rfc7807_exception_handler",
 }
 
@@ -175,3 +187,23 @@ MIN_SERVICE_TIME_SAMPLES = env("MIN_SERVICE_TIME_SAMPLES")
 # Pepper for national-ID hashing. Never stored in the database, so a dump
 # alone cannot brute-force the short, structured ID space. See docs/08.
 NATIONAL_ID_PEPPER = env("NATIONAL_ID_PEPPER", default="")
+
+# --- Phase 2 ------------------------------------------------------------------
+
+OTP_LIFETIME = timedelta(minutes=5)
+OTP_MAX_ATTEMPTS = 5
+
+# Minutes of slack added when telling a patient to set off. Rounded generously
+# on purpose: leaving too early costs a few minutes in a waiting room, leaving
+# too late costs the patient their place in the queue.
+LEAVE_BY_BUFFER_MINUTES = env.int("LEAVE_BY_BUFFER_MINUTES", default=10)
+
+# ConsoleSMSBackend prints instead of sending, so no developer machine ever
+# texts a real patient. Production must set this to a real gateway.
+SMS_BACKEND = env("SMS_BACKEND", default="apps.notifications.sms.ConsoleSMSBackend")
+SMS_SENDER_ID = env("SMS_SENDER_ID", default="MEDILINK")
+
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default=env("REDIS_URL", default=""))
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=False)
