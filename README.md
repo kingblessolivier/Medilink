@@ -4,7 +4,7 @@ A multi-channel platform that makes healthcare access predictable: find a nearby
 facility, confirm it accepts your insurance, book a slot, and track the queue
 remotely so you leave home at the right time.
 
-**Sector:** Health · **Country:** Rwanda · **Status:** Phases 0-2 built, Phase 3 next
+**Sector:** Health · **Country:** Rwanda · **Status:** Phases 0-3 built, Phase 4 gated
 
 ---
 
@@ -75,8 +75,8 @@ the build order in [docs/09-roadmap-and-milestones.md](docs/09-roadmap-and-miles
 
 ## Status
 
-**Phases 0, 1 and 2 are implemented and running.** Phases 3-4 are specified in
-the docs but not yet built.
+**Phases 0 through 3 are implemented and running.** Phase 4 is specified but
+deliberately not built - see the gate below.
 
 | Component | State |
 |---|---|
@@ -90,18 +90,46 @@ the docs but not yet built.
 | **Phase 2** `notifications`: SMS leave-now, called, appointment reminders | Done |
 | **Phase 2** `leave_by` - the sentence the product exists for | Done |
 | **Phase 2** Patient app: home states B and C, booking, visits, profile | Done |
-| **Phase 3** USSD and WhatsApp | Not built |
-| **Phase 4** Triage | Not built, and gated on docs/08 section 8 |
-| Backend test suite | 133 tests, 91% coverage |
+| **Phase 3** USSD: nearby, book, my queue, insurance, language in rw/en/fr | Done |
+| **Phase 3** WhatsApp: signed webhook, interactive pickers, queue status | Done |
+| **Phase 4** Triage | Not built, and gated on [docs/08 section 8](docs/08-security-and-compliance.md) |
+| Backend test suite | 349 tests, 92% coverage |
 | Bundles | patient 79 KB, provider 62 KB gzipped (budget 150 KB) |
 | Facility data | 25 seed facilities, **coordinates approximate - not field verified** |
 
-Two gates remain open and neither is code. Facility coordinates must be
-captured on site before a facility is marked verified - see
-[backend/fixtures/README.md](backend/fixtures/README.md). And a pilot facility
-must run reception unaided for five working days, with a stopwatch baseline
-recorded first, or the wait-time reduction cannot be proved. See
-[docs/09](docs/09-roadmap-and-milestones.md).
+### What is blocked on you, not on code
+
+| Blocker | Owner | Lead time |
+|---|---|---|
+| USSD shortcode (RURA + MTN/Airtel) | Business | **Months** - start now |
+| Aggregator contract and session pricing | Business | Weeks |
+| WhatsApp Business verification + template approval | Business | 2-6 weeks |
+| On-site capture of facility coordinates | Field team | Weeks |
+| Pilot facility: 5 unaided days + stopwatch baseline | Field team | Weeks |
+| GitHub Actions billing (CI cannot run) | Repo owner | - |
+
+The USSD code runs against any Africa's Talking-compatible aggregator today,
+including their sandbox. It cannot reach a real handset without a shortcode,
+and that application is the long pole in the whole project.
+
+Nothing above is fixable by writing more code, and the last two gates decide
+whether the wait-time reduction in the pitch can be proved at all - see
+[docs/09](docs/09-roadmap-and-milestones.md) and
+[backend/fixtures/README.md](backend/fixtures/README.md).
+
+### USSD in development
+
+The webhook **fails closed**: a blank `USSD_SHARED_SECRET` rejects every
+request, in development as much as in production. An unauthenticated USSD
+endpoint would let anyone act as any phone number. Put a throwaway value in
+`.env` and drive a session with curl:
+
+```bash
+curl -X POST localhost:8000/api/v1/gateway/ussd   -H "X-Gateway-Secret: dev-ussd-secret"   -d "sessionId=demo&phoneNumber=%2B250788111222&text="
+```
+
+`CON ` keeps the session open, `END ` closes it. Append `*`-separated choices
+to `text` to walk deeper: `text=1*1*1`.
 
 ### Notifications in development
 
@@ -206,7 +234,7 @@ medilink/
 │       ├── queueing/           # check-in, live position, ETA, offline sync
 │       ├── scheduling/         # slot templates, booking, cancellation
 │       ├── notifications/      # SMS dispatch, reminders, scheduled tasks
-│       ├── gateway/            # Phase 3 - USSD + WhatsApp webhooks
+│       ├── gateway/            # USSD + WhatsApp webhooks
 │       └── triage/             # Phase 4 - rule-based symptom router
 ├── web-provider/               # React - reception desk & facility admin
 ├── web-patient/                # React PWA - patient-facing

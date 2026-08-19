@@ -102,6 +102,35 @@ within the length budget.
 Option 3 is deliberately a **single step** - a patient already waiting must not
 navigate a menu to learn their position.
 
+### Step budget as shipped
+
+| Feature | Steps from the main menu |
+|---|---|
+| My queue | 1 |
+| Insurance | 2 |
+| Language | 2 |
+| Nearby | 3 - district, service, results |
+| Book | **4** - district, service, facility, slot |
+
+Booking is the one feature that exceeds the three-step rule above. It cannot be
+compressed further without guessing which facility the patient means, and a
+wrong guess sends somebody to the wrong hospital. The rule holds for everything
+a patient needs in a hurry.
+
+### Two rules learned from building it
+
+**The webhook fails closed.** A blank shared secret rejects every request, in
+development as much as in production. An unauthenticated USSD endpoint lets
+anyone act as any phone number - read a stranger's queue position, book in
+their name, change their insurer. Do not gate this on `DEBUG`: test runners set
+it to False, and a deployment that forgets one variable would silently expose
+the endpoint.
+
+**Never re-prompt on an invalid choice.** USSD input is append-only: the bad
+digit stays in `text` forever, so re-showing the menu reads the same bad digit
+again on the next request and traps the caller in a loop they can only escape
+by hanging up. End the session with a clear message instead.
+
 **Returning users skip step one.** After the first session, store the patient's
 district on their `Patient` row and go straight to the service menu.
 

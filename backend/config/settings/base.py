@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     # Local - Phase 2
     "apps.scheduling",
     "apps.notifications",
+    # Local - Phase 3
+    "apps.gateway",
 ]
 
 MIDDLEWARE = [
@@ -207,3 +209,15 @@ CELERY_BROKER_URL = env("CELERY_BROKER_URL", default=env("REDIS_URL", default=""
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=False)
+
+# --- Phase 3: USSD and WhatsApp ----------------------------------------------
+
+# Blank in development runs against the aggregator sandbox. Production
+# refuses unauthenticated webhooks - see apps/gateway/security.py.
+USSD_SHARED_SECRET = env("USSD_SHARED_SECRET", default="")
+USSD_ALLOWED_IPS = env.list("USSD_ALLOWED_IPS", default=[])
+
+WA_VERIFY_TOKEN = env("WA_VERIFY_TOKEN", default="")
+WA_APP_SECRET = env("WA_APP_SECRET", default="")
+WA_ACCESS_TOKEN = env("WA_ACCESS_TOKEN", default="")
+WA_PHONE_NUMBER_ID = env("WA_PHONE_NUMBER_ID", default="")

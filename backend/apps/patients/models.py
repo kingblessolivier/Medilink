@@ -56,6 +56,10 @@ class Patient(models.Model):
     insurer = models.ForeignKey(
         "insurance.Insurer", null=True, blank=True, on_delete=models.SET_NULL
     )
+    # Set on the first USSD session so returning callers skip the district
+    # screen entirely - one step saved on every future session, and USSD
+    # sessions are billed per step.
+    district = models.CharField(max_length=50, blank=True)
     national_id_hash = models.CharField(max_length=64, blank=True)
     home_location = models.PointField(geography=True, null=True, blank=True)
 
