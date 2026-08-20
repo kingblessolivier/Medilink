@@ -16,6 +16,7 @@ from django.utils import timezone
 
 from apps.facilities.models import Facility, FacilityService, OpeningHours, ServiceType
 from apps.insurance.models import FacilityInsurer, Insurer
+from apps.providers.models import Provider, ProviderFacility, Specialty
 
 WEEKDAYS_MON_FRI = [0, 1, 2, 3, 4]
 
@@ -123,6 +124,8 @@ class Command(BaseCommand):
             services_created += self._seed_services(facility, service_types)
             insurers_created += self._seed_insurers(facility, insurers)
 
+        providers_made = self._seed_providers(facilities, service_types)
+
         verified = 0
         if not options["no_verify"]:
             verified = Facility.objects.filter(verified_at__isnull=True).update(
@@ -135,6 +138,7 @@ class Command(BaseCommand):
                 f"{hours_created} opening-hour rows, "
                 f"{services_created} services, "
                 f"{insurers_created} insurer links, "
+                f"{providers_made} doctors, "
                 f"{verified} marked verified."
             )
         )
@@ -223,3 +227,74 @@ class Command(BaseCommand):
             )
             created += int(was_created)
         return created
+
+    # Plausible Rwandan names for demo doctors. Clearly demo data: every one
+    # is created unverified, so none of them reaches patient-facing search
+    # until a human confirms the placement with the facility.
+    DEMO_NAMES = [
+        "Uwase Alice", "Mugisha Jean", "Keza Diane", "Habimana Eric",
+        "Ingabire Claudine", "Niyonsaba Patrick", "Umutoni Sandrine",
+        "Nshimiyimana Olivier", "Mukamana Josiane", "Bizimana Thierry",
+        "Uwimana Chantal", "Kayitesi Solange",
+    ]
+
+    def _seed_providers(self, facilities, service_types) -> int:
+        specialties = list(Specialty.objects.prefetch_related("service_types"))
+        if not specialties:
+            self.stdout.write(
+                self.style.WARNING(
+                    "  No specialties loaded - skipping doctors. Run: "
+                    "python manage.py loaddata fixtures/specialties.json"
+                )
+            )
+            return 0
+
+        if Provider.objects.exists():
+            return 0
+
+        made = 0
+        for index, name in enumerate(self.DEMO_NAMES):
+            specialty = specialties[index % len(specialties)]
+            # Place each doctor at a facility that actually offers one of
+            # their specialty's services - a cardiologist at a dental clinic
+            # would be nonsense data that makes the directory untrustworthy.
+            codes = {s.code for s in specialty.service_types.all()}
+            candidates = [
+                f
+                for f in facilities
+                if codes & {fs.service_type.code for fs in f.services.all()}
+            ]
+            if not candidates:
+                continue
+
+            facility = candidates[index % len(candidates)]
+            provider = Provider.objects.create(
+                slug=f"demo-{name.lower().replace(' ', '-')}",
+                full_name=name,
+                title=Provider.Title.DR,
+                languages=["rw", "en"] if index % 2 == 0 else ["rw", "en", "fr"],
+                bio_en="",
+            )
+            provider.specialties.add(specialty)
+
+            placement = ProviderFacility.objects.create(
+                provider=provider, facility=facility
+            )
+            placement.service_types.set(
+                [
+                    fs.service_type
+                    for fs in facility.services.all()
+                    if fs.service_type.code in codes
+                ]
+            )
+            made += 1
+
+        if made:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"  {made} DEMO doctors created, all unverified. They will "
+                    "not appear as verified until a human confirms each "
+                    "placement with the facility."
+                )
+            )
+        return made

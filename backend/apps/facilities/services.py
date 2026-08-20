@@ -48,6 +48,7 @@ def find_nearby(
     radius_m: int | None = None,
     insurer: str | None = None,
     service: str | None = None,
+    specialty: str | None = None,
     levels: list[str] | None = None,
     open_now: bool = False,
     limit: int = 20,
@@ -100,6 +101,19 @@ def find_nearby(
         qs = qs.filter(
             services__service_type__code=service, services__available=True
         )
+    elif specialty:
+        # The Care Guide recommends a SPECIALTY; the directory understands
+        # SERVICES. Translate, and narrow to facilities that offer any of them.
+        #
+        # A specialty with no mapped services yields an empty list rather than
+        # silently widening to every facility - sending a patient anywhere is
+        # worse than telling them we found nothing.
+        from apps.providers.services import service_codes_for_specialty
+
+        codes = service_codes_for_specialty(specialty)
+        qs = qs.filter(
+            services__service_type__code__in=codes, services__available=True
+        ) if codes else qs.none()
     if levels:
         qs = qs.filter(level__in=levels)
     if open_now:

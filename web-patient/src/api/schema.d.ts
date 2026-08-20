@@ -162,6 +162,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/facilities/{slug}/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Doctors practising at a facility */
+        get: operations["facility_providers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/facilities/{slug}/slots": {
         parameters: {
             query?: never;
@@ -253,6 +270,40 @@ export interface paths {
          * @description The right of access under Rwanda Law 058/2021. Returns the profile, appointment and queue history, and every message sent - in one document. Symptom-checker answers are not included because they are never stored against an account.
          */
         get: operations["me_export_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Doctors directory */
+        get: operations["provider_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/providers/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Doctor profile */
+        get: operations["provider_detail"];
         put?: never;
         post?: never;
         delete?: never;
@@ -402,6 +453,26 @@ export interface paths {
          *     that USSD and WhatsApp can render without a second call.
          */
         get: operations["service_types_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/specialties": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Specialties
+         * @description The shared clinical vocabulary. Each specialty carries the facility service codes a clinician in it delivers, which is what lets a Care Guide recommendation reach the facility search.
+         */
+        get: operations["specialties_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -647,6 +718,14 @@ export interface components {
          */
         LanguageEnum: "rw" | "en" | "fr";
         /**
+         * @description * `rw` - Kinyarwanda
+         *     * `en` - English
+         *     * `fr` - Francais
+         *     * `sw` - Kiswahili
+         * @enum {string}
+         */
+        LanguagesEnum: "rw" | "en" | "fr" | "sw";
+        /**
          * @description * `health_post` - Health post
          *     * `health_centre` - Health centre
          *     * `district_hospital` - District hospital
@@ -671,6 +750,7 @@ export interface components {
             radius_expanded: boolean;
             insurer: string | null;
             service: string | null;
+            specialty: string | null;
             open_now: boolean;
         };
         NearbyResponse: {
@@ -719,6 +799,45 @@ export interface components {
             readonly home_location: {
                 [key: string]: unknown;
             } | null;
+        };
+        Placement: {
+            facility_slug: string;
+            facility_name: string;
+            district: string;
+            role_title: string;
+            services: string[];
+        };
+        Provider: {
+            slug: string;
+            readonly display_name: string;
+            full_name: string;
+            readonly initials: string;
+            /** Format: uri */
+            photo_url?: string;
+            /** @description Languages this clinician can consult in. */
+            languages?: components["schemas"]["LanguagesEnum"][];
+            readonly specialties: string[];
+            readonly placements: components["schemas"]["Placement"][];
+            readonly verified: boolean;
+        };
+        ProviderDetail: {
+            slug: string;
+            readonly display_name: string;
+            full_name: string;
+            readonly initials: string;
+            /** Format: uri */
+            photo_url?: string;
+            /** @description Languages this clinician can consult in. */
+            languages?: components["schemas"]["LanguagesEnum"][];
+            readonly specialties: string[];
+            readonly placements: components["schemas"]["Placement"][];
+            readonly verified: boolean;
+            /** @description Short professional summary. Never enter qualifications or claims that have not been verified - see docs/11 section 7. */
+            bio_en?: string;
+        };
+        ProviderList: {
+            count: number;
+            results: components["schemas"]["Provider"][];
         };
         /** @description Staff-facing view of one entry. */
         QueueEntry: {
@@ -834,6 +953,18 @@ export interface components {
             service: string;
             as_of: string;
             days: components["schemas"]["SlotDay"][];
+        };
+        Specialty: {
+            code: string;
+            name_rw: string;
+            name_en: string;
+            name_fr: string;
+            description_en?: string;
+            readonly service_types: string[];
+            is_triage_target?: boolean;
+        };
+        SpecialtyList: {
+            results: components["schemas"]["Specialty"][];
         };
         StaffFacility: {
             id: number;
@@ -1174,6 +1305,30 @@ export interface operations {
             };
         };
     };
+    facility_providers: {
+        parameters: {
+            query?: {
+                service?: string;
+                specialty?: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderList"];
+                };
+            };
+        };
+    };
     facilities_slots_retrieve: {
         parameters: {
             query: {
@@ -1213,6 +1368,8 @@ export interface operations {
                 radius?: number;
                 /** @description Service type code */
                 service?: string;
+                /** @description Specialty code, from a Care Guide recommendation */
+                specialty?: string;
             };
             header?: never;
             path?: never;
@@ -1326,6 +1483,58 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    provider_list: {
+        parameters: {
+            query?: {
+                /** @description Facility slug */
+                facility?: string;
+                /** @description rw | en | fr | sw */
+                language?: string;
+                limit?: number;
+                /** @description Name or specialty */
+                search?: string;
+                /** @description ServiceType code */
+                service?: string;
+                /** @description Specialty code */
+                specialty?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderList"];
+                };
+            };
+        };
+    };
+    provider_detail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderDetail"];
+                };
             };
         };
     };
@@ -1475,6 +1684,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ServiceTypeList"];
+                };
+            };
+        };
+    };
+    specialties_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpecialtyList"];
                 };
             };
         };

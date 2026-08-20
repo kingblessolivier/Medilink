@@ -243,6 +243,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/FacilityDetail'
           description: ''
+  /api/v1/facilities/{slug}/providers:
+    get:
+      operationId: facility_providers
+      summary: Doctors practising at a facility
+      parameters:
+      - in: query
+        name: service
+        schema:
+          type: string
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: specialty
+        schema:
+          type: string
+      tags:
+      - facilities
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderList'
+          description: ''
   /api/v1/facilities/{slug}/slots:
     get:
       operationId: facilities_slots_retrieve
@@ -330,6 +362,11 @@ paths:
         schema:
           type: string
         description: Service type code
+      - in: query
+        name: specialty
+        schema:
+          type: string
+        description: Specialty code, from a Care Guide recommendation
       tags:
       - facilities
       security:
@@ -439,6 +476,78 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/providers:
+    get:
+      operationId: provider_list
+      summary: Doctors directory
+      parameters:
+      - in: query
+        name: facility
+        schema:
+          type: string
+        description: Facility slug
+      - in: query
+        name: language
+        schema:
+          type: string
+        description: rw | en | fr | sw
+      - in: query
+        name: limit
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Name or specialty
+      - in: query
+        name: service
+        schema:
+          type: string
+        description: ServiceType code
+      - in: query
+        name: specialty
+        schema:
+          type: string
+        description: Specialty code
+      tags:
+      - providers
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderList'
+          description: ''
+  /api/v1/providers/{slug}:
+    get:
+      operationId: provider_detail
+      summary: Doctor profile
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - providers
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderDetail'
+          description: ''
   /api/v1/queue/board:
     get:
       operationId: queue_board_retrieve
@@ -623,6 +732,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceTypeList'
+          description: ''
+  /api/v1/specialties:
+    get:
+      operationId: specialties_retrieve
+      description: The shared clinical vocabulary. Each specialty carries the facility
+        service codes a clinician in it delivers, which is what lets a Care Guide
+        recommendation reach the facility search.
+      summary: Specialties
+      tags:
+      - specialties
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpecialtyList'
           description: ''
   /api/v1/staff/me:
     get:
@@ -1153,6 +1283,18 @@ components:
         * `rw` - Kinyarwanda
         * `en` - English
         * `fr` - Francais
+    LanguagesEnum:
+      enum:
+      - rw
+      - en
+      - fr
+      - sw
+      type: string
+      description: |-
+        * `rw` - Kinyarwanda
+        * `en` - English
+        * `fr` - Francais
+        * `sw` - Kiswahili
     LevelEnum:
       enum:
       - health_post
@@ -1200,6 +1342,9 @@ components:
         service:
           type: string
           nullable: true
+        specialty:
+          type: string
+          nullable: true
         open_now:
           type: boolean
       required:
@@ -1210,6 +1355,7 @@ components:
       - radius
       - radius_expanded
       - service
+      - specialty
     NearbyResponse:
       type: object
       properties:
@@ -1322,6 +1468,135 @@ components:
       - home_location
       - id
       - phone
+    Placement:
+      type: object
+      properties:
+        facility_slug:
+          type: string
+        facility_name:
+          type: string
+        district:
+          type: string
+        role_title:
+          type: string
+        services:
+          type: array
+          items:
+            type: string
+      required:
+      - district
+      - facility_name
+      - facility_slug
+      - role_title
+      - services
+    Provider:
+      type: object
+      properties:
+        slug:
+          type: string
+          maxLength: 140
+          pattern: ^[-a-zA-Z0-9_]+$
+        display_name:
+          type: string
+          readOnly: true
+        full_name:
+          type: string
+          maxLength: 150
+        initials:
+          type: string
+          readOnly: true
+        photo_url:
+          type: string
+          format: uri
+          maxLength: 200
+        languages:
+          type: array
+          items:
+            $ref: '#/components/schemas/LanguagesEnum'
+          description: Languages this clinician can consult in.
+        specialties:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        placements:
+          type: array
+          items:
+            $ref: '#/components/schemas/Placement'
+          readOnly: true
+        verified:
+          type: boolean
+          readOnly: true
+      required:
+      - display_name
+      - full_name
+      - initials
+      - placements
+      - slug
+      - specialties
+      - verified
+    ProviderDetail:
+      type: object
+      properties:
+        slug:
+          type: string
+          maxLength: 140
+          pattern: ^[-a-zA-Z0-9_]+$
+        display_name:
+          type: string
+          readOnly: true
+        full_name:
+          type: string
+          maxLength: 150
+        initials:
+          type: string
+          readOnly: true
+        photo_url:
+          type: string
+          format: uri
+          maxLength: 200
+        languages:
+          type: array
+          items:
+            $ref: '#/components/schemas/LanguagesEnum'
+          description: Languages this clinician can consult in.
+        specialties:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        placements:
+          type: array
+          items:
+            $ref: '#/components/schemas/Placement'
+          readOnly: true
+        verified:
+          type: boolean
+          readOnly: true
+        bio_en:
+          type: string
+          description: Short professional summary. Never enter qualifications or claims
+            that have not been verified - see docs/11 section 7.
+      required:
+      - display_name
+      - full_name
+      - initials
+      - placements
+      - slug
+      - specialties
+      - verified
+    ProviderList:
+      type: object
+      properties:
+        count:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Provider'
+      required:
+      - count
+      - results
     QueueEntry:
       type: object
       description: Staff-facing view of one entry.
@@ -1605,6 +1880,46 @@ components:
       - days
       - facility
       - service
+    Specialty:
+      type: object
+      properties:
+        code:
+          type: string
+          maxLength: 40
+          pattern: ^[-a-zA-Z0-9_]+$
+        name_rw:
+          type: string
+          maxLength: 100
+        name_en:
+          type: string
+          maxLength: 100
+        name_fr:
+          type: string
+          maxLength: 100
+        description_en:
+          type: string
+        service_types:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        is_triage_target:
+          type: boolean
+      required:
+      - code
+      - name_en
+      - name_fr
+      - name_rw
+      - service_types
+    SpecialtyList:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Specialty'
+      required:
+      - results
     StaffFacility:
       type: object
       properties:

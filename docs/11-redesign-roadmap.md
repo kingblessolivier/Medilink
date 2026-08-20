@@ -205,19 +205,41 @@ Without it the import is silently dropped and both apps render unstyled. Also:
 Tailwind emits `rgb(11 107 85 / …)`, not hex - grepping compiled CSS for
 `#0B6B55` finds nothing and proves nothing.
 
-### R1 - Providers and specialties (backend)
+### R1 - Providers and specialties (backend) `DONE`
 
-Unblocks 8+ screens. Nothing in R3 or R5 can start without it.
+Unblocks 8+ screens. Nothing in R3 or R5 could start without it.
 
-- [ ] `providers` app: `Specialty`, `Provider`, `ProviderSpecialty`,
-      `ProviderService`, `ProviderAvailability`
-- [ ] `Specialty` ↔ `ServiceType` mapping, so a recommendation reaches search
-- [ ] Optional `Provider` ↔ `StaffMember` link (a doctor may have no login)
-- [ ] Endpoints: `/providers`, `/providers/{slug}`,
-      `/facilities/{slug}/providers`, `/specialties`
-- [ ] Extend `/facilities/nearby` with a `specialty` filter
-- [ ] Appointment gains an optional `provider` - "any available" stays default
-- [ ] Admin, fixtures, tests
+- [x] `providers` app: `Specialty`, `Provider`, `ProviderFacility`
+- [x] `Specialty` <-> `ServiceType` many-to-many, so a recommendation reaches
+      the facility search that already exists
+- [x] Optional `ProviderFacility` <-> `StaffMember` link
+- [x] Endpoints: `/specialties`, `/providers`, `/providers/{slug}`,
+      `/facilities/{slug}/providers`
+- [x] `/facilities/nearby?specialty=` filter
+- [x] `ScheduleTemplate.provider` and `Appointment.provider`, both optional
+- [x] Admin with a verification action, `fixtures/specialties.json` (11 rows),
+      demo doctors in `seed_demo`, 18 tests
+
+**Decisions worth keeping:**
+
+- **Providers are many-to-many with facilities.** Clinicians in Rwanda commonly
+  hold a public post and consult privately; a single FK would force us to pick
+  one and hide the other from search.
+- **`ScheduleTemplate` was reused, not duplicated.** A template with
+  `provider=None` is the facility's "any available" clinic; with a provider it
+  is that clinician's own session. Slot expansion, capacity locking and
+  cancellation all work unchanged - a parallel availability model would have
+  duplicated every one of them.
+- **A specialty with no mapped services returns nothing, not everything.**
+  Silently widening to every facility would send a patient anywhere. The admin
+  flags unroutable specialties with a "Reaches facilities" column.
+- **An explicit `service` beats an inferred `specialty`.** A patient's own
+  choice always wins over a recommendation.
+- **A doctor with no active placement is never listed.** They cannot be booked,
+  and listing them sends a patient after an appointment that does not exist.
+- **No ratings; no unverified qualifications.** `bio_en` carries an admin
+  warning that a doctor profile is a public statement about a named person.
+  Every demo doctor is created unverified.
 
 ### R2 - Discovery: home, find care, map
 
@@ -331,4 +353,5 @@ them for visual convenience.
 | Date | Change |
 |---|---|
 | 2026-08-20 | Audit complete. Five data gaps identified. Roadmap written. |
-| 2026-08-20 | R0 part 1: design preset, base layer, 14 UI primitives, WaitLine + FacilityCard + Home rebuilt. Patient bundle 80 KB gz (budget 150). 21 patient + 4 provider tests green. |
+| 2026-08-20 | R0: design preset, base layer, 14 UI primitives, WaitLine + FacilityCard + Home rebuilt. Patient bundle 80 KB gz (budget 150). 21 patient + 4 provider tests green. |
+| 2026-08-20 | R1 done: `providers` app, specialty-to-service mapping, 4 endpoints, `nearby?specialty=`, provider on templates and appointments. 414 backend tests, 92% coverage, 31 API operations. Journey verified live: specialty -> 3 facilities -> doctor. |

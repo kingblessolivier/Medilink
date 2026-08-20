@@ -27,6 +27,17 @@ class ScheduleTemplate(models.Model):
     service_type = models.ForeignKey(
         "facilities.ServiceType", on_delete=models.PROTECT
     )
+    # None means the facility's general clinic - "any available". A provider
+    # makes this that clinician's own session. Deliberately reuses this model
+    # rather than adding a parallel availability table, so slot expansion,
+    # capacity locking and cancellation all work unchanged.
+    provider = models.ForeignKey(
+        "providers.Provider",
+        null=True,
+        blank=True,
+        related_name="schedule_templates",
+        on_delete=models.CASCADE,
+    )
     weekday = models.SmallIntegerField(choices=[(i, i) for i in range(7)])
     start_time = models.TimeField()
     end_time = models.TimeField()
@@ -36,7 +47,13 @@ class ScheduleTemplate(models.Model):
 
     class Meta:
         ordering = ["weekday", "start_time"]
-        unique_together = ("facility", "service_type", "weekday", "start_time")
+        unique_together = (
+            "facility",
+            "service_type",
+            "provider",
+            "weekday",
+            "start_time",
+        )
 
     def __str__(self) -> str:
         return (
@@ -75,6 +92,15 @@ class Appointment(models.Model):
     )
     service_type = models.ForeignKey(
         "facilities.ServiceType", on_delete=models.PROTECT
+    )
+    # None means the patient chose "any available", which stays the default:
+    # naming a doctor narrows availability and most patients do not need to.
+    provider = models.ForeignKey(
+        "providers.Provider",
+        null=True,
+        blank=True,
+        related_name="appointments",
+        on_delete=models.SET_NULL,
     )
 
     slot_start = models.DateTimeField()
