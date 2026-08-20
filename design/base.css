@@ -128,6 +128,25 @@
   .ml-table tbody tr:last-child td { @apply border-b-0; }
   .ml-table tbody tr[data-selected="true"] { @apply bg-primary-subtle; }
 
+  /* ------------------------------------------------------------------ map */
+
+  /* Map markers are real buttons - keyboard reachable and announced. The
+     selected state is a size and ring change, not colour alone. */
+  .ml-marker {
+    @apply grid h-6 w-6 place-items-center rounded-full border-2 border-white
+           bg-primary shadow-overlay transition-transform;
+  }
+  .ml-marker::after {
+    content: "";
+    @apply h-2 w-2 rounded-full bg-white;
+  }
+  .ml-marker[data-selected="true"] {
+    @apply h-8 w-8 scale-110 bg-primary-active ring-4 ring-primary/30;
+  }
+  .ml-marker:focus-visible {
+    @apply ring-4 ring-primary/40;
+  }
+
   /* --------------------------------------------------------------- skeleton */
 
   .ml-skeleton { @apply animate-pulse rounded bg-surface-sunken; }

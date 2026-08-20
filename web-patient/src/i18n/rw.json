@@ -100,5 +100,14 @@
   "your_queue": "Umurongo wawe",
   "next_appointment": "Gahunda itaha",
   "no_results_body": "Gerageza guhindura akarere cyangwa ubwishingizi.",
-  "change_filters": "Hindura"
+  "change_filters": "Hindura",
+  "n_results": "Ibisubizo {n}",
+  "show_map": "Erekana ikarita",
+  "hide_map": "Hisha ikarita",
+  "map_label": "Ikarita y'amavuriro",
+  "map_needs_results": "Nta vuriro ryo kwerekana ku ikarita.",
+  "clear": "Kuraho",
+  "clear_filters": "Kuraho ibyo washyizeho",
+  "filtered_by_specialty": "Twerekana ibijyanye na {specialty}.",
+  "from_care_guide": "Byaturutse ku nama y'ubuvuzi"
 }

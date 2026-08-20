@@ -100,5 +100,14 @@
   "your_queue": "Your queue",
   "next_appointment": "Next appointment",
   "no_results_body": "Try changing your district or insurance filter.",
-  "change_filters": "Change filters"
+  "change_filters": "Change filters",
+  "n_results": "{n} results",
+  "show_map": "Show map",
+  "hide_map": "Hide map",
+  "map_label": "Map of facilities",
+  "map_needs_results": "No facilities to show on the map yet.",
+  "clear": "Clear",
+  "clear_filters": "Clear filters",
+  "filtered_by_specialty": "Showing care for {specialty}.",
+  "from_care_guide": "From your Care Guide result"
 }

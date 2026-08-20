@@ -440,6 +440,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One search across specialties, services, doctors and facilities
+         * @description A patient typing 'pediatric' does not know whether that is a service, a specialty, a doctor or a hospital. Results come back grouped, ordered by what gets somebody to care fastest. Empty groups are omitted rather than returned empty.
+         */
+        get: operations["global_search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/service-types": {
         parameters: {
             query?: never;
@@ -711,6 +731,14 @@ export interface components {
             results: components["schemas"]["Insurer"][];
         };
         /**
+         * @description * `specialty` - specialty
+         *     * `service` - service
+         *     * `provider` - provider
+         *     * `facility` - facility
+         * @enum {string}
+         */
+        KindEnum: "specialty" | "service" | "provider" | "facility";
+        /**
          * @description * `rw` - Kinyarwanda
          *     * `en` - English
          *     * `fr` - Francais
@@ -912,6 +940,24 @@ export interface components {
             lat: number;
             /** Format: double */
             lng: number;
+        };
+        SearchGroup: {
+            kind: components["schemas"]["KindEnum"];
+            results: components["schemas"]["SearchResult"][];
+        };
+        SearchResponse: {
+            query: string;
+            groups: components["schemas"]["SearchGroup"][];
+        };
+        SearchResult: {
+            code: string;
+            label: string;
+            label_rw?: string;
+            label_fr?: string;
+            sublabel?: string;
+            distance_m?: number | null;
+            href: string;
+            routable: boolean;
         };
         ServiceBrief: {
             code: string;
@@ -1665,6 +1711,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SyncResponse"];
+                };
+            };
+        };
+    };
+    global_search: {
+        parameters: {
+            query: {
+                /** @description Orders facilities by distance */
+                lat?: number;
+                lng?: number;
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResponse"];
                 };
             };
         };

@@ -241,17 +241,54 @@ Unblocks 8+ screens. Nothing in R3 or R5 could start without it.
   warning that a doctor profile is a public statement about a named person.
   Every demo doctor is created unverified.
 
-### R2 - Discovery: home, find care, map
+### R2 - Discovery: home, find care, map `IN PROGRESS`
 
 The brief's highest priority, and the strongest screen in the product.
 
-- [ ] Homepage: hero, universal search, location, nearby map, nearby
-      facilities, doctors near you, popular services, insurance, Care Guide
-- [ ] Find Care: 40/60 split, filter rail, synchronised list ↔ map
-- [ ] MapLibre integration, lazy-loaded, list-first fallback
-- [ ] Location: auto, manual district, map-area selection; **never blocks**
-- [ ] Global search: facilities, doctors, services, grouped results
+- [x] Global search: one `/search` over specialties, services, doctors and
+      facilities, grouped and ordered by what reaches care fastest
+- [x] Find Care: 40/58 split, filter rail in the URL, list <-> map selection
+      synchronised both ways
+- [x] MapLibre, lazy-loaded, list-first fallback, map opt-in on mobile
+- [x] Location: auto, district fallback, never blocks
+- [ ] Homepage sections: hero, doctors near you, popular services, insurance,
+      Care Guide entry
+- [ ] Search-as-you-type UI on top of `/search`
 - [ ] Compare facilities (max 3, simple table, not a spreadsheet)
+- [ ] Retire the old list-only `/search/list` route once Find Care covers it
+
+**Decisions worth keeping:**
+
+- **Specialties and services rank above named results.** Somebody typing
+  "dental" almost always wants dentistry near them, not the one dentist whose
+  name contains those letters.
+- **Empty groups are omitted, not returned empty**, and a query under two
+  characters returns nothing rather than everything.
+- **The map is excluded from the service-worker precache.** It is a 258 KB
+  gzipped chunk; precaching it would push it onto every phone at install and
+  undo the lazy import. Fetched on demand, then cached for a month.
+- **Filters live in the URL**, so a search can be shared or reloaded, and a
+  Care Guide recommendation arrives as `?specialty=` with a banner the patient
+  can clear.
+- **Tiles are inline OSM raster.** MapLibre's demotiles style carries only
+  low-zoom country outlines and renders as empty blue at city zoom. **Before
+  launch this must move to a self-hosted or contracted source** - the OSM
+  community servers are volunteer-funded and a health service should not lean
+  on them.
+
+**Three bugs found by running it:**
+
+1. **Duplicate facilities.** A specialty maps to several service codes, so a
+   facility offering more than one of them (paediatrics *and* vaccination)
+   joined once per match and was listed twice. Needed `.distinct()` - and only
+   on the specialty branch, since a single `service` matches at most one row.
+2. **No markers.** The marker effect ran before the async map import resolved,
+   found no map, returned early, and never re-ran. Fixed with a readiness flag.
+3. **The suite became order-dependent.** DRF throttles per IP through a shared
+   cache; as the suite grew, later tests started getting 429 from a budget
+   spent by earlier ones. A test could pass alone and fail in the full run.
+   Now `config/settings/test.py` disables throttling and uses a local-memory
+   cache. Rate limits belong in tests that assert them explicitly.
 
 ### R3 - Facility profile
 
@@ -355,3 +392,4 @@ them for visual convenience.
 | 2026-08-20 | Audit complete. Five data gaps identified. Roadmap written. |
 | 2026-08-20 | R0: design preset, base layer, 14 UI primitives, WaitLine + FacilityCard + Home rebuilt. Patient bundle 80 KB gz (budget 150). 21 patient + 4 provider tests green. |
 | 2026-08-20 | R1 done: `providers` app, specialty-to-service mapping, 4 endpoints, `nearby?specialty=`, provider on templates and appointments. 414 backend tests, 92% coverage, 31 API operations. Journey verified live: specialty -> 3 facilities -> doctor. |
+| 2026-08-20 | R2 part 1: `/search` global endpoint (14 tests), Find Care with synchronised list and map, MapLibre lazy-loaded and excluded from precache (1329 KB -> 283 KB). Fixed duplicate facilities, missing markers, and an order-dependent test suite. 444 backend tests, 92% coverage. |

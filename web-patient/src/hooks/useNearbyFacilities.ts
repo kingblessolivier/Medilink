@@ -5,6 +5,8 @@ import type { Coordinates } from "../api/types"
 export type NearbyFilters = {
   insurer?: string
   service?: string
+  /** Set by a Care Guide recommendation. `service` always wins over it. */
+  specialty?: string
   openNow?: boolean
   radius?: number
 }
@@ -21,6 +23,7 @@ export function useNearbyFacilities(
         lng: coords!.lng,
         insurer: filters.insurer,
         service: filters.service,
+        specialty: filters.specialty,
         open_now: filters.openNow,
         radius: filters.radius,
       }),

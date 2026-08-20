@@ -5,7 +5,9 @@ import type {
   NearbyResponse,
   Patient,
   QueueEntryPublic,
+  SearchResponse,
   ServiceType,
+  Specialty,
   SlotDays,
   TokenPair,
 } from "./types"
@@ -121,6 +123,7 @@ export const api = {
     radius?: number
     insurer?: string
     service?: string
+    specialty?: string
     open_now?: boolean
     limit?: number
   }) => request<NearbyResponse>("/facilities/nearby", { params, auth: false }),
@@ -136,6 +139,12 @@ export const api = {
 
   serviceTypes: () =>
     request<{ results: ServiceType[] }>("/service-types", { auth: false }),
+
+  specialties: () =>
+    request<{ results: Specialty[] }>("/specialties"),
+
+  search: (params: { q: string; lat?: number; lng?: number }) =>
+    request<SearchResponse>("/search", { params }),
 
   districts: () =>
     request<{ results: string[] }>("/districts", { auth: false }),

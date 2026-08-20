@@ -100,5 +100,14 @@
   "your_queue": "Votre file",
   "next_appointment": "Prochain rendez-vous",
   "no_results_body": "Essayez un autre district ou une autre assurance.",
-  "change_filters": "Modifier"
+  "change_filters": "Modifier",
+  "n_results": "{n} resultats",
+  "show_map": "Voir la carte",
+  "hide_map": "Masquer la carte",
+  "map_label": "Carte des centres",
+  "map_needs_results": "Aucun centre a afficher sur la carte.",
+  "clear": "Effacer",
+  "clear_filters": "Effacer les filtres",
+  "filtered_by_specialty": "Resultats pour {specialty}.",
+  "from_care_guide": "Depuis votre guide de soins"
 }

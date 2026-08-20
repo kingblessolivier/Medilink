@@ -9,7 +9,29 @@ export default defineConfig({
       registerType: "autoUpdate",
       manifest: false, // served from public/manifest.json
       workbox: {
+        // The map is a 258 KB gzipped chunk. Precaching it would push it onto
+        // every phone at install time and undo the lazy import - a patient who
+        // never opens the map must never pay for it. Fetched on demand, then
+        // cached for a month once they have.
+        globIgnores: ["**/maplibre-gl-*.{js,css}"],
         runtimeCaching: [
+          {
+            urlPattern: /maplibre-gl-.*\.(js|css)$/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "map",
+              expiration: { maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
+          {
+            // Tiles are large and change rarely.
+            urlPattern: /^https:\/\/.*(tiles|demotiles)\..*/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "map-tiles",
+              expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 14 },
+            },
+          },
           {
             // Fresh when online, usable when not.
             urlPattern: /\/api\/v1\/facilities\/nearby/,
