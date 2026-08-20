@@ -10,8 +10,10 @@ from rest_framework.throttling import ScopedRateThrottle
 from apps.notifications.models import Notification
 from apps.notifications.services import dispatch
 
+from . import privacy
+from .audit import record as record_access
 from .auth import IsPatient, current_patient, issue_otp, tokens_for_patient, verify_otp
-from .models import normalise_phone
+from .models import PatientAccessLog, normalise_phone
 from .serializers import (
     OTPRequestSerializer,
     OTPVerifySerializer,
@@ -97,6 +99,51 @@ def me(request):
         serializer = PatientSerializer(patient, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save(last_seen_at=timezone.now())
+        record_access(
+            request, action=PatientAccessLog.Action.UPDATE, patient=patient
+        )
         return Response(serializer.data)
 
     return Response(PatientSerializer(patient).data)
+
+
+@extend_schema(
+    summary="Export everything held about you",
+    description=(
+        "The right of access under Rwanda Law 058/2021. Returns the profile, "
+        "appointment and queue history, and every message sent - in one "
+        "document. Symptom-checker answers are not included because they are "
+        "never stored against an account."
+    ),
+    responses={200: None},
+)
+@api_view(["GET"])
+@permission_classes([IsPatient])
+def export_me(request):
+    patient = current_patient(request)
+    record_access(request, action=PatientAccessLog.Action.EXPORT, patient=patient)
+
+    response = Response(privacy.export(patient))
+    # Offered as a download rather than a wall of JSON in a phone browser.
+    response["Content-Disposition"] = 'attachment; filename="medilink-my-data.json"'
+    return response
+
+
+@extend_schema(
+    summary="Erase your account",
+    description=(
+        "The right of erasure. Records are anonymised rather than deleted: the "
+        "facility keeps its attendance counts, which every other patient's "
+        "wait estimate depends on, and you are no longer identifiable in them. "
+        "This cannot be undone."
+    ),
+    responses={204: None},
+)
+@api_view(["DELETE"])
+@permission_classes([IsPatient])
+def delete_me(request):
+    patient = current_patient(request)
+    # Logged BEFORE anonymising, while the link still exists to log.
+    record_access(request, action=PatientAccessLog.Action.ERASE, patient=patient)
+    privacy.anonymise(patient)
+    return Response(status=status.HTTP_204_NO_CONTENT)

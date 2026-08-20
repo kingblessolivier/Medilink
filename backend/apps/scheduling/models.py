@@ -64,8 +64,14 @@ class Appointment(models.Model):
     facility = models.ForeignKey(
         "facilities.Facility", related_name="appointments", on_delete=models.PROTECT
     )
+    # Nullable so a patient can exercise their right to erasure without the
+    # facility losing its no-show counts. See apps/patients/privacy.py.
     patient = models.ForeignKey(
-        "patients.Patient", related_name="appointments", on_delete=models.PROTECT
+        "patients.Patient",
+        related_name="appointments",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
     )
     service_type = models.ForeignKey(
         "facilities.ServiceType", on_delete=models.PROTECT

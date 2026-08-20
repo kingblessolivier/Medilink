@@ -402,6 +402,39 @@ paths:
               schema:
                 $ref: '#/components/schemas/Patient'
           description: ''
+  /api/v1/me/delete:
+    delete:
+      operationId: me_delete_destroy
+      description: 'The right of erasure. Records are anonymised rather than deleted:
+        the facility keeps its attendance counts, which every other patient''s wait
+        estimate depends on, and you are no longer identifiable in them. This cannot
+        be undone.'
+      summary: Erase your account
+      tags:
+      - me
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/me/export:
+    get:
+      operationId: me_export_retrieve
+      description: The right of access under Rwanda Law 058/2021. Returns the profile,
+        appointment and queue history, and every message sent - in one document. Symptom-checker
+        answers are not included because they are never stored against an account.
+      summary: Export everything held about you
+      tags:
+      - me
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
   /api/v1/queue/board:
     get:
       operationId: queue_board_retrieve

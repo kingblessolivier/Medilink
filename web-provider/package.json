@@ -8,7 +8,8 @@
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
-    "gen:api": "openapi-typescript ../backend/schema.yaml -o src/api/schema.d.ts"
+    "gen:api": "openapi-typescript ../backend/schema.yaml -o src/api/schema.d.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.51.1",
@@ -25,6 +26,11 @@
     "postcss": "^8.4.41",
     "tailwindcss": "^3.4.10",
     "typescript": "^5.5.4",
-    "vite": "^5.4.1"
+    "vite": "^5.4.1",
+    "@testing-library/jest-dom": "^6.4.8",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.5.2",
+    "jsdom": "^24.1.1",
+    "vitest": "^2.0.5"
   }
 }

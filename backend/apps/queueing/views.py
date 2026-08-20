@@ -10,7 +10,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.facilities.models import ServiceType
+from apps.patients.audit import record as record_access
 from apps.patients.auth import IsPatient, current_patient
+from apps.patients.models import PatientAccessLog
 from apps.staff.permissions import IsFacilityStaff, IsQueueManager, active_staff
 
 from .models import QueueEntry
@@ -87,6 +89,13 @@ def check_in_view(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    record_access(
+        request,
+        action=PatientAccessLog.Action.CHECK_IN,
+        patient=entry.patient,
+        facility=staff.facility,
+    )
+
     body = QueueEntrySerializer(entry).data
     body.update(eta_for(entry))
     return Response(
@@ -111,6 +120,7 @@ def board(request):
         .select_related("service_type", "patient")
         .order_by("service_type__sort_order", "joined_at")
     )
+    entries = list(entries)
 
     grouped: dict[str, dict] = {}
     for entry in entries:
@@ -127,6 +137,15 @@ def board(request):
         )
         bucket = "waiting" if entry.status == QueueEntry.Status.WAITING else "called"
         group[bucket].append(QueueEntrySerializer(entry).data)
+
+    # A board render is a BULK read of every waiting patient. Recorded as one
+    # row with a count, so the signal is not drowned by per-patient noise.
+    record_access(
+        request,
+        action=PatientAccessLog.Action.BOARD,
+        facility=staff.facility,
+        record_count=len(entries),
+    )
 
     return Response(
         {
@@ -160,6 +179,13 @@ def transition(request, pk, action):
         handler(entry)
     except QueueError as exc:
         return _conflict(exc)
+
+    record_access(
+        request,
+        action=PatientAccessLog.Action.TRANSITION,
+        patient=entry.patient,
+        facility=entry.facility,
+    )
 
     if action == "call":
         # Best effort: a failed SMS must never fail the receptionist's action.
