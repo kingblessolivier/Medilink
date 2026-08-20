@@ -220,6 +220,51 @@ liability.
 **If any box is unticked, ship the product without the symptom checker.** The
 rest of MediLink delivers its value without it.
 
+### How this is enforced in code
+
+The checklist above is not trusted to a checklist. `apps/triage/gate.py` refuses
+to serve any triage endpoint unless **all four** of these are configured:
+
+```
+TRIAGE_PROTOCOL_VERSION    the exact version a clinician reviewed
+TRIAGE_APPROVED_BY         their name and registration number
+TRIAGE_APPROVED_ON         the date of sign-off
+TRIAGE_PROTOCOL_FILE       the file they reviewed
+```
+
+With any of them missing, `/triage/*` returns **503** and `/triage/status`
+reports `available: false` with a reason. That is the default in every
+environment, including production. A partial approval does not open the gate -
+it is somebody having forgotten a step.
+
+**No clinical protocol ships with the codebase.** What ships is the mechanism:
+a schema, a validator, a deterministic engine, and red-flag screening that can
+only escalate. The routing rules are a clinical artefact and are authored by a
+clinician. `apps/triage/protocols/README.md` describes what they need to
+produce; the example file carries a version that cannot match any approval, so
+it fails to load on purpose.
+
+Three safety properties are enforced by the engine rather than by protocol
+authors remembering them:
+
+1. **Red-flag questions are asked first**, before any routing question.
+2. **Escalation is one-way.** Nothing a patient answers afterwards can reverse
+   it.
+3. **Every option must lead somewhere** - escalate, recommend a service, or ask
+   another question. An option that does none is rejected at load time rather
+   than becoming a dead end in front of a patient.
+
+The recommendation is always a `ServiceType` code, never a condition name, and
+`manage.py check_triage_protocol` fails if a protocol routes to a service the
+facility directory does not have.
+
+Session answers live in Redis with a 30-minute TTL and are discarded the moment
+the flow ends. Only `TriageOutcome` persists, and it deliberately has no
+patient link, no session id and no answers - just protocol version, outcome,
+date and hour bucket. The hour bucket rather than a timestamp is so a row
+cannot be correlated with a queue check-in a minute later to re-identify
+somebody.
+
 ## 9. Third-party processors
 
 | Processor | Data shared | Location | Notes |

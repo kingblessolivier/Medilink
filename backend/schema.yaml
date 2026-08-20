@@ -607,8 +607,95 @@ paths:
               schema:
                 $ref: '#/components/schemas/StaffMe'
           description: ''
+  /api/v1/triage/sessions:
+    post:
+      operationId: triage_sessions_create
+      summary: Start a triage session
+      tags:
+      - triage
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriageSession'
+          description: ''
+  /api/v1/triage/sessions/{session_id}/answer:
+    post:
+      operationId: triage_sessions_answer_create
+      summary: Answer the current question
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - triage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Answer'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Answer'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Answer'
+        required: true
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriageSession'
+          description: ''
+  /api/v1/triage/status:
+    get:
+      operationId: triage_status_retrieve
+      description: Reports whether a clinician sign-off has been recorded. The client
+        must hide the symptom checker entirely when this returns available=false,
+        rather than showing a broken entry point.
+      summary: Whether the symptom checker is available
+      tags:
+      - triage
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriageStatus'
+          description: ''
 components:
   schemas:
+    Answer:
+      type: object
+      properties:
+        question:
+          type: string
+          maxLength: 64
+        option:
+          type: string
+          maxLength: 64
+      required:
+      - option
+      - question
     Appointment:
       type: object
       properties:
@@ -1638,6 +1725,102 @@ components:
       required:
       - access
       - refresh
+    Translation:
+      type: object
+      properties:
+        rw:
+          type: string
+        en:
+          type: string
+        fr:
+          type: string
+      required:
+      - en
+      - fr
+      - rw
+    TriageOption:
+      type: object
+      properties:
+        code:
+          type: string
+        text:
+          $ref: '#/components/schemas/Translation'
+      required:
+      - code
+      - text
+    TriageQuestion:
+      type: object
+      properties:
+        code:
+          type: string
+        red_flag:
+          type: boolean
+        text:
+          $ref: '#/components/schemas/Translation'
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/TriageOption'
+      required:
+      - code
+      - options
+      - red_flag
+      - text
+    TriageSession:
+      type: object
+      properties:
+        session_id:
+          type: string
+        protocol_version:
+          type: string
+        approved_by:
+          type: string
+        disclaimer:
+          $ref: '#/components/schemas/Translation'
+        escalate_emergency:
+          type: boolean
+        emergency_advice:
+          allOf:
+          - $ref: '#/components/schemas/Translation'
+          nullable: true
+        recommendation:
+          type: string
+          nullable: true
+        finished:
+          type: boolean
+        next_question:
+          allOf:
+          - $ref: '#/components/schemas/TriageQuestion'
+          nullable: true
+      required:
+      - approved_by
+      - disclaimer
+      - emergency_advice
+      - escalate_emergency
+      - finished
+      - next_question
+      - protocol_version
+      - recommendation
+      - session_id
+    TriageStatus:
+      type: object
+      properties:
+        available:
+          type: boolean
+        protocol_version:
+          type: string
+        approved_by:
+          type: string
+        approved_on:
+          type: string
+        reason:
+          type: string
+      required:
+      - approved_by
+      - approved_on
+      - available
+      - protocol_version
+      - reason
     TypeEnum:
       enum:
       - check_in

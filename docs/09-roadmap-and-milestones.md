@@ -180,10 +180,32 @@ approved template messages.
 
 **Goal:** reduce unnecessary referrals to major hospitals.
 
-**Do not start this phase until every checkbox in section 8 of
-[08-security-and-compliance.md](08-security-and-compliance.md) can be ticked** -
-in particular clinician sign-off and regulator consultation. If they cannot, the
-product ships without it, and loses nothing essential.
+**Status: the engineering is done and the feature is switched off.**
+
+The engine, protocol schema, validator and API all exist. Every endpoint returns
+503 because `apps/triage/gate.py` requires a recorded clinician sign-off, and
+none exists. That is the intended state, not an unfinished one.
+
+**No clinical protocol ships with the codebase.** Routing rules are a clinical
+artefact; a licensed clinician authors them against the schema in
+`apps/triage/protocols/README.md`, and validates with:
+
+```bash
+python manage.py check_triage_protocol <file>
+```
+
+Structural validation is not clinical review. What remains before this can be
+turned on is entirely human work:
+
+- [ ] A clinician authors a protocol from a published, citable triage protocol
+- [ ] A licensed clinician reviews and signs off that specific version
+- [ ] Ministry of Health and Rwanda FDA consulted on classification
+- [ ] Disclaimer wording reviewed in all three languages
+- [ ] The four `TRIAGE_*` settings configured with the sign-off record
+
+If those cannot be completed, the product ships without a symptom checker and
+loses nothing essential. That is the recommended outcome unless there is a
+clinician actively on the team.
 
 ## 7. Scaling beyond the pilot
 
