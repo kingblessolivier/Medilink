@@ -1,0 +1,134 @@
+/**
+ * MediLink design system - base layer and component classes.
+ *
+ * Imported by both apps after @tailwind base/components.
+ *
+ * Component classes live here rather than as React props because the provider
+ * app renders dense tables where a `className` string is easier to read than
+ * a wrapper component per cell. Anything with behaviour is a React component;
+ * anything purely visual is a class.
+ */
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-canvas text-ink font-sans text-body antialiased;
+    /* Tabular figures everywhere: queue positions, times, distances and
+       counts must not shift width as they tick. */
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1 { @apply text-h1 font-semibold text-ink; }
+  h2 { @apply text-h2 font-semibold text-ink; }
+  h3 { @apply text-h3 font-semibold text-ink; }
+
+  /* Visible focus is an accessibility requirement here, not a preference:
+     a meaningful share of users navigate by keyboard, and reception staff
+     work this product without touching the mouse. */
+  :focus-visible {
+    @apply outline-none shadow-focus rounded;
+  }
+
+  /* Respect a user who has asked the OS for less motion. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  ::placeholder { @apply text-ink-subtle; }
+}
+
+@layer components {
+  /* ---------------------------------------------------------------- layout */
+
+  .ml-page { @apply mx-auto w-full max-w-content px-4 sm:px-6; }
+
+  /* A plain section divider. Reached for BEFORE a card - most groupings need
+     separation, not elevation. */
+  .ml-section { @apply border-t border-line pt-6 mt-6; }
+
+  .ml-label {
+    @apply text-caption font-medium uppercase tracking-wide text-ink-subtle;
+  }
+
+  /* ---------------------------------------------------------------- surface */
+
+  /* Used for facilities, doctors, appointments and summaries only.
+     Everything else is a list, a table or a section. */
+  .ml-card {
+    @apply rounded-xl border border-line bg-surface;
+  }
+
+  .ml-card-interactive {
+    @apply ml-card transition-colors hover:border-line-strong hover:bg-surface-sunken/40;
+  }
+
+  /* ---------------------------------------------------------------- buttons */
+
+  .ml-btn {
+    @apply inline-flex min-h-touch items-center justify-center gap-2 rounded-md
+           px-4 text-body font-medium transition-colors
+           disabled:cursor-not-allowed disabled:opacity-45;
+  }
+  .ml-btn-primary {
+    @apply ml-btn bg-primary text-white hover:bg-primary-hover active:bg-primary-active;
+  }
+  .ml-btn-secondary {
+    @apply ml-btn border border-line-strong bg-surface text-ink hover:bg-surface-sunken;
+  }
+  .ml-btn-tertiary {
+    @apply ml-btn text-primary hover:bg-primary-subtle;
+  }
+  .ml-btn-destructive {
+    @apply ml-btn border border-danger-border bg-surface text-danger hover:bg-danger-subtle;
+  }
+  .ml-btn-sm { @apply min-h-0 h-9 px-3 text-small; }
+  .ml-btn-icon { @apply min-h-touch w-touch px-0; }
+
+  /* ----------------------------------------------------------------- inputs */
+
+  .ml-field {
+    @apply min-h-touch w-full rounded-md border border-line-strong bg-surface
+           px-3 text-body text-ink transition-colors
+           hover:border-ink-subtle focus:border-primary;
+  }
+  .ml-field-invalid { @apply border-danger hover:border-danger; }
+
+  /* ----------------------------------------------------------------- status */
+
+  /* Pill shape is reserved for status: the shape itself says "this is a
+     state, not an action". Every variant pairs a colour with a WORD - status
+     is never communicated by colour alone. */
+  .ml-chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5
+           text-caption font-medium whitespace-nowrap;
+  }
+  .ml-chip-success { @apply ml-chip border-success-border bg-success-subtle text-success; }
+  .ml-chip-warning { @apply ml-chip border-warning-border bg-warning-subtle text-warning; }
+  .ml-chip-danger  { @apply ml-chip border-danger-border  bg-danger-subtle  text-danger; }
+  .ml-chip-info    { @apply ml-chip border-info-border    bg-info-subtle    text-info; }
+  .ml-chip-neutral { @apply ml-chip border-line bg-surface-sunken text-ink-muted; }
+  /* Unknown data. The quietest chip in the system, on purpose. */
+  .ml-chip-unknown { @apply ml-chip border-unknown-border bg-unknown-subtle text-unknown; }
+
+  /* ----------------------------------------------------------------- tables */
+
+  .ml-table { @apply w-full border-collapse text-body; }
+  .ml-table thead th {
+    @apply border-b border-line bg-surface-sunken px-3 py-2 text-left
+           text-caption font-medium uppercase tracking-wide text-ink-subtle;
+  }
+  .ml-table tbody td { @apply border-b border-line px-3 py-3 align-middle; }
+  .ml-table tbody tr:last-child td { @apply border-b-0; }
+  .ml-table tbody tr[data-selected="true"] { @apply bg-primary-subtle; }
+
+  /* --------------------------------------------------------------- skeleton */
+
+  .ml-skeleton { @apply animate-pulse rounded bg-surface-sunken; }
+}

@@ -93,5 +93,12 @@
   "nav_home": "Home",
   "nav_facilities": "Facilities",
   "nav_visits": "Visits",
-  "nav_profile": "Profile"
+  "nav_profile": "Profile",
+  "open": "Open now",
+  "view_facility": "View",
+  "tagline": "Know before you go",
+  "your_queue": "Your queue",
+  "next_appointment": "Next appointment",
+  "no_results_body": "Try changing your district or insurance filter.",
+  "change_filters": "Change filters"
 }
