@@ -136,5 +136,22 @@
   "compare_wait": "Wait",
   "compare_district": "Location",
   "compare_add_more": "You can add {n} more.",
-  "remove": "Remove"
+  "remove": "Remove",
+  "tab_overview": "Overview",
+  "tab_services": "Services",
+  "tab_doctors": "Doctors",
+  "tab_insurance": "Insurance",
+  "current_status": "Current status",
+  "facility_information": "Facility information",
+  "address": "Address",
+  "phone": "Phone",
+  "no_services_listed": "No services listed yet.",
+  "no_doctors_listed": "No doctors listed yet.",
+  "no_doctors_listed_body": "This facility has not registered its doctors on MediLink yet.",
+  "no_insurers_listed": "No insurance information yet.",
+  "insurance_disclaimer": "This is what the facility told us it accepts. It does not confirm that your own cover is active - check with them before you travel.",
+  "coverage_full": "Covered",
+  "coverage_partial": "Partly covered",
+  "coverage_none": "Not covered",
+  "coverage_unknown": "Not confirmed"
 }

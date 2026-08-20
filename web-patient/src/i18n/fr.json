@@ -136,5 +136,22 @@
   "compare_wait": "Attente",
   "compare_district": "Localisation",
   "compare_add_more": "Vous pouvez en ajouter {n}.",
-  "remove": "Retirer"
+  "remove": "Retirer",
+  "tab_overview": "Apercu",
+  "tab_services": "Services",
+  "tab_doctors": "Medecins",
+  "tab_insurance": "Assurance",
+  "current_status": "Statut actuel",
+  "facility_information": "Informations",
+  "address": "Adresse",
+  "phone": "Telephone",
+  "no_services_listed": "Aucun service liste.",
+  "no_doctors_listed": "Aucun medecin liste.",
+  "no_doctors_listed_body": "Ce centre n'a pas encore enregistre ses medecins.",
+  "no_insurers_listed": "Aucune information d'assurance.",
+  "insurance_disclaimer": "Voici ce que le centre declare accepter. Cela ne confirme pas que votre couverture est active - verifiez avant de vous deplacer.",
+  "coverage_full": "Couvert",
+  "coverage_partial": "Partiellement",
+  "coverage_none": "Non couvert",
+  "coverage_unknown": "Non confirme"
 }
