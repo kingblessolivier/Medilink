@@ -4,8 +4,8 @@ from . import views
 
 urlpatterns = [
     path("facilities/<slug:slug>/slots", views.slots, name="facility-slots"),
-    path("appointments", views.list_appointments, name="appointment-list"),
-    path("appointments/create", views.create_appointment, name="appointment-create"),
+    # GET lists, POST books - one path, as docs/03 specifies.
+    path("appointments", views.appointments, name="appointments"),
     path(
         "appointments/<int:pk>/cancel",
         views.cancel_appointment,

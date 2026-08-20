@@ -90,10 +90,27 @@ def otp_verify(request):
     responses=PatientSerializer,
     methods=["PATCH"],
 )
-@api_view(["GET", "PATCH"])
+@extend_schema(
+    summary="Erase your account",
+    description=(
+        "The right of erasure. Records are anonymised rather than deleted: the "
+        "facility keeps its attendance counts, which every other patient's "
+        "wait estimate depends on, and you are no longer identifiable in them. "
+        "This cannot be undone."
+    ),
+    responses={204: None},
+    methods=["DELETE"],
+)
+@api_view(["GET", "PATCH", "DELETE"])
 @permission_classes([IsPatient])
 def me(request):
     patient = current_patient(request)
+
+    if request.method == "DELETE":
+        # Logged BEFORE anonymising, while the link still exists to log.
+        record_access(request, action=PatientAccessLog.Action.ERASE, patient=patient)
+        privacy.anonymise(patient)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     if request.method == "PATCH":
         serializer = PatientSerializer(patient, data=request.data, partial=True)
@@ -127,23 +144,3 @@ def export_me(request):
     # Offered as a download rather than a wall of JSON in a phone browser.
     response["Content-Disposition"] = 'attachment; filename="medilink-my-data.json"'
     return response
-
-
-@extend_schema(
-    summary="Erase your account",
-    description=(
-        "The right of erasure. Records are anonymised rather than deleted: the "
-        "facility keeps its attendance counts, which every other patient's "
-        "wait estimate depends on, and you are no longer identifiable in them. "
-        "This cannot be undone."
-    ),
-    responses={204: None},
-)
-@api_view(["DELETE"])
-@permission_classes([IsPatient])
-def delete_me(request):
-    patient = current_patient(request)
-    # Logged BEFORE anonymising, while the link still exists to log.
-    record_access(request, action=PatientAccessLog.Action.ERASE, patient=patient)
-    privacy.anonymise(patient)
-    return Response(status=status.HTTP_204_NO_CONTENT)

@@ -7,7 +7,10 @@ paths:
   /api/v1/appointments:
     get:
       operationId: appointments_list
-      summary: The signed-in patient's appointments
+      description: |-
+        One path, dispatched on method - the conventional shape, and the one
+        docs/03 specifies.
+      summary: List your appointments
       parameters:
       - in: query
         name: status
@@ -29,32 +32,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/Appointment'
           description: ''
-  /api/v1/appointments/{id}/cancel:
     post:
-      operationId: appointments_cancel_create
-      summary: Cancel an appointment
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - appointments
-      security:
-      - patientJWT: []
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Appointment'
-          description: ''
-  /api/v1/appointments/create:
-    post:
-      operationId: appointments_create_create
+      operationId: appointments_create
+      description: |-
+        One path, dispatched on method - the conventional shape, and the one
+        docs/03 specifies.
       summary: Book an appointment
       tags:
       - appointments
@@ -70,6 +52,29 @@ paths:
             schema:
               $ref: '#/components/schemas/Booking'
         required: true
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+          description: ''
+  /api/v1/appointments/{id}/cancel:
+    post:
+      operationId: appointments_cancel_create
+      summary: Cancel an appointment
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - appointments
       security:
       - patientJWT: []
       - jwtAuth: []
@@ -402,9 +407,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Patient'
           description: ''
-  /api/v1/me/delete:
     delete:
-      operationId: me_delete_destroy
+      operationId: me_destroy
       description: 'The right of erasure. Records are anonymised rather than deleted:
         the facility keeps its attendance counts, which every other patient''s wait
         estimate depends on, and you are no longer identifiable in them. This cannot

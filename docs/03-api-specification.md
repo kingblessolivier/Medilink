@@ -405,25 +405,47 @@ patient sees a blank screen. Details in
 
 ## 10. Endpoint summary
 
+Every endpoint below exists. Generated from `backend/schema.yaml`, which CI
+regenerates and diffs, so this table cannot drift from the code without the
+build failing.
+
 | Method | Path | Auth | Phase |
 |---|---|---|---|
 | GET | `/facilities/nearby` | none | 0 |
 | GET | `/facilities/{slug}` | none | 0 |
-| GET | `/facilities/{slug}/slots` | none | 2 |
 | GET | `/insurers` | none | 0 |
 | GET | `/service-types` | none | 0 |
+| GET | `/districts` | none | 0 |
+| POST | `/auth/token` | none | 1 |
+| POST | `/auth/token/refresh` | none | 1 |
+| GET | `/staff/me` | staff | 1 |
+| POST | `/queue/entries` | staff | 1 |
+| GET | `/queue/board` | staff | 1 |
+| POST | `/queue/entries/{id}/{call\|serve\|skip\|cancel}` | staff | 1 |
+| POST | `/queue/sync` | staff | 1 |
+| GET | `/queue/entries/{id}` | patient or staff, scoped | 1 |
 | POST | `/auth/otp/request` | none | 2 |
 | POST | `/auth/otp/verify` | none | 2 |
-| POST | `/appointments` | patient | 2 |
+| GET | `/facilities/{slug}/slots` | none | 2 |
 | GET | `/appointments` | patient | 2 |
+| POST | `/appointments` | patient | 2 |
 | POST | `/appointments/{id}/cancel` | patient | 2 |
-| POST | `/queue/entries` | staff | 1 |
-| GET | `/queue/entries/{id}` | patient/staff | 1 |
 | GET | `/queue/current` | patient | 2 |
-| GET | `/queue/board` | staff | 1 |
-| POST | `/queue/entries/{id}/call\|serve\|skip\|cancel` | staff | 1 |
-| POST | `/queue/sync` | staff | 1 |
-| GET/PATCH | `/me` | patient | 2 |
-| POST | `/gateway/ussd` | secret | 3 |
-| POST | `/gateway/whatsapp` | HMAC | 3 |
+| GET | `/me` | patient | 2 |
+| PATCH | `/me` | patient | 2 |
+| DELETE | `/me` | patient | compliance |
+| GET | `/me/export` | patient | compliance |
+| POST | `/gateway/ussd` | shared secret + IP | 3 |
+| GET | `/gateway/whatsapp` | verify token | 3 |
+| POST | `/gateway/whatsapp` | HMAC signature | 3 |
+| GET | `/triage/status` | none | 4 |
 | POST | `/triage/sessions` | none | 4 |
+| POST | `/triage/sessions/{id}/answer` | none | 4 |
+
+**The triage endpoints return 503** unless a clinician sign-off is configured.
+That is the default in every environment. See
+[08-security-and-compliance.md](08-security-and-compliance.md) section 8.
+
+`DELETE /me` anonymises rather than deletes: the facility keeps its attendance
+counts, which every other patient's wait estimate depends on, and the person is
+no longer identifiable in them.

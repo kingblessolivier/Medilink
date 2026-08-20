@@ -11,10 +11,19 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** The signed-in patient's appointments */
+        /**
+         * List your appointments
+         * @description One path, dispatched on method - the conventional shape, and the one
+         *     docs/03 specifies.
+         */
         get: operations["appointments_list"];
         put?: never;
-        post?: never;
+        /**
+         * Book an appointment
+         * @description One path, dispatched on method - the conventional shape, and the one
+         *     docs/03 specifies.
+         */
+        post: operations["appointments_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -32,23 +41,6 @@ export interface paths {
         put?: never;
         /** Cancel an appointment */
         post: operations["appointments_cancel_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/appointments/create": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Book an appointment */
-        post: operations["appointments_create_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -238,31 +230,15 @@ export interface paths {
         get: operations["me_retrieve"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update the signed-in patient */
-        patch: operations["me_partial_update"];
-        trace?: never;
-    };
-    "/api/v1/me/delete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
         /**
          * Erase your account
          * @description The right of erasure. Records are anonymised rather than deleted: the facility keeps its attendance counts, which every other patient's wait estimate depends on, and you are no longer identifiable in them. This cannot be undone.
          */
-        delete: operations["me_delete_destroy"];
+        delete: operations["me_destroy"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Update the signed-in patient */
+        patch: operations["me_partial_update"];
         trace?: never;
     };
     "/api/v1/me/export": {
@@ -1013,28 +989,7 @@ export interface operations {
             };
         };
     };
-    appointments_cancel_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Appointment"];
-                };
-            };
-        };
-    };
-    appointments_create_create: {
+    appointments_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -1048,6 +1003,27 @@ export interface operations {
                 "multipart/form-data": components["schemas"]["Booking"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Appointment"];
+                };
+            };
+        };
+    };
+    appointments_cancel_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -1292,6 +1268,24 @@ export interface operations {
             };
         };
     };
+    me_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     me_partial_update: {
         parameters: {
             query?: never;
@@ -1314,24 +1308,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Patient"];
                 };
-            };
-        };
-    };
-    me_delete_destroy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };

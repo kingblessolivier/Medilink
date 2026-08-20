@@ -180,7 +180,7 @@ export const api = {
     request<Appointment[]>("/appointments", { params: { status } }),
 
   book: (payload: { facility: string; service: string; slot_start: string }) =>
-    request<Appointment>("/appointments/create", {
+    request<Appointment>("/appointments", {
       method: "POST",
       body: payload,
     }),

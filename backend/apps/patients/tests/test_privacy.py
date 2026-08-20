@@ -24,7 +24,7 @@ from apps.scheduling.models import Appointment
 from apps.staff.models import StaffMember
 
 EXPORT = "/api/v1/me/export"
-DELETE = "/api/v1/me/delete"
+DELETE = "/api/v1/me"
 
 
 @pytest.fixture
