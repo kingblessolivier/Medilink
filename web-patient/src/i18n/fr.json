@@ -93,5 +93,12 @@
   "nav_home": "Accueil",
   "nav_facilities": "Centres",
   "nav_visits": "Visites",
-  "nav_profile": "Profil"
+  "nav_profile": "Profil",
+  "open": "Ouvert",
+  "view_facility": "Voir",
+  "tagline": "Sachez avant de partir",
+  "your_queue": "Votre file",
+  "next_appointment": "Prochain rendez-vous",
+  "no_results_body": "Essayez un autre district ou une autre assurance.",
+  "change_filters": "Modifier"
 }

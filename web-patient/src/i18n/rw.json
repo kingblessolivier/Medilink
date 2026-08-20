@@ -93,5 +93,12 @@
   "nav_home": "Ahabanza",
   "nav_facilities": "Amavuriro",
   "nav_visits": "Ingendo",
-  "nav_profile": "Umwirondoro"
+  "nav_profile": "Umwirondoro",
+  "open": "Bifunguye",
+  "view_facility": "Reba ivuriro",
+  "tagline": "Menya mbere yo kugenda",
+  "your_queue": "Umurongo wawe",
+  "next_appointment": "Gahunda itaha",
+  "no_results_body": "Gerageza guhindura akarere cyangwa ubwishingizi.",
+  "change_filters": "Hindura"
 }
