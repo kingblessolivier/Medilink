@@ -1,0 +1,101 @@
+# Production topology.
+#
+# Read docs/08 section 2 BEFORE deploying this anywhere. Rwanda's Law
+# N° 058/2021 restricts transferring personal data outside the country, and
+# MediLink holds health data about identifiable people. Choosing a host is a
+# legal decision, not only a latency one - and moving production health data
+# later is the most expensive rework there is.
+#
+# Required in .env.prod (never commit it):
+#   SECRET_KEY, ALLOWED_HOSTS, DATABASE_URL, REDIS_URL,
+#   SMS_BACKEND (a real gateway - not the console one, prod.py refuses it),
+#   USSD_SHARED_SECRET, WA_APP_SECRET, WA_VERIFY_TOKEN,
+#   NATIONAL_ID_PEPPER
+#
+#   docker compose -f infra/docker-compose.prod.yml --env-file .env.prod up -d
+
+x-backend: &backend
+  build:
+    context: ../backend
+    dockerfile: Dockerfile
+  image: medilink-backend:latest
+  environment:
+    DJANGO_SETTINGS_MODULE: config.settings.prod
+  env_file: [../.env.prod]
+  depends_on:
+    db: {condition: service_healthy}
+    redis: {condition: service_healthy}
+  restart: unless-stopped
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    env_file: [../.env.prod]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Backups are written here; see the note at the bottom of this file.
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 10s
+      retries: 10
+    restart: unless-stopped
+    # Not published. Only the compose network reaches the database.
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    <<: *backend
+    # Two workers per core is the usual starting point; this is a small VM.
+    # --timeout 30 because no request here should legitimately take longer,
+    # and a stuck worker must not hold a reception desk.
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn config.wsgi:application
+               --bind 0.0.0.0:8000
+               --workers 3
+               --timeout 30
+               --access-logfile -
+               --error-logfile -"
+    volumes: [static:/app/staticfiles]
+    expose: ["8000"]
+
+  worker:
+    <<: *backend
+    command: ["celery", "-A", "config", "worker", "--loglevel=info"]
+
+  beat:
+    <<: *backend
+    # Sends the leave-now nudges and appointment reminders. If this is not
+    # running, patients are never told to set off - which is the whole product.
+    # Alert on it.
+    command: ["celery", "-A", "config", "beat", "--loglevel=info"]
+
+  web:
+    image: nginx:1.27-alpine
+    depends_on: [api]
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - static:/var/www/static:ro
+      - ./certs:/etc/nginx/certs:ro
+      # Built frontends are copied here by the deploy step.
+      - ./www:/var/www/html:ro
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
+  static:
+# Backups are NOT configured here on purpose - an untested backup is not a
+# backup (docs/08 section 5). Set up an encrypted pg_dump to off-box storage
+# and REHEARSE THE RESTORE monthly before this carries real patient data.

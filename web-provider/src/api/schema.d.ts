@@ -245,6 +245,46 @@ export interface paths {
         patch: operations["me_partial_update"];
         trace?: never;
     };
+    "/api/v1/me/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Erase your account
+         * @description The right of erasure. Records are anonymised rather than deleted: the facility keeps its attendance counts, which every other patient's wait estimate depends on, and you are no longer identifiable in them. This cannot be undone.
+         */
+        delete: operations["me_delete_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export everything held about you
+         * @description The right of access under Rwanda Law 058/2021. Returns the profile, appointment and queue history, and every message sent - in one document. Symptom-checker answers are not included because they are never stored against an account.
+         */
+        get: operations["me_export_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/queue/board": {
         parameters: {
             query?: never;
@@ -1274,6 +1314,42 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Patient"];
                 };
+            };
+        };
+    };
+    me_delete_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    me_export_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -101,3 +101,62 @@ class OTPCode(models.Model):
 
     def __str__(self) -> str:
         return f"OTP for {self.phone} ({'used' if self.consumed_at else 'open'})"
+
+
+class PatientAccessLog(models.Model):
+    """Who looked at whose record, and when.
+
+    docs/08 section 6: every read and write of an identifiable patient record
+    must be attributable. This table is what surfaces the anomaly that matters -
+    a receptionist viewing hundreds of records outside their shift.
+
+    `patient` is nullable because a queue board is a BULK read: one row records
+    that a staff member listed N patients at once, rather than N rows. Logging
+    each would drown the signal in noise, and the board is rendered constantly.
+    """
+
+    class Action(models.TextChoices):
+        BOARD = "board", "Viewed queue board"
+        VIEW = "view", "Viewed a patient record"
+        CHECK_IN = "check_in", "Checked a patient in"
+        TRANSITION = "transition", "Changed a queue entry"
+        UPDATE = "update", "Updated a patient record"
+        EXPORT = "export", "Exported own data"
+        ERASE = "erase", "Erased own data"
+
+    actor = models.ForeignKey(
+        "auth.User", null=True, blank=True, on_delete=models.SET_NULL
+    )
+    # Set when the patient acted on their own record rather than a staff member.
+    acting_patient = models.ForeignKey(
+        "patients.Patient",
+        null=True,
+        blank=True,
+        related_name="own_access_logs",
+        on_delete=models.SET_NULL,
+    )
+    patient = models.ForeignKey(
+        Patient,
+        null=True,
+        blank=True,
+        related_name="access_logs",
+        on_delete=models.SET_NULL,
+    )
+    facility = models.ForeignKey(
+        "facilities.Facility", null=True, blank=True, on_delete=models.SET_NULL
+    )
+    action = models.CharField(max_length=12, choices=Action.choices)
+    record_count = models.PositiveIntegerField(default=1)
+    occurred_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-occurred_at"]
+        indexes = [
+            models.Index(fields=["actor", "occurred_at"], name="access_actor_idx"),
+            models.Index(fields=["patient", "occurred_at"], name="access_patient_idx"),
+        ]
+
+    def __str__(self) -> str:
+        who = self.actor or self.acting_patient or "anonymous"
+        return f"{who} {self.action} ({self.record_count}) at {self.occurred_at}"

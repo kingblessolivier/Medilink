@@ -106,7 +106,9 @@ the build order in [docs/09-roadmap-and-milestones.md](docs/09-roadmap-and-miles
 | WhatsApp Business verification + template approval | Business | 2-6 weeks |
 | On-site capture of facility coordinates | Field team | Weeks |
 | Pilot facility: 5 unaided days + stopwatch baseline | Field team | Weeks |
-| GitHub Actions billing (CI cannot run) | Repo owner | - |
+| GitHub Actions billing (CI has never run) | Repo owner | - |
+| Hosting location lawful for Rwandan health data | Repo owner | Decide **before** deploying |
+| Encrypted backup with a rehearsed restore | Repo owner | Before real data |
 
 The USSD code runs against any Africa's Talking-compatible aggregator today,
 including their sandbox. It cannot reach a real handset without a shortcode,
@@ -153,6 +155,24 @@ curl localhost:8000/api/v1/triage/status
 
 The patient app must hide the entry point entirely when `available` is false,
 rather than showing a button that errors.
+
+### Deploying
+
+`infra/docker-compose.prod.yml` and `infra/deploy.sh` exist but have **never
+been run** - there is no server to run them against yet.
+
+```bash
+cp backend/.env.example .env.prod   # then fill it in properly
+./infra/deploy.sh
+```
+
+Read [docs/08 §2](docs/08-security-and-compliance.md) first. Where this is
+hosted is a legal question under Law 058/2021, not only a latency one, and
+migrating production health data later is the most expensive rework there is.
+
+Two things the deploy script prints and means: **if `beat` is not running,
+nobody is ever told to leave home**, which is the entire product; and an
+untested backup is not a backup.
 
 ### Notifications in development
 
