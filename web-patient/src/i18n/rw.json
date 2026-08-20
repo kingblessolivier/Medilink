@@ -136,5 +136,22 @@
   "compare_wait": "Gutegereza",
   "compare_district": "Aho biherereye",
   "compare_add_more": "Ushobora kongeraho {n}.",
-  "remove": "Kuraho"
+  "remove": "Kuraho",
+  "tab_overview": "Incamake",
+  "tab_services": "Serivisi",
+  "tab_doctors": "Abaganga",
+  "tab_insurance": "Ubwishingizi",
+  "current_status": "Uko bimeze ubu",
+  "facility_information": "Amakuru y'ivuriro",
+  "address": "Aderesi",
+  "phone": "Telefone",
+  "no_services_listed": "Nta serivisi zanditse.",
+  "no_doctors_listed": "Nta baganga banditse.",
+  "no_doctors_listed_body": "Ivuriro riracyandika abaganga baryo.",
+  "no_insurers_listed": "Nta bwishingizi bwanditse.",
+  "insurance_disclaimer": "Ibi ni ibyo ivuriro ryatangaje. Ntibisobanura ko ubwishingizi bwawe bukora. Banza ubaze.",
+  "coverage_full": "Bwose",
+  "coverage_partial": "Igice",
+  "coverage_none": "Ntibwemewe",
+  "coverage_unknown": "Ntibiremezwa"
 }

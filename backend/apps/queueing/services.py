@@ -401,3 +401,90 @@ def wait_snapshot(facilities, service_code=None, now=None) -> dict:
         }
 
     return snapshot
+
+
+def facility_service_waits(facility, now=None, services=None) -> dict:
+    """Wait status per service AT one facility.
+
+    The facility page shows a live status line for each service, so the
+    facility-level `wait_snapshot` is the wrong shape: it answers "how busy is
+    this place" when the patient is asking "how busy is the thing I need".
+
+    Same four statuses, same sample-size gate, same refusal to guess. Returns
+    {service_code: wait dict} covering every available service, so a service
+    with no queue data still gets an honest `not_reported` rather than being
+    quietly dropped from the list.
+    """
+    now = now or timezone.localtime()
+    stamp = now.isoformat()
+
+    # Callers that already prefetched services pass them in; adding
+    # select_related here would re-query and throw that prefetch away. Callers
+    # that did not must get select_related, or reading `fs.service_type` is one
+    # query per service - the exact N+1 this function exists to avoid.
+    if services is None:
+        services = [
+            fs.service_type
+            for fs in facility.services.select_related("service_type")
+            if fs.available
+        ]
+    if not services:
+        return {}
+
+    from apps.facilities.services import is_open_now
+
+    is_open = getattr(facility, "is_open", None)
+    if is_open is None:
+        is_open = is_open_now(facility, now)
+
+    def unknown(status):
+        return {
+            "status": status,
+            "minutes": None,
+            "people_waiting": None,
+            "as_of": stamp,
+        }
+
+    if not is_open:
+        return {s.code: unknown(STATUS_CLOSED) for s in services}
+    if not facility.reports_queue:
+        return {s.code: unknown(STATUS_NOT_REPORTED) for s in services}
+
+    # One query for the counts, one for the statistics - not one pair per
+    # service. A referral hospital offers a dozen services.
+    counts = {
+        row["service_type_id"]: row["n"]
+        for row in QueueEntry.objects.filter(
+            facility=facility, status=QueueEntry.Status.WAITING
+        )
+        .values("service_type_id")
+        .annotate(n=Count("id"))
+    }
+    stats = {
+        s.service_type_id: s
+        for s in ServiceTimeStat.objects.filter(
+            facility=facility,
+            service_type__in=services,
+            hour_of_day=now.hour,
+        )
+    }
+
+    result = {}
+    for service in services:
+        waiting = counts.get(service.id, 0)
+        stat = stats.get(service.id)
+
+        if stat is None or stat.sample_size < settings.MIN_SERVICE_TIME_SAMPLES:
+            entry = unknown(STATUS_INSUFFICIENT_DATA)
+            entry["people_waiting"] = waiting
+            result[service.code] = entry
+            continue
+
+        result[service.code] = {
+            "status": STATUS_AVAILABLE,
+            "minutes": round(waiting * stat.median_minutes),
+            "people_waiting": waiting,
+            "as_of": stamp,
+        }
+
+    return result

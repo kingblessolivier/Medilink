@@ -88,13 +88,33 @@ def nearby(request):
 def facility_detail(request, slug):
     facility = get_object_or_404(
         Facility.objects.filter(verified_at__isnull=False).prefetch_related(
-            "insurers__insurer", "services__service_type", "opening_hours"
+            "insurers__insurer",
+            "services__service_type",
+            "services__insurer_coverage__insurer",
+            "opening_hours",
         ),
         slug=slug,
     )
-    waits = wait_snapshot([facility])
+
+    from apps.queueing.services import facility_service_waits
+
     return Response(
-        FacilityDetailSerializer(facility, context={"waits": waits}).data
+        FacilityDetailSerializer(
+            facility,
+            context={
+                "waits": wait_snapshot([facility]),
+                "service_waits": facility_service_waits(
+                    facility,
+                    # Already prefetched above; passing them avoids a
+                    # second round trip for the same rows.
+                    services=[
+                        fs.service_type
+                        for fs in facility.services.all()
+                        if fs.available
+                    ],
+                ),
+            },
+        ).data
     )
 
 

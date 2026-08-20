@@ -74,11 +74,13 @@ class InsurerBriefSerializer(serializers.Serializer):
     note = serializers.CharField(allow_blank=True)
 
 
-class ServiceBriefSerializer(serializers.Serializer):
-    code = serializers.CharField()
-    name_rw = serializers.CharField()
-    name_en = serializers.CharField()
-    name_fr = serializers.CharField()
+class ServiceCoverageSerializer(serializers.Serializer):
+    insurer = serializers.CharField()
+    insurer_name = serializers.CharField()
+    # full | partial | not_covered | unknown. Defaults to unknown, and an
+    # unconfirmed row reads as unknown however it was entered.
+    coverage = serializers.CharField()
+    note = serializers.CharField(allow_blank=True)
 
 
 class WaitSerializer(serializers.Serializer):
@@ -88,12 +90,25 @@ class WaitSerializer(serializers.Serializer):
     TypeScript client gets a closed union and a client that forgets to
     handle one of the four states fails to compile. There is deliberately
     no value meaning "estimated" - we never guess a wait time.
+
+    Defined above ServiceBriefSerializer because that one embeds it.
     """
 
     status = serializers.ChoiceField(choices=ALL_STATUSES)
     minutes = serializers.IntegerField(allow_null=True)
     people_waiting = serializers.IntegerField(allow_null=True)
     as_of = serializers.CharField()
+
+
+class ServiceBriefSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    name_rw = serializers.CharField()
+    name_en = serializers.CharField()
+    name_fr = serializers.CharField()
+    # Per-service live status: "General consultation - 32 min" rather than one
+    # number for the whole hospital.
+    wait = WaitSerializer()
+    coverage = ServiceCoverageSerializer(many=True)
 
 
 class FacilityNearbySerializer(serializers.ModelSerializer):
@@ -234,12 +249,31 @@ class FacilityDetailSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(ServiceBriefSerializer(many=True))
     def get_services(self, obj) -> list:
+        waits = self.context.get("service_waits", {})
+        unknown = {
+            "status": "not_reported",
+            "minutes": None,
+            "people_waiting": None,
+            "as_of": "",
+        }
         return [
             {
                 "code": fs.service_type.code,
                 "name_rw": fs.service_type.name_rw,
                 "name_en": fs.service_type.name_en,
                 "name_fr": fs.service_type.name_fr,
+                "wait": waits.get(fs.service_type.code, unknown),
+                "coverage": [
+                    {
+                        "insurer": c.insurer.code,
+                        "insurer_name": c.insurer.name,
+                        # effective_coverage, not coverage: somebody part-way
+                        # through entering data must not publish a claim.
+                        "coverage": c.effective_coverage,
+                        "note": c.note,
+                    }
+                    for c in fs.insurer_coverage.all()
+                ],
             }
             for fs in obj.services.all()
             if fs.available

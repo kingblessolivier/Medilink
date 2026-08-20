@@ -1866,11 +1866,35 @@ components:
           type: string
         name_fr:
           type: string
+        wait:
+          $ref: '#/components/schemas/Wait'
+        coverage:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceCoverage'
       required:
       - code
+      - coverage
       - name_en
       - name_fr
       - name_rw
+      - wait
+    ServiceCoverage:
+      type: object
+      properties:
+        insurer:
+          type: string
+        insurer_name:
+          type: string
+        coverage:
+          type: string
+        note:
+          type: string
+      required:
+      - coverage
+      - insurer
+      - insurer_name
+      - note
     ServiceGroup:
       type: object
       properties:
@@ -2284,6 +2308,8 @@ components:
         TypeScript client gets a closed union and a client that forgets to
         handle one of the four states fails to compile. There is deliberately
         no value meaning "estimated" - we never guess a wait time.
+
+        Defined above ServiceBriefSerializer because that one embeds it.
       properties:
         status:
           $ref: '#/components/schemas/WaitStatusEnum'

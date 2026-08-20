@@ -310,14 +310,42 @@ The brief's highest priority, and the strongest screen in the product.
    Now `config/settings/test.py` disables throttling and uses a local-memory
    cache. Rate limits belong in tests that assert them explicitly.
 
-### R3 - Facility profile
+### R3 - Facility profile `IN PROGRESS`
 
-- [ ] Header: name, type, verified, open state, distance, book, directions
-- [ ] Tabs: Overview / Doctors / Services / Insurance / Appointments / Queue
-- [ ] Per-service live status, honouring the four wait states
-- [ ] Doctor list and profile
-- [ ] Service detail
-- [ ] Insurance tab with explicit `unknown` coverage
+- [x] Header: name, location, verified, open state, book, directions
+- [x] Tabs: Overview / Services / Doctors / Insurance / Opening hours
+- [x] **Per-service live status** - `facility_service_waits`, same four states
+      and the same sample gate as everywhere else
+- [x] **`FacilityServiceInsurer`** - gap 3 from section 3 is now closed
+- [x] Doctor list on the facility, using R1
+- [ ] Doctor profile page and the global doctors directory
+- [ ] Service detail page
+- [ ] Appointments and Queue tabs (they belong with R4)
+
+**Decisions worth keeping:**
+
+- **Coverage defaults to `unknown`, and an unconfirmed row publishes as
+  `unknown` whatever was entered.** Absence of data is not evidence of
+  coverage, and somebody part-way through data entry must not accidentally
+  publish a claim. A patient turned away at a counter because we implied
+  coverage is a real harm.
+- **No price, anywhere.** There is a test asserting the payload contains no
+  cost words at all. We hold no verified cost data and a wrong number is worse
+  than none.
+- **The insurance tab carries a disclaimer on every view**: this is what the
+  facility told us it accepts, not confirmation that your own cover is active.
+- **A service with no statistics is listed with `insufficient_data`**, never
+  dropped - dropping it would silently shorten the service list.
+- **Query-count tests assert shape, not a ceiling.** Instead of "at most N
+  queries", they measure the cost for two services and require it to be
+  identical for twelve. A ceiling breaks whenever a prefetch is added; the
+  shape is the property that actually matters.
+
+**A bug worth remembering:** removing `select_related("service_type")` to
+respect a caller's prefetch introduced an N+1 for every caller that had no
+prefetch. The fix is neither - `facility_service_waits` now takes the services
+as a parameter, so the caller that already has them passes them, and the caller
+that does not gets `select_related`.
 
 ### R4 - Booking and queue
 
@@ -414,3 +442,4 @@ them for visual convenience.
 | 2026-08-20 | R1 done: `providers` app, specialty-to-service mapping, 4 endpoints, `nearby?specialty=`, provider on templates and appointments. 414 backend tests, 92% coverage, 31 API operations. Journey verified live: specialty -> 3 facilities -> doctor. |
 | 2026-08-20 | R2 part 1: `/search` global endpoint (14 tests), Find Care with synchronised list and map, MapLibre lazy-loaded and excluded from precache (1329 KB -> 283 KB). Fixed duplicate facilities, missing markers, and an order-dependent test suite. 444 backend tests, 92% coverage. |
 | 2026-08-20 | R2 done: homepage discovery sections, search-as-you-type combobox with keyboard navigation, DoctorCard, compare, old list route retired. Care Guide entry points correctly hidden while the clinical gate is shut. 6 of 51 screens done. Patient bundle 88 KB gz. |
+| 2026-08-20 | R3 part 1: per-service wait status, FacilityServiceInsurer (gap 3 closed), facility profile with five tabs. 13 new tests. 457 backend tests, 92% coverage. Insurance verified live: green only where confirmed, grey (?) everywhere else. |

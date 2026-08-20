@@ -952,6 +952,14 @@ export interface components {
             name_rw: string;
             name_en: string;
             name_fr: string;
+            wait: components["schemas"]["Wait"];
+            coverage: components["schemas"]["ServiceCoverage"][];
+        };
+        ServiceCoverage: {
+            insurer: string;
+            insurer_name: string;
+            coverage: string;
+            note: string;
         };
         ServiceGroup: {
             service: string;
@@ -1108,6 +1116,8 @@ export interface components {
          *     TypeScript client gets a closed union and a client that forgets to
          *     handle one of the four states fails to compile. There is deliberately
          *     no value meaning "estimated" - we never guess a wait time.
+         *
+         *     Defined above ServiceBriefSerializer because that one embeds it.
          */
         Wait: {
             status: components["schemas"]["WaitStatusEnum"];
