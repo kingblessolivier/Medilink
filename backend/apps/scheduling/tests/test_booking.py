@@ -299,7 +299,7 @@ def test_booking_endpoint(api_client, facility, general, templates, patient):
     slot = tomorrow_at(8)
 
     response = api_client.post(
-        "/api/v1/appointments/create",
+        "/api/v1/appointments",
         {
             "facility": facility.slug,
             "service": general.code,
@@ -328,7 +328,7 @@ def test_booking_a_taken_slot_returns_409(
     authed(api_client, third)
 
     response = api_client.post(
-        "/api/v1/appointments/create",
+        "/api/v1/appointments",
         {
             "facility": facility.slug,
             "service": general.code,

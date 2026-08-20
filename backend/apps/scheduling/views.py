@@ -83,13 +83,28 @@ def slots(request, slug):
 
 
 @extend_schema(
+    summary="List your appointments",
+    parameters=[OpenApiParameter("status", str, description="upcoming | past | all")],
+    responses=AppointmentSerializer(many=True),
+    methods=["GET"],
+)
+@extend_schema(
     summary="Book an appointment",
     request=BookingSerializer,
     responses=AppointmentSerializer,
+    methods=["POST"],
 )
-@api_view(["POST"])
+@api_view(["GET", "POST"])
 @permission_classes([IsPatient])
-def create_appointment(request):
+def appointments(request):
+    """One path, dispatched on method - the conventional shape, and the one
+    docs/03 specifies."""
+    if request.method == "GET":
+        return _list_appointments(request)
+    return _create_appointment(request)
+
+
+def _create_appointment(request):
     patient = current_patient(request)
     payload = BookingSerializer(data=request.data)
     payload.is_valid(raise_exception=True)
@@ -117,14 +132,7 @@ def create_appointment(request):
     )
 
 
-@extend_schema(
-    summary="The signed-in patient's appointments",
-    parameters=[OpenApiParameter("status", str, description="upcoming | past | all")],
-    responses=AppointmentSerializer(many=True),
-)
-@api_view(["GET"])
-@permission_classes([IsPatient])
-def list_appointments(request):
+def _list_appointments(request):
     patient = current_patient(request)
     which = request.query_params.get("status", "upcoming")
 
