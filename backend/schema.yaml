@@ -1334,18 +1334,6 @@ components:
         * `rw` - Kinyarwanda
         * `en` - English
         * `fr` - Francais
-    LanguagesEnum:
-      enum:
-      - rw
-      - en
-      - fr
-      - sw
-      type: string
-      description: |-
-        * `rw` - Kinyarwanda
-        * `en` - English
-        * `fr` - Francais
-        * `sw` - Kiswahili
     LevelEnum:
       enum:
       - health_post
@@ -1545,26 +1533,24 @@ components:
       properties:
         slug:
           type: string
-          maxLength: 140
-          pattern: ^[-a-zA-Z0-9_]+$
+          readOnly: true
         display_name:
           type: string
           readOnly: true
         full_name:
           type: string
-          maxLength: 150
+          readOnly: true
         initials:
           type: string
           readOnly: true
         photo_url:
           type: string
-          format: uri
-          maxLength: 200
+          readOnly: true
         languages:
           type: array
           items:
-            $ref: '#/components/schemas/LanguagesEnum'
-          description: Languages this clinician can consult in.
+            type: string
+          readOnly: true
         specialties:
           type: array
           items:
@@ -1582,6 +1568,8 @@ components:
       - display_name
       - full_name
       - initials
+      - languages
+      - photo_url
       - placements
       - slug
       - specialties
@@ -1591,26 +1579,24 @@ components:
       properties:
         slug:
           type: string
-          maxLength: 140
-          pattern: ^[-a-zA-Z0-9_]+$
+          readOnly: true
         display_name:
           type: string
           readOnly: true
         full_name:
           type: string
-          maxLength: 150
+          readOnly: true
         initials:
           type: string
           readOnly: true
         photo_url:
           type: string
-          format: uri
-          maxLength: 200
+          readOnly: true
         languages:
           type: array
           items:
-            $ref: '#/components/schemas/LanguagesEnum'
-          description: Languages this clinician can consult in.
+            type: string
+          readOnly: true
         specialties:
           type: array
           items:
@@ -1632,6 +1618,8 @@ components:
       - display_name
       - full_name
       - initials
+      - languages
+      - photo_url
       - placements
       - slug
       - specialties

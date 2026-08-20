@@ -746,14 +746,6 @@ export interface components {
          */
         LanguageEnum: "rw" | "en" | "fr";
         /**
-         * @description * `rw` - Kinyarwanda
-         *     * `en` - English
-         *     * `fr` - Francais
-         *     * `sw` - Kiswahili
-         * @enum {string}
-         */
-        LanguagesEnum: "rw" | "en" | "fr" | "sw";
-        /**
          * @description * `health_post` - Health post
          *     * `health_centre` - Health centre
          *     * `district_hospital` - District hospital
@@ -836,27 +828,23 @@ export interface components {
             services: string[];
         };
         Provider: {
-            slug: string;
+            readonly slug: string;
             readonly display_name: string;
-            full_name: string;
+            readonly full_name: string;
             readonly initials: string;
-            /** Format: uri */
-            photo_url?: string;
-            /** @description Languages this clinician can consult in. */
-            languages?: components["schemas"]["LanguagesEnum"][];
+            readonly photo_url: string;
+            readonly languages: string[];
             readonly specialties: string[];
             readonly placements: components["schemas"]["Placement"][];
             readonly verified: boolean;
         };
         ProviderDetail: {
-            slug: string;
+            readonly slug: string;
             readonly display_name: string;
-            full_name: string;
+            readonly full_name: string;
             readonly initials: string;
-            /** Format: uri */
-            photo_url?: string;
-            /** @description Languages this clinician can consult in. */
-            languages?: components["schemas"]["LanguagesEnum"][];
+            readonly photo_url: string;
+            readonly languages: string[];
             readonly specialties: string[];
             readonly placements: components["schemas"]["Placement"][];
             readonly verified: boolean;

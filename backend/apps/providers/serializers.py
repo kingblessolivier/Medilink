@@ -39,6 +39,16 @@ class PlacementSerializer(serializers.Serializer):
 class ProviderSerializer(serializers.ModelSerializer):
     display_name = serializers.CharField(read_only=True)
     initials = serializers.CharField(read_only=True)
+
+    # Declared read-only so the schema marks them as always present in a
+    # response. Model fields with defaults are otherwise emitted as optional,
+    # which forces every client into needless undefined checks.
+    slug = serializers.CharField(read_only=True)
+    full_name = serializers.CharField(read_only=True)
+    photo_url = serializers.CharField(read_only=True, allow_blank=True)
+    languages = serializers.ListField(
+        child=serializers.CharField(), read_only=True
+    )
     specialties = serializers.SerializerMethodField()
     placements = serializers.SerializerMethodField()
     verified = serializers.SerializerMethodField()
