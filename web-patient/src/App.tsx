@@ -4,6 +4,7 @@ import { I18nProvider } from "./i18n"
 import { AuthProvider } from "./hooks/useAuth"
 import { Home } from "./routes/Home"
 import { Search } from "./routes/Search"
+import { FindCare } from "./routes/FindCare"
 import { FacilityDetail } from "./routes/FacilityDetail"
 import { SignIn } from "./routes/SignIn"
 import { Book } from "./routes/Book"
@@ -36,7 +37,8 @@ export function App() {
             <OfflineBanner />
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/search" element={<Search />} />
+              <Route path="/search" element={<FindCare />} />
+              <Route path="/search/list" element={<Search />} />
               <Route path="/facility/:slug" element={<FacilityDetail />} />
               <Route path="/facility/:slug/book" element={<Book />} />
               <Route path="/sign-in" element={<SignIn />} />

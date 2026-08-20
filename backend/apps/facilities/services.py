@@ -111,9 +111,17 @@ def find_nearby(
         from apps.providers.services import service_codes_for_specialty
 
         codes = service_codes_for_specialty(specialty)
-        qs = qs.filter(
-            services__service_type__code__in=codes, services__available=True
-        ) if codes else qs.none()
+        # distinct() matters here and not in the `service` branch above: a
+        # specialty maps to SEVERAL service codes, so a facility offering more
+        # than one of them (paediatrics AND vaccination) joins once per match
+        # and appears twice in the results.
+        qs = (
+            qs.filter(
+                services__service_type__code__in=codes, services__available=True
+            ).distinct()
+            if codes
+            else qs.none()
+        )
     if levels:
         qs = qs.filter(level__in=levels)
     if open_now:

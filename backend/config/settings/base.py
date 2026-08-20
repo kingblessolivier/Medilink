@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     "apps.triage",
     # Redesign R1
     "apps.providers",
+    # Redesign R2
+    "apps.search",
 ]
 
 MIDDLEWARE = [

@@ -383,3 +383,26 @@ def test_directory_query_count_is_bounded(
 
     with django_assert_max_num_queries(6):
         api_client.get("/api/v1/providers")
+
+
+@pytest.mark.django_db
+def test_a_facility_matching_two_of_a_specialtys_services_appears_once(
+    db, services, make_facility
+):
+    """Regression: a specialty maps to several service codes, so a facility
+    offering more than one of them joined once per match and was listed twice.
+    """
+    specialty = Specialty.objects.create(
+        code="child-health", name_en="Child health", name_rw="x", name_fr="x"
+    )
+    specialty.service_types.add(services["paediatrics"], services["general_consultation"])
+
+    facility = make_facility(
+        offers=[services["paediatrics"], services["general_consultation"]]
+    )
+
+    results, _, _ = find_nearby(
+        lat=KCC_LAT, lng=KCC_LNG, radius_m=10000, specialty="child-health"
+    )
+
+    assert [f.id for f in results] == [facility.id]
