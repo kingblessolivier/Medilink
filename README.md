@@ -4,7 +4,7 @@ A multi-channel platform that makes healthcare access predictable: find a nearby
 facility, confirm it accepts your insurance, book a slot, and track the queue
 remotely so you leave home at the right time.
 
-**Sector:** Health · **Country:** Rwanda · **Status:** Phases 0-3 built, Phase 4 gated
+**Sector:** Health · **Country:** Rwanda · **Status:** Phases 0-4 built; triage gated off pending clinician sign-off
 
 ---
 
@@ -75,8 +75,8 @@ the build order in [docs/09-roadmap-and-milestones.md](docs/09-roadmap-and-miles
 
 ## Status
 
-**Phases 0 through 3 are implemented and running.** Phase 4 is specified but
-deliberately not built - see the gate below.
+**All five phases are implemented.** The symptom checker is built but
+**switched off in code** until a clinician signs off a protocol - see below.
 
 | Component | State |
 |---|---|
@@ -92,7 +92,7 @@ deliberately not built - see the gate below.
 | **Phase 2** Patient app: home states B and C, booking, visits, profile | Done |
 | **Phase 3** USSD: nearby, book, my queue, insurance, language in rw/en/fr | Done |
 | **Phase 3** WhatsApp: signed webhook, interactive pickers, queue status | Done |
-| **Phase 4** Triage | Not built, and gated on [docs/08 section 8](docs/08-security-and-compliance.md) |
+| **Phase 4** Triage engine, protocol validator, clinical gate | Built, **returns 503 by design** |
 | Backend test suite | 349 tests, 92% coverage |
 | Bundles | patient 79 KB, provider 62 KB gzipped (budget 150 KB) |
 | Facility data | 25 seed facilities, **coordinates approximate - not field verified** |
@@ -130,6 +130,29 @@ curl -X POST localhost:8000/api/v1/gateway/ussd   -H "X-Gateway-Secret: dev-ussd
 
 `CON ` keeps the session open, `END ` closes it. Append `*`-separated choices
 to `text` to walk deeper: `text=1*1*1`.
+
+### The symptom checker is switched off
+
+`/api/v1/triage/*` returns **503**, and that is the feature working correctly.
+
+Anything that routes patients toward or away from care carries clinical
+liability, so the gate lives in code rather than in a checklist:
+`apps/triage/gate.py` refuses to serve unless a named clinician, a sign-off
+date, a protocol version and a protocol file are all configured. A partial
+approval does not open it.
+
+**No clinical protocol ships with this codebase.** What ships is the mechanism -
+schema, validator, deterministic engine, one-way red-flag escalation. The
+routing rules are a clinical artefact for a clinician to author. See
+[backend/apps/triage/protocols/README.md](backend/apps/triage/protocols/README.md).
+
+```bash
+curl localhost:8000/api/v1/triage/status
+# {"available": false, "reason": "Awaiting review and sign-off by a licensed clinician."}
+```
+
+The patient app must hide the entry point entirely when `available` is false,
+rather than showing a button that errors.
 
 ### Notifications in development
 
@@ -235,7 +258,7 @@ medilink/
 │       ├── scheduling/         # slot templates, booking, cancellation
 │       ├── notifications/      # SMS dispatch, reminders, scheduled tasks
 │       ├── gateway/            # USSD + WhatsApp webhooks
-│       └── triage/             # Phase 4 - rule-based symptom router
+│       └── triage/             # rule-based symptom router (gated off)
 ├── web-provider/               # React - reception desk & facility admin
 ├── web-patient/                # React PWA - patient-facing
 ├── infra/                      # docker-compose, deployment

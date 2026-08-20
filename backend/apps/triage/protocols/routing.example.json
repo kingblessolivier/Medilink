@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "version": "0.0-example",
+  "_warning": "STRUCTURAL EXAMPLE ONLY. Not clinically reviewed. Contains no real triage logic. The version will not match any approval, so loading this in a configured environment fails on purpose. See README.md in this directory.",
+
+  "disclaimer": {
+    "rw": "Ibi si ubuvuzi. Ni inama yo kukwereka muganga ukwiye. Niba bikomeye, jya kwa muganga ako kanya.",
+    "en": "This is not a diagnosis. It only suggests which service to attend. If you feel very unwell, go to a health facility now.",
+    "fr": "Ceci n'est pas un diagnostic. Il indique seulement quel service consulter. Si votre etat est grave, rendez-vous immediatement dans un centre de sante."
+  },
+
+  "emergency_advice": {
+    "rw": "Jya ku bitaro byihuse cyangwa uhamagare ubutabazi ako kanya.",
+    "en": "Go to the nearest emergency department now, or call emergency services.",
+    "fr": "Rendez-vous immediatement aux urgences ou appelez les secours."
+  },
+
+  "first_question": "example_routing_question",
+
+  "questions": [
+    {
+      "code": "example_red_flag",
+      "red_flag": true,
+      "text": {
+        "rw": "[URUGERO] Ufite ikimenyetso gikomeye cyane?",
+        "en": "[EXAMPLE] Placeholder red-flag screening question. A clinician must replace this.",
+        "fr": "[EXEMPLE] Question de depistage d'urgence a remplacer par un clinicien."
+      },
+      "options": [
+        {
+          "code": "yes",
+          "text": { "rw": "Yego", "en": "Yes", "fr": "Oui" },
+          "escalate_emergency": true
+        },
+        {
+          "code": "no",
+          "text": { "rw": "Oya", "en": "No", "fr": "Non" },
+          "next_question": "example_routing_question"
+        }
+      ]
+    },
+    {
+      "code": "example_routing_question",
+      "text": {
+        "rw": "[URUGERO] Ikibazo cyo kuyobora. Muganga agomba gusimbura iki.",
+        "en": "[EXAMPLE] Placeholder routing question. A clinician must replace this.",
+        "fr": "[EXEMPLE] Question d'orientation a remplacer par un clinicien."
+      },
+      "options": [
+        {
+          "code": "option_a",
+          "text": { "rw": "[URUGERO A]", "en": "[EXAMPLE A]", "fr": "[EXEMPLE A]" },
+          "recommend_service": "general_consultation"
+        },
+        {
+          "code": "option_b",
+          "text": { "rw": "[URUGERO B]", "en": "[EXAMPLE B]", "fr": "[EXEMPLE B]" },
+          "recommend_service": "general_consultation"
+        }
+      ]
+    }
+  ]
+}

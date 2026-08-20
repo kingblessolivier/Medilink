@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     "apps.notifications",
     # Local - Phase 3
     "apps.gateway",
+    # Local - Phase 4
+    "apps.triage",
 ]
 
 MIDDLEWARE = [
@@ -221,3 +223,18 @@ WA_VERIFY_TOKEN = env("WA_VERIFY_TOKEN", default="")
 WA_APP_SECRET = env("WA_APP_SECRET", default="")
 WA_ACCESS_TOKEN = env("WA_ACCESS_TOKEN", default="")
 WA_PHONE_NUMBER_ID = env("WA_PHONE_NUMBER_ID", default="")
+
+# --- Phase 4: triage ---------------------------------------------------------
+
+# The symptom checker is UNAVAILABLE unless all four of these are set.
+# Anything that routes patients toward or away from care carries clinical
+# liability, so the gate is enforced in code rather than trusted to a
+# checklist. See apps/triage/gate.py and docs/08 section 8.
+#
+# Do not set these to make tests pass or to demo the feature. They are a
+# record that a named, licensed clinician reviewed a specific protocol
+# version and signed it off.
+TRIAGE_PROTOCOL_VERSION = env("TRIAGE_PROTOCOL_VERSION", default="")
+TRIAGE_APPROVED_BY = env("TRIAGE_APPROVED_BY", default="")
+TRIAGE_APPROVED_ON = env("TRIAGE_APPROVED_ON", default="")
+TRIAGE_PROTOCOL_FILE = env("TRIAGE_PROTOCOL_FILE", default="")
