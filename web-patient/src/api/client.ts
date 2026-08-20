@@ -5,11 +5,13 @@ import type {
   NearbyResponse,
   Patient,
   QueueEntryPublic,
+  ProviderList,
   SearchResponse,
   ServiceType,
   Specialty,
   SlotDays,
   TokenPair,
+  TriageStatus,
 } from "./types"
 
 const BASE = "/api/v1"
@@ -139,6 +141,11 @@ export const api = {
 
   serviceTypes: () =>
     request<{ results: ServiceType[] }>("/service-types", { auth: false }),
+
+  triageStatus: () => request<TriageStatus>("/triage/status"),
+
+  providers: (params: Record<string, unknown>) =>
+    request<ProviderList>("/providers", { params }),
 
   specialties: () =>
     request<{ results: Specialty[] }>("/specialties"),

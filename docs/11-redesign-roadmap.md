@@ -241,7 +241,7 @@ Unblocks 8+ screens. Nothing in R3 or R5 could start without it.
   warning that a doctor profile is a public statement about a named person.
   Every demo doctor is created unverified.
 
-### R2 - Discovery: home, find care, map `IN PROGRESS`
+### R2 - Discovery: home, find care, map `DONE`
 
 The brief's highest priority, and the strongest screen in the product.
 
@@ -251,11 +251,31 @@ The brief's highest priority, and the strongest screen in the product.
       synchronised both ways
 - [x] MapLibre, lazy-loaded, list-first fallback, map opt-in on mobile
 - [x] Location: auto, district fallback, never blocks
-- [ ] Homepage sections: hero, doctors near you, popular services, insurance,
-      Care Guide entry
-- [ ] Search-as-you-type UI on top of `/search`
-- [ ] Compare facilities (max 3, simple table, not a spreadsheet)
-- [ ] Retire the old list-only `/search/list` route once Find Care covers it
+- [x] Homepage: hero, universal search, nearby, doctors near you, popular
+      services, insurance, Care Guide entry
+- [x] Search-as-you-type: a real combobox with `aria-activedescendant`,
+      grouped results, arrow-key navigation, 250 ms debounce
+- [x] `DoctorCard` with initials fallback and honest verification state
+- [x] Compare facilities: max 3, six rows, selection in the URL
+- [x] Old list-only `Search.tsx` deleted - Find Care supersedes it
+
+**More decisions worth keeping:**
+
+- **The Care Guide entry points are hidden, not disabled**, when
+  `/triage/status` reports unavailable - which is the shipped default. A button
+  that errors is worse than no button, and implying the feature exists when no
+  clinician has reviewed it is worse still. `useTriageStatus` defaults to
+  hidden: if we cannot tell, we do not offer it.
+- **The doctors section is omitted entirely when no doctors are listed**,
+  rather than rendering an empty shelf.
+- **Doctor avatars fall back to initials.** Most clinicians have no photo on
+  file; a grey person-icon placeholder pretends something is missing.
+- **Verification is stated, not implied.** An unverified doctor says so in the
+  quiet `unknown` chip rather than looking identical to a checked one.
+- **Popular services and insurers are links, not cards.** Sixteen cards would
+  be exactly the wall the brief warns against.
+- **Compare is capped at three and six rows.** A comparison a patient cannot
+  read at a glance has failed at the one job it has.
 
 **Decisions worth keeping:**
 
@@ -347,12 +367,12 @@ Mostly a redesign - the backend is complete.
 
 51 screens. `—` not started, `~` in progress, `✓` done.
 
-**Public (23):** — Homepage · — Find Care · — Map discovery · — Search results ·
+**Public (23):** ✓ Homepage · ✓ Find Care · ✓ Map discovery · ✓ Search results ·
 — Facility profile · — Facility overview · — Facility doctors · — Doctor
 profile · — Facility services · — Service detail · — Facility insurance ·
 — Global insurance · — Booking · — Confirmation · — Queue tracking · — Care
 Guide landing · — Symptom assessment · — AI processing · — AI result · — AI
-recommended facilities · — Compare · — About · — Help
+recommended facilities · ✓ Compare · — About · — Help
 
 **Patient (8):** — Dashboard · — Appointments · — Appointment detail · — Active
 queue · — Notifications · — Profile · — Insurance · — Settings
@@ -393,3 +413,4 @@ them for visual convenience.
 | 2026-08-20 | R0: design preset, base layer, 14 UI primitives, WaitLine + FacilityCard + Home rebuilt. Patient bundle 80 KB gz (budget 150). 21 patient + 4 provider tests green. |
 | 2026-08-20 | R1 done: `providers` app, specialty-to-service mapping, 4 endpoints, `nearby?specialty=`, provider on templates and appointments. 414 backend tests, 92% coverage, 31 API operations. Journey verified live: specialty -> 3 facilities -> doctor. |
 | 2026-08-20 | R2 part 1: `/search` global endpoint (14 tests), Find Care with synchronised list and map, MapLibre lazy-loaded and excluded from precache (1329 KB -> 283 KB). Fixed duplicate facilities, missing markers, and an order-dependent test suite. 444 backend tests, 92% coverage. |
+| 2026-08-20 | R2 done: homepage discovery sections, search-as-you-type combobox with keyboard navigation, DoctorCard, compare, old list route retired. Care Guide entry points correctly hidden while the clinical gate is shut. 6 of 51 screens done. Patient bundle 88 KB gz. |
