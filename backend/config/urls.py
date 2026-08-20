@@ -12,6 +12,7 @@ api_v1 = [
     path("", include("apps.scheduling.urls")),
     path("", include("apps.gateway.urls")),
     path("", include("apps.triage.urls")),
+    path("", include("apps.providers.urls")),
     # Staff sign-in. Patients use the OTP endpoints in apps.patients.urls.
     path("auth/token", TokenObtainPairView.as_view(), name="token-obtain"),
     path("auth/token/refresh", TokenRefreshView.as_view(), name="token-refresh"),

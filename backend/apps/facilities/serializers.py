@@ -51,6 +51,9 @@ class NearbyQuerySerializer(serializers.Serializer):
     )
     insurer = serializers.SlugField(required=False, allow_null=True)
     service = serializers.SlugField(required=False, allow_null=True)
+    # Set by the Care Guide. Ignored when `service` is given - an explicit
+    # service choice by the patient always wins over an inference.
+    specialty = serializers.SlugField(required=False, allow_null=True)
     level = serializers.ListField(
         child=serializers.SlugField(), required=False, default=list
     )
@@ -271,6 +274,7 @@ class NearbyQueryEchoSerializer(serializers.Serializer):
     radius_expanded = serializers.BooleanField()
     insurer = serializers.CharField(allow_null=True)
     service = serializers.CharField(allow_null=True)
+    specialty = serializers.CharField(allow_null=True)
     open_now = serializers.BooleanField()
 
 

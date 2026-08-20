@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     "apps.gateway",
     # Local - Phase 4
     "apps.triage",
+    # Redesign R1
+    "apps.providers",
 ]
 
 MIDDLEWARE = [
