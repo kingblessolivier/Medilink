@@ -218,8 +218,7 @@ python manage.py runserver
 
 ```bash
 # 3. Frontends
-cd web-patient  && npm install && npm run dev          # http://localhost:5173
-cd web-provider && npm install && npm run dev          # http://localhost:5174
+cd web && npm install && npm run dev                   # http://localhost:5173
 ```
 
 The provider app needs a staff account. Create one after `createsuperuser`:
@@ -256,8 +255,7 @@ frontends. Never hand-write TypeScript API types:
 
 ```bash
 cd backend && python manage.py spectacular --file schema.yaml --fail-on-warn
-cd ../web-patient  && npm run gen:api
-cd ../web-provider && npm run gen:api
+cd ../web && npm run gen:api
 ```
 
 CI regenerates all three and fails on any diff, so a backend rename breaks the
@@ -279,8 +277,10 @@ medilink/
 │       ├── notifications/      # SMS dispatch, reminders, scheduled tasks
 │       ├── gateway/            # USSD + WhatsApp webhooks
 │       └── triage/             # rule-based symptom router (gated off)
-├── web-provider/               # React - reception desk & facility admin
-├── web-patient/                # React PWA - patient-facing
+├── web/                        # React PWA - one app, three surfaces:
+│                               #   /            patients
+│                               #   /workspace   facility reception & admin
+│                               #   /platform    MediLink platform admin
 ├── infra/                      # docker-compose, deployment
 └── docs/                       # this documentation set
 ```

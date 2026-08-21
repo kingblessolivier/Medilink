@@ -1,7 +1,8 @@
 /**
  * MediLink design system - Tailwind preset.
  *
- * Shared by web-patient and web-provider so the two surfaces cannot drift.
+ * The single source of truth for the one web app, which serves all three
+ * surfaces - patient, facility workspace, platform admin.
  * Both import it in their tailwind.config.js via `presets: [medilink]`.
  *
  * Three rules this preset deliberately encodes, because they are the ones a
