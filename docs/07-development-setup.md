@@ -240,17 +240,14 @@ placeholder values only.
 ## 9. Frontend
 
 ```bash
-cd web-patient
+cd web
 npm install
 npm run dev            # http://localhost:5173
 
-cd ../web-provider
-npm install
-npm run dev            # http://localhost:5174
 ```
 
 ```ts
-// web-patient/vite.config.ts
+// web/vite.config.ts
 export default defineConfig({
   plugins: [
     react(),

@@ -76,14 +76,9 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        app: [web-patient, web-provider, web-admin]
-
     defaults:
       run:
-        working-directory: ${{ matrix.app }}
+        working-directory: web
 
     steps:
       - uses: actions/checkout@v4
@@ -92,7 +87,7 @@ jobs:
         with:
           node-version: "20"
           cache: npm
-          cache-dependency-path: ${{ matrix.app }}/package-lock.json
+          cache-dependency-path: web/package-lock.json
 
       - run: npm ci
 
@@ -102,18 +97,15 @@ jobs:
         run: |
           npm run gen:api
           git diff --exit-code src/api/schema.d.ts || {
-            echo "::error::${{ matrix.app }}/src/api/schema.d.ts is stale. Run: npm run gen:api"
+            echo "::error::web/src/api/schema.d.ts is stale. Run: npm run gen:api"
             exit 1
           }
 
       - name: Type check
         run: npm run typecheck
 
-      # --if-present rather than a placeholder script: web-admin has no
-      # tests yet, and a `test` script that echoes and exits 0 would report
-      # green for a suite that does not exist.
       - name: Tests
-        run: npm test --if-present
+        run: npm test
 
       - name: Build
         run: npx vite build
@@ -141,7 +133,7 @@ jobs:
       # Kinyarwanda is the default language, not an afterthought. A missing key
       # silently falls back to Kinyarwanda text inside an English page.
       - name: Translation files must have identical keys
-        working-directory: web-patient
+        working-directory: web
         run: |
           node -e "
             const fs = require('fs');

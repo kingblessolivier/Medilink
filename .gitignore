@@ -22,6 +22,8 @@ node_modules/
 dist/
 # Vite's dependency pre-bundling cache.
 .vite/
+# Kubernetes manifests Docker Desktop generates from docker-compose.yml.
+infra/bridge/
 dist-ssr/
 *.local
 

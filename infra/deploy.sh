@@ -18,17 +18,16 @@ echo "==> Verifying the API contract is current"
 docker compose -f infra/docker-compose.prod.yml --env-file .env.prod \
   run --rm --no-deps api python manage.py spectacular --file /tmp/schema.yaml --fail-on-warn
 
-echo "==> Building patient PWA"
-( cd web-patient  && npm ci && npm run gen:api && npm run build )
-
-echo "==> Building provider app"
-( cd web-provider && npm ci && npm run gen:api && npm run build )
+# One app for all three surfaces. It used to be three builds served from
+# three roots; the router now decides which surface a person gets from the
+# `kind` on their session, so there is one bundle and one origin to host.
+echo "==> Building the web app"
+( cd web && npm ci && npm run gen:api && npm run build )
 
 echo "==> Staging static output"
 rm -rf infra/www
-mkdir -p infra/www/patient infra/www/provider
-cp -r web-patient/dist/.  infra/www/patient/
-cp -r web-provider/dist/. infra/www/provider/
+mkdir -p infra/www
+cp -r web/dist/. infra/www/
 
 echo "==> Starting services (migrations run in the api entrypoint)"
 docker compose -f infra/docker-compose.prod.yml --env-file .env.prod up -d --build

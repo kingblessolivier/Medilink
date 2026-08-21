@@ -1,7 +1,0 @@
-/* Imports must precede all other rules. postcss-import inlines them. */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-@import "../../design/base.css";
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
