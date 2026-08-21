@@ -33,6 +33,14 @@ def _conflict(message):
     summary="Bookable slots for a facility and service",
     parameters=[
         OpenApiParameter("service", str, required=True),
+        OpenApiParameter(
+            "provider",
+            str,
+            description=(
+                "Provider slug. Omit for the facility general clinic - "
+                "'any available', which is the default and the common case."
+            ),
+        ),
         OpenApiParameter("date_from", str),
         OpenApiParameter("date_to", str),
     ],
@@ -51,9 +59,17 @@ def slots(request, slug):
         ServiceType, code=params.validated_data["service"]
     )
 
+    provider = None
+    provider_slug = params.validated_data.get("provider")
+    if provider_slug:
+        from apps.providers.models import Provider
+
+        provider = get_object_or_404(Provider, slug=provider_slug, active=True)
+
     days = available_slots(
         facility=facility,
         service_type=service_type,
+        provider=provider,
         date_from=params.validated_data.get("date_from"),
         date_to=params.validated_data.get("date_to"),
     )
@@ -62,6 +78,7 @@ def slots(request, slug):
         {
             "facility": facility.slug,
             "service": service_type.code,
+            "provider": provider.slug if provider else None,
             "as_of": timezone.localtime().isoformat(),
             "days": [
                 {
@@ -115,12 +132,19 @@ def _create_appointment(request):
     )
     service_type = get_object_or_404(ServiceType, code=data["service"])
 
+    provider = None
+    if data.get("provider"):
+        from apps.providers.models import Provider
+
+        provider = get_object_or_404(Provider, slug=data["provider"], active=True)
+
     try:
         appointment = book(
             facility=facility,
             service_type=service_type,
             patient=patient,
             slot_start=data["slot_start"],
+            provider=provider,
         )
     except SlotUnavailable as exc:
         return _conflict(exc)
@@ -149,6 +173,25 @@ def _list_appointments(request):
         ).order_by("-slot_start")
 
     return Response(AppointmentSerializer(queryset, many=True).data)
+
+
+@extend_schema(
+    operation_id="appointment_detail",
+    summary="One appointment",
+    responses=AppointmentSerializer,
+)
+@api_view(["GET"])
+@permission_classes([IsPatient])
+def appointment_detail(request, pk):
+    """Scoped to the caller: an enumerated id must not reveal somebody else's
+    appointment."""
+    patient = current_patient(request)
+    appointment = get_object_or_404(
+        Appointment.objects.select_related("facility", "service_type", "provider"),
+        pk=pk,
+        patient=patient,
+    )
+    return Response(AppointmentSerializer(appointment).data)
 
 
 @extend_schema(

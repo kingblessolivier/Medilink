@@ -134,7 +134,7 @@ export const api = {
   facility: (slug: string) =>
     request<FacilityDetail>(`/facilities/${slug}`, { auth: false }),
 
-  slots: (slug: string, params: { service: string; date_from?: string }) =>
+  slots: (slug: string, params: { service: string; provider?: string; date_from?: string }) =>
     request<SlotDays>(`/facilities/${slug}/slots`, { params, auth: false }),
 
   insurers: () =>
@@ -198,11 +198,19 @@ export const api = {
   appointments: (status: "upcoming" | "past" | "all" = "upcoming") =>
     request<Appointment[]>("/appointments", { params: { status } }),
 
-  book: (payload: { facility: string; service: string; slot_start: string }) =>
+  book: (payload: {
+    facility: string
+    service: string
+    /** Omit for the facility general clinic - "any available". */
+    provider?: string
+    slot_start: string
+  }) =>
     request<Appointment>("/appointments", {
       method: "POST",
       body: payload,
     }),
+
+  appointment: (id: number) => request<Appointment>(`/appointments/${id}`),
 
   cancelAppointment: (id: number) =>
     request<Appointment>(`/appointments/${id}/cancel`, { method: "POST" }),

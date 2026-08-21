@@ -8,6 +8,8 @@ import { Compare } from "./routes/Compare"
 import { Doctors } from "./routes/Doctors"
 import { DoctorProfile } from "./routes/DoctorProfile"
 import { ServiceDetail } from "./routes/ServiceDetail"
+import { AppointmentDetail } from "./routes/AppointmentDetail"
+import { QueueTracking } from "./routes/QueueTracking"
 import { FacilityDetail } from "./routes/FacilityDetail"
 import { SignIn } from "./routes/SignIn"
 import { Book } from "./routes/Book"
@@ -45,6 +47,8 @@ export function App() {
               <Route path="/doctors" element={<Doctors />} />
               <Route path="/doctor/:slug" element={<DoctorProfile />} />
               <Route path="/service/:code" element={<ServiceDetail />} />
+              <Route path="/appointment/:id" element={<AppointmentDetail />} />
+              <Route path="/queue" element={<QueueTracking />} />
               <Route path="/facility/:slug" element={<FacilityDetail />} />
               <Route path="/facility/:slug/book" element={<Book />} />
               <Route path="/sign-in" element={<SignIn />} />
