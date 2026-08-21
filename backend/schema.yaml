@@ -886,6 +886,80 @@ paths:
               schema:
                 $ref: '#/components/schemas/SpecialtyList'
           description: ''
+  /api/v1/staff/appointments:
+    get:
+      operationId: staff_appointments_retrieve
+      description: |-
+        Today's list, so reception knows who is expected.
+
+        Scoped to the caller's facility through active_staff(), never through a
+        facility id in the query string - see permissions.py for why.
+      summary: Appointments booked at the caller's facility
+      parameters:
+      - in: query
+        name: date
+        schema:
+          type: string
+          format: date
+        description: Defaults to today, in the facility's local time.
+      - in: query
+        name: status
+        schema:
+          type: string
+        description: Filter by status. Defaults to everything not cancelled.
+      tags:
+      - staff
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffAppointmentList'
+          description: ''
+  /api/v1/staff/appointments/{id}/status:
+    post:
+      operationId: staff_appointments_status_create
+      description: |-
+        The three transitions reception actually performs.
+
+        Cancellation is deliberately NOT here: a facility cancelling on a patient
+        has to notify them, which is what the scheduling endpoint does.
+      summary: Mark an appointment arrived, served or a no-show
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentStatus'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AppointmentStatus'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AppointmentStatus'
+        required: true
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffAppointment'
+          description: ''
   /api/v1/staff/me:
     get:
       operationId: staff_me_retrieve
@@ -905,6 +979,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StaffMe'
+          description: ''
+  /api/v1/staff/reports:
+    get:
+      operationId: staff_reports_retrieve
+      summary: Operational report for the caller's facility
+      parameters:
+      - in: query
+        name: days
+        schema:
+          type: integer
+        description: Window length, 1-90. Defaults to 30.
+      tags:
+      - staff
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityReport'
           description: ''
   /api/v1/triage/sessions:
     post:
@@ -1049,6 +1146,18 @@ components:
       - name
       - phone
       - slug
+    AppointmentStatus:
+      type: object
+      description: |-
+        The three transitions reception performs from the appointment list.
+
+        Cancellation is absent on purpose: a facility cancelling on a patient owes
+        them a message, so it goes through the scheduling endpoint that sends one.
+      properties:
+        status:
+          $ref: '#/components/schemas/AppointmentStatusStatusEnum'
+      required:
+      - status
     AppointmentStatusEnum:
       enum:
       - booked
@@ -1063,6 +1172,16 @@ components:
         * `served` - Served
         * `no_show` - No show
         * `cancelled` - Cancelled
+    AppointmentStatusStatusEnum:
+      enum:
+      - arrived
+      - served
+      - no_show
+      type: string
+      description: |-
+        * `arrived` - arrived
+        * `served` - served
+        * `no_show` - no_show
     Board:
       type: object
       properties:
@@ -1378,6 +1497,37 @@ components:
       - ownership
       - services
       - slug
+      - wait
+    FacilityReport:
+      type: object
+      properties:
+        facility:
+          type: string
+        days:
+          type: integer
+        as_of:
+          type: string
+          format: date-time
+        today:
+          $ref: '#/components/schemas/ReportToday'
+        period:
+          $ref: '#/components/schemas/ReportPeriod'
+        wait:
+          $ref: '#/components/schemas/ReportWait'
+        appointments:
+          $ref: '#/components/schemas/ReportAppointments'
+        demand:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportDemand'
+      required:
+      - appointments
+      - as_of
+      - days
+      - demand
+      - facility
+      - period
+      - today
       - wait
     Insurer:
       type: object
@@ -1991,6 +2141,82 @@ components:
       required:
       - lat
       - lng
+    ReportAppointments:
+      type: object
+      properties:
+        total:
+          type: integer
+        no_shows:
+          type: integer
+        no_show_rate:
+          type: number
+          format: double
+          nullable: true
+      required:
+      - no_show_rate
+      - no_shows
+      - total
+    ReportDemand:
+      type: object
+      properties:
+        service:
+          type: string
+        count:
+          type: integer
+      required:
+      - count
+      - service
+    ReportPeriod:
+      type: object
+      properties:
+        checked_in:
+          type: integer
+        served:
+          type: integer
+        left_without_being_seen:
+          type: integer
+      required:
+      - checked_in
+      - left_without_being_seen
+      - served
+    ReportToday:
+      type: object
+      properties:
+        checked_in:
+          type: integer
+        waiting:
+          type: integer
+        served:
+          type: integer
+      required:
+      - checked_in
+      - served
+      - waiting
+    ReportWait:
+      type: object
+      properties:
+        median_minutes:
+          type: number
+          format: double
+          nullable: true
+        sample_size:
+          type: integer
+        this_week_minutes:
+          type: number
+          format: double
+          nullable: true
+        last_week_minutes:
+          type: number
+          format: double
+          nullable: true
+        enough_data:
+          type: boolean
+      required:
+      - enough_data
+      - last_week_minutes
+      - median_minutes
+      - sample_size
+      - this_week_minutes
     SearchGroup:
       type: object
       properties:
@@ -2220,6 +2446,70 @@ components:
           items:
             $ref: '#/components/schemas/Specialty'
       required:
+      - results
+    StaffAppointment:
+      type: object
+      description: |-
+        One row on the facility's appointment list.
+
+        Staff at the facility a patient booked with see the patient's name and
+        phone: they have to call somebody who has not arrived, and reception has
+        always had this. It is scoped to their own facility and written to the
+        audit log - see apps/patients/models.PatientAccessLog.
+      properties:
+        id:
+          type: integer
+        reference:
+          type: string
+        slot_start:
+          type: string
+          format: date-time
+        slot_end:
+          type: string
+          format: date-time
+        status:
+          type: string
+        booked_via:
+          type: string
+        service:
+          type: string
+        service_code:
+          type: string
+        provider:
+          type: string
+          nullable: true
+        patient_name:
+          type: string
+        patient_phone:
+          type: string
+          nullable: true
+      required:
+      - booked_via
+      - id
+      - patient_name
+      - patient_phone
+      - provider
+      - reference
+      - service
+      - service_code
+      - slot_end
+      - slot_start
+      - status
+    StaffAppointmentList:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        count:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaffAppointment'
+      required:
+      - count
+      - date
       - results
     StaffFacility:
       type: object

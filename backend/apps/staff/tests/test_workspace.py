@@ -1,0 +1,536 @@
+"""The facility workspace: appointment list, transitions, and reports.
+
+Two things are being protected here. Facility scoping, because one missing
+filter shows another clinic's patients. And the honesty of the reports, because
+a manager will act on a median wait whether or not there is enough data behind
+it - so an under-sampled median must come back null, not zero.
+"""
+
+from datetime import time, timedelta
+
+import pytest
+from django.contrib.auth.models import User
+from django.contrib.gis.geos import Point
+from django.utils import timezone
+from rest_framework.test import APIClient
+
+from apps.facilities.models import Facility, OpeningHours, ServiceType
+from apps.patients.models import Patient, PatientAccessLog
+from apps.queueing.models import QueueEntry
+from apps.scheduling.models import Appointment
+from apps.staff.models import StaffMember
+
+APPOINTMENTS = "/api/v1/staff/appointments"
+REPORTS = "/api/v1/staff/reports"
+
+
+# --------------------------------------------------------------------------
+# Fixtures
+# --------------------------------------------------------------------------
+
+
+@pytest.fixture
+def general(db):
+    return ServiceType.objects.create(
+        code="general_consultation", name_en="General", name_rw="x", name_fr="x"
+    )
+
+
+def make_facility(name, slug):
+    facility = Facility.objects.create(
+        name=name, slug=slug, ownership="public", level="health_centre",
+        district="Gasabo", location=Point(30.11, -1.94, srid=4326),
+        verified_at=timezone.now(), reports_queue=True,
+    )
+    for weekday in range(7):
+        OpeningHours.objects.create(
+            facility=facility, weekday=weekday,
+            opens_at=time(0, 0), closes_at=time(23, 59),
+        )
+    return facility
+
+
+@pytest.fixture
+def facility(db):
+    return make_facility("Kimironko HC", "kimironko-hc")
+
+
+@pytest.fixture
+def other_facility(db):
+    return make_facility("Remera HC", "remera-hc")
+
+
+def make_staff(facility, username, role="receptionist"):
+    user = User.objects.create_user(username=username, password="pw-for-tests")
+    StaffMember.objects.create(user=user, facility=facility, role=role, active=True)
+    return user
+
+
+@pytest.fixture
+def desk(facility):
+    return make_staff(facility, "desk")
+
+
+@pytest.fixture
+def client_as(db):
+    def _sign_in(user):
+        client = APIClient()
+        client.force_authenticate(user=user)
+        return client
+
+    return _sign_in
+
+
+def make_appointment(facility, service, patient=None, *, offset_hours=1, **kwargs):
+    start = timezone.localtime().replace(minute=0, second=0, microsecond=0)
+    start += timedelta(hours=offset_hours)
+    return Appointment.objects.create(
+        facility=facility, service_type=service, patient=patient,
+        slot_start=start, slot_end=start + timedelta(minutes=15), **kwargs
+    )
+
+
+# --------------------------------------------------------------------------
+# Scoping - the control that matters most
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_the_list_shows_only_the_callers_facility(
+    client_as, desk, facility, other_facility, general
+):
+    mine = make_appointment(facility, general)
+    make_appointment(other_facility, general)
+
+    body = client_as(desk).get(APPOINTMENTS).json()
+
+    assert [row["reference"] for row in body["results"]] == [mine.reference]
+
+
+@pytest.mark.django_db
+def test_transitioning_another_facilitys_appointment_is_a_404(
+    client_as, desk, other_facility, general
+):
+    """404 rather than 403, so a facility cannot probe for the existence of
+    another facility's appointment ids."""
+    theirs = make_appointment(other_facility, general)
+
+    response = client_as(desk).post(
+        f"{APPOINTMENTS}/{theirs.id}/status", {"status": "arrived"}, format="json"
+    )
+
+    assert response.status_code == 404
+    theirs.refresh_from_db()
+    assert theirs.status == Appointment.Status.BOOKED
+
+
+@pytest.mark.django_db
+def test_reports_count_only_the_callers_facility(
+    client_as, desk, facility, other_facility, general
+):
+    QueueEntry.objects.create(
+        facility=facility, service_type=general, ticket_code="G-1"
+    )
+    for n in range(5):
+        QueueEntry.objects.create(
+            facility=other_facility, service_type=general, ticket_code=f"R-{n}"
+        )
+
+    body = client_as(desk).get(REPORTS).json()
+
+    assert body["facility"] == "Kimironko HC"
+    assert body["period"]["checked_in"] == 1
+
+
+@pytest.mark.django_db
+def test_anonymous_callers_are_refused(db):
+    client = APIClient()
+
+    for path in (APPOINTMENTS, REPORTS):
+        assert client.get(path).status_code in (401, 403)
+
+
+@pytest.mark.django_db
+def test_a_signed_in_user_who_is_not_staff_is_refused(client_as, db):
+    outsider = User.objects.create_user(username="nobody", password="pw-for-tests")
+
+    assert client_as(outsider).get(APPOINTMENTS).status_code == 403
+
+
+# --------------------------------------------------------------------------
+# The appointment list
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_the_list_defaults_to_today(client_as, desk, facility, general):
+    today = make_appointment(facility, general)
+    make_appointment(facility, general, offset_hours=30)
+
+    body = client_as(desk).get(APPOINTMENTS).json()
+
+    assert body["count"] == 1
+    assert body["results"][0]["reference"] == today.reference
+
+
+@pytest.mark.django_db
+def test_another_day_can_be_asked_for(client_as, desk, facility, general):
+    tomorrow = make_appointment(facility, general, offset_hours=30)
+    day = timezone.localtime(tomorrow.slot_start).date()
+
+    body = client_as(desk).get(APPOINTMENTS, {"date": day.isoformat()}).json()
+
+    assert [row["reference"] for row in body["results"]] == [tomorrow.reference]
+
+
+@pytest.mark.django_db
+def test_a_malformed_date_is_a_400_not_a_500(client_as, desk):
+    response = client_as(desk).get(APPOINTMENTS, {"date": "not-a-date"})
+
+    assert response.status_code == 400
+    assert response.json()["field"] == "date"
+
+
+@pytest.mark.django_db
+def test_cancelled_appointments_are_off_the_working_list(
+    client_as, desk, facility, general
+):
+    """Noise on a list reception works through - but still reachable, and
+    still counted in the reports."""
+    make_appointment(facility, general, status=Appointment.Status.CANCELLED)
+
+    assert client_as(desk).get(APPOINTMENTS).json()["count"] == 0
+    assert client_as(desk).get(
+        APPOINTMENTS, {"status": "cancelled"}
+    ).json()["count"] == 1
+
+
+@pytest.mark.django_db
+def test_staff_see_the_phone_number_of_a_patient_booked_with_them(
+    client_as, desk, facility, general
+):
+    """Reception has to be able to ring somebody who has not arrived. Scoped
+    to their own facility, and written to the audit log."""
+    patient = Patient.objects.create(phone="+250788111222", full_name="A. Uwase")
+    make_appointment(facility, general, patient=patient)
+
+    row = client_as(desk).get(APPOINTMENTS).json()["results"][0]
+
+    assert row["patient_name"] == "A. Uwase"
+    assert row["patient_phone"] == "+250788111222"
+
+
+@pytest.mark.django_db
+def test_viewing_the_list_is_written_to_the_audit_log(
+    client_as, desk, facility, general
+):
+    make_appointment(facility, general)
+
+    client_as(desk).get(APPOINTMENTS)
+
+    entry = PatientAccessLog.objects.get()
+    assert entry.action == PatientAccessLog.Action.VIEW
+    assert entry.facility_id == facility.id
+    # One bulk row for the whole list, not one per patient - the board rule.
+    assert entry.record_count == 1
+
+
+@pytest.mark.django_db
+def test_an_empty_list_writes_nothing_to_the_audit_log(client_as, desk):
+    """A quiet morning should not fill the log with rows recording that
+    nobody's record was looked at."""
+    client_as(desk).get(APPOINTMENTS)
+
+    assert PatientAccessLog.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_an_anonymised_patient_leaves_a_row_with_nobody_to_name(
+    client_as, desk, facility, general
+):
+    """Erasure nulls the FK rather than deleting the appointment, so the
+    facility's own records stay intact. The row must still render."""
+    make_appointment(facility, general, patient=None)
+
+    row = client_as(desk).get(APPOINTMENTS).json()["results"][0]
+
+    assert row["patient_name"] == "Removed"
+    assert row["patient_phone"] is None
+
+
+# --------------------------------------------------------------------------
+# Transitions
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_marking_somebody_arrived(client_as, desk, facility, general):
+    appointment = make_appointment(facility, general)
+
+    body = client_as(desk).post(
+        f"{APPOINTMENTS}/{appointment.id}/status", {"status": "arrived"},
+        format="json",
+    ).json()
+
+    assert body["status"] == "arrived"
+    appointment.refresh_from_db()
+    assert appointment.status == Appointment.Status.ARRIVED
+
+
+@pytest.mark.django_db
+def test_marking_a_no_show(client_as, desk, facility, general):
+    appointment = make_appointment(facility, general)
+
+    client_as(desk).post(
+        f"{APPOINTMENTS}/{appointment.id}/status", {"status": "no_show"},
+        format="json",
+    )
+
+    appointment.refresh_from_db()
+    assert appointment.status == Appointment.Status.NO_SHOW
+
+
+@pytest.mark.django_db
+def test_cancelling_is_not_available_here(client_as, desk, facility, general):
+    """A facility cancelling on a patient owes them a message, so it goes
+    through the scheduling endpoint that sends one."""
+    appointment = make_appointment(facility, general)
+
+    response = client_as(desk).post(
+        f"{APPOINTMENTS}/{appointment.id}/status", {"status": "cancelled"},
+        format="json",
+    )
+
+    assert response.status_code == 400
+    appointment.refresh_from_db()
+    assert appointment.status == Appointment.Status.BOOKED
+
+
+@pytest.mark.django_db
+def test_a_cancelled_appointment_cannot_be_marked_arrived(
+    client_as, desk, facility, general
+):
+    """The patient was told it was off. Quietly reviving it would have them
+    turn up to a slot nobody is expecting them in."""
+    appointment = make_appointment(
+        facility, general, status=Appointment.Status.CANCELLED
+    )
+
+    response = client_as(desk).post(
+        f"{APPOINTMENTS}/{appointment.id}/status", {"status": "arrived"},
+        format="json",
+    )
+
+    assert response.status_code == 400
+    appointment.refresh_from_db()
+    assert appointment.status == Appointment.Status.CANCELLED
+
+
+@pytest.mark.django_db
+def test_a_clinician_cannot_change_the_list(client_as, facility, general):
+    """Clinicians read the workspace; they do not run the desk."""
+    clinician = make_staff(facility, "dr-k", role="clinician")
+    appointment = make_appointment(facility, general)
+
+    response = client_as(clinician).post(
+        f"{APPOINTMENTS}/{appointment.id}/status", {"status": "arrived"},
+        format="json",
+    )
+
+    assert response.status_code == 403
+    assert client_as(clinician).get(APPOINTMENTS).status_code == 200
+
+
+# --------------------------------------------------------------------------
+# Reports - honesty about the sample
+# --------------------------------------------------------------------------
+
+
+def served_entry(facility, service, *, waited_minutes, days_ago=1, code="G"):
+    joined = timezone.localtime() - timedelta(days=days_ago)
+    return QueueEntry.objects.create(
+        facility=facility, service_type=service, ticket_code=code,
+        joined_at=joined,
+        called_at=joined + timedelta(minutes=waited_minutes),
+        served_at=joined + timedelta(minutes=waited_minutes + 5),
+        status=QueueEntry.Status.SERVED,
+    )
+
+
+@pytest.mark.django_db
+def test_a_thin_sample_reports_no_median_at_all(
+    client_as, desk, facility, general
+):
+    """Not zero, and not a number with a caveat next to it. A manager will act
+    on whatever number is on the screen - so there must not be one."""
+    for n in range(4):
+        served_entry(facility, general, waited_minutes=20, code=f"G-{n}")
+
+    wait = client_as(desk).get(REPORTS).json()["wait"]
+
+    assert wait["median_minutes"] is None
+    assert wait["enough_data"] is False
+    assert wait["sample_size"] == 4
+
+
+@pytest.mark.django_db
+def test_enough_visits_produce_a_median(client_as, desk, facility, general):
+    for n in range(11):
+        served_entry(facility, general, waited_minutes=20, code=f"G-{n}")
+
+    wait = client_as(desk).get(REPORTS).json()["wait"]
+
+    assert wait["median_minutes"] == 20.0
+    assert wait["enough_data"] is True
+
+
+@pytest.mark.django_db
+def test_an_entry_left_open_overnight_does_not_poison_the_median(
+    client_as, desk, facility, general
+):
+    """A receptionist clearing yesterday's queue this morning would otherwise
+    record a sixteen-hour wait and wreck the facility's own numbers."""
+    for n in range(11):
+        served_entry(facility, general, waited_minutes=20, code=f"G-{n}")
+    served_entry(facility, general, waited_minutes=16 * 60, code="G-stale")
+
+    assert client_as(desk).get(REPORTS).json()["wait"]["median_minutes"] == 20.0
+
+
+@pytest.mark.django_db
+def test_the_no_show_rate_is_null_when_there_are_no_appointments(
+    client_as, desk
+):
+    """Zero out of zero is not a zero percent no-show rate."""
+    assert client_as(desk).get(REPORTS).json()["appointments"]["no_show_rate"] is None
+
+
+@pytest.mark.django_db
+def test_the_no_show_rate(client_as, desk, facility, general):
+    make_appointment(facility, general, status=Appointment.Status.NO_SHOW)
+    for _ in range(3):
+        make_appointment(facility, general, status=Appointment.Status.SERVED)
+
+    appointments = client_as(desk).get(REPORTS).json()["appointments"]
+
+    assert appointments["total"] == 4
+    assert appointments["no_shows"] == 1
+    assert appointments["no_show_rate"] == 0.25
+
+
+@pytest.mark.django_db
+def test_cancelled_appointments_still_count_in_the_reports(
+    client_as, desk, facility, general
+):
+    make_appointment(facility, general, status=Appointment.Status.CANCELLED)
+
+    assert client_as(desk).get(REPORTS).json()["appointments"]["total"] == 1
+
+
+@pytest.mark.django_db
+def test_demand_is_ordered_by_pressure(client_as, desk, facility, general, db):
+    antenatal = ServiceType.objects.create(
+        code="antenatal", name_en="Antenatal", name_rw="x", name_fr="x"
+    )
+    for n in range(3):
+        QueueEntry.objects.create(
+            facility=facility, service_type=general, ticket_code=f"G-{n}"
+        )
+    QueueEntry.objects.create(
+        facility=facility, service_type=antenatal, ticket_code="A-1"
+    )
+
+    demand = client_as(desk).get(REPORTS).json()["demand"]
+
+    assert [row["service"] for row in demand] == ["general_consultation", "antenatal"]
+    assert demand[0]["count"] == 3
+
+
+@pytest.mark.django_db
+def test_the_window_is_bounded(client_as, desk):
+    """An unbounded window is a table scan somebody can ask for repeatedly."""
+    for days in ("0", "91", "-5"):
+        response = client_as(desk).get(REPORTS, {"days": days})
+        assert response.status_code == 400, days
+
+    assert client_as(desk).get(REPORTS, {"days": "7"}).json()["days"] == 7
+
+
+@pytest.mark.django_db
+def test_a_malformed_window_is_a_400_not_a_500(client_as, desk):
+    response = client_as(desk).get(REPORTS, {"days": "lots"})
+
+    assert response.status_code == 400
+    assert response.json()["field"] == "days"
+
+
+@pytest.mark.django_db
+def test_visits_outside_the_window_are_excluded(
+    client_as, desk, facility, general
+):
+    served_entry(facility, general, waited_minutes=20, days_ago=45, code="G-old")
+
+    assert client_as(desk).get(REPORTS, {"days": "30"}).json()["period"][
+        "checked_in"
+    ] == 0
+    assert client_as(desk).get(REPORTS, {"days": "60"}).json()["period"][
+        "checked_in"
+    ] == 1
+
+
+@pytest.mark.django_db
+def test_todays_counts_are_separate_from_the_window(
+    client_as, desk, facility, general
+):
+    QueueEntry.objects.create(
+        facility=facility, service_type=general, ticket_code="G-now"
+    )
+    served_entry(facility, general, waited_minutes=20, days_ago=3, code="G-old")
+
+    body = client_as(desk).get(REPORTS).json()
+
+    assert body["today"]["checked_in"] == 1
+    assert body["today"]["waiting"] == 1
+    assert body["period"]["checked_in"] == 2
+
+
+@pytest.mark.django_db
+def test_a_no_show_can_be_put_right(client_as, desk, facility, general):
+    """People turn up late and receptionists mis-tap. Correcting it must not
+    need a support call."""
+    appointment = make_appointment(
+        facility, general, status=Appointment.Status.NO_SHOW
+    )
+
+    client_as(desk).post(
+        f"{APPOINTMENTS}/{appointment.id}/status", {"status": "arrived"},
+        format="json",
+    )
+
+    appointment.refresh_from_db()
+    assert appointment.status == Appointment.Status.ARRIVED
+
+
+@pytest.mark.django_db
+def test_reviving_a_no_show_into_an_occupied_slot_is_a_409(
+    client_as, desk, facility, general
+):
+    """one_active_appointment_per_slot. Reachable when the patient rebooked
+    the identical slot after not turning up - a 409, not a 500."""
+    patient = Patient.objects.create(phone="+250788333444", full_name="B. Keza")
+    missed = make_appointment(
+        facility, general, patient=patient, status=Appointment.Status.NO_SHOW
+    )
+    Appointment.objects.create(
+        facility=facility, service_type=general, patient=patient,
+        slot_start=missed.slot_start, slot_end=missed.slot_end,
+        status=Appointment.Status.BOOKED,
+    )
+
+    response = client_as(desk).post(
+        f"{APPOINTMENTS}/{missed.id}/status", {"status": "arrived"}, format="json"
+    )
+
+    assert response.status_code == 409
+    missed.refresh_from_db()
+    assert missed.status == Appointment.Status.NO_SHOW

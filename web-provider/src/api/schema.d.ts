@@ -30,6 +30,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/appointments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One appointment
+         * @description Scoped to the caller: an enumerated id must not reveal somebody else's
+         *     appointment.
+         */
+        get: operations["appointment_detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/appointments/{id}/cancel": {
         parameters: {
             query?: never;
@@ -278,6 +299,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/notification-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Which messages you receive */
+        get: operations["notification_preferences"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Turn one kind of message on or off */
+        patch: operations["notification_preferences_update"];
+        trace?: never;
+    };
+    "/api/v1/me/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Messages MediLink has sent you */
+        get: operations["notification_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/providers": {
         parameters: {
             query?: never;
@@ -440,6 +496,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One search across specialties, services, doctors and facilities
+         * @description A patient typing 'pediatric' does not know whether that is a service, a specialty, a doctor or a hospital. Results come back grouped, ordered by what gets somebody to care fastest. Empty groups are omitted rather than returned empty.
+         */
+        get: operations["global_search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/service-types": {
         parameters: {
             query?: never;
@@ -481,6 +557,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/staff/appointments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Appointments booked at the caller's facility
+         * @description Today's list, so reception knows who is expected.
+         *
+         *     Scoped to the caller's facility through active_staff(), never through a
+         *     facility id in the query string - see permissions.py for why.
+         */
+        get: operations["staff_appointments_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/appointments/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark an appointment arrived, served or a no-show
+         * @description The three transitions reception actually performs.
+         *
+         *     Cancellation is deliberately NOT here: a facility cancelling on a patient
+         *     has to notify them, which is what the scheduling endpoint does.
+         */
+        post: operations["staff_appointments_status_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/staff/me": {
         parameters: {
             query?: never;
@@ -494,6 +616,23 @@ export interface paths {
          *     operating, and which services that facility offers.
          */
         get: operations["staff_me_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Operational report for the caller's facility */
+        get: operations["staff_reports_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -570,6 +709,7 @@ export interface components {
             readonly status: components["schemas"]["AppointmentStatusEnum"];
             readonly facility: components["schemas"]["AppointmentFacility"];
             readonly service: string;
+            readonly provider: string | null;
             /** Format: date-time */
             readonly slot_start: string;
             /** Format: date-time */
@@ -581,6 +721,15 @@ export interface components {
             phone: string;
         };
         /**
+         * @description The three transitions reception performs from the appointment list.
+         *
+         *     Cancellation is absent on purpose: a facility cancelling on a patient owes
+         *     them a message, so it goes through the scheduling endpoint that sends one.
+         */
+        AppointmentStatus: {
+            status: components["schemas"]["AppointmentStatusStatusEnum"];
+        };
+        /**
          * @description * `booked` - Booked
          *     * `arrived` - Arrived
          *     * `served` - Served
@@ -589,6 +738,13 @@ export interface components {
          * @enum {string}
          */
         AppointmentStatusEnum: "booked" | "arrived" | "served" | "no_show" | "cancelled";
+        /**
+         * @description * `arrived` - arrived
+         *     * `served` - served
+         *     * `no_show` - no_show
+         * @enum {string}
+         */
+        AppointmentStatusStatusEnum: "arrived" | "served" | "no_show";
         Board: {
             facility: components["schemas"]["BoardFacility"];
             as_of: string;
@@ -601,6 +757,7 @@ export interface components {
         Booking: {
             facility: string;
             service: string;
+            provider?: string | null;
             /** Format: date-time */
             slot_start: string;
         };
@@ -697,6 +854,17 @@ export interface components {
             readonly wait: components["schemas"]["Wait"];
             readonly bookable: boolean;
         };
+        FacilityReport: {
+            facility: string;
+            days: number;
+            /** Format: date-time */
+            as_of: string;
+            today: components["schemas"]["ReportToday"];
+            period: components["schemas"]["ReportPeriod"];
+            wait: components["schemas"]["ReportWait"];
+            appointments: components["schemas"]["ReportAppointments"];
+            demand: components["schemas"]["ReportDemand"][];
+        };
         Insurer: {
             code: string;
             name: string;
@@ -711,20 +879,20 @@ export interface components {
             results: components["schemas"]["Insurer"][];
         };
         /**
+         * @description * `specialty` - specialty
+         *     * `service` - service
+         *     * `provider` - provider
+         *     * `facility` - facility
+         * @enum {string}
+         */
+        KindEnum: "specialty" | "service" | "provider" | "facility";
+        /**
          * @description * `rw` - Kinyarwanda
          *     * `en` - English
          *     * `fr` - Francais
          * @enum {string}
          */
         LanguageEnum: "rw" | "en" | "fr";
-        /**
-         * @description * `rw` - Kinyarwanda
-         *     * `en` - English
-         *     * `fr` - Francais
-         *     * `sw` - Kiswahili
-         * @enum {string}
-         */
-        LanguagesEnum: "rw" | "en" | "fr" | "sw";
         /**
          * @description * `health_post` - Health post
          *     * `health_centre` - Health centre
@@ -759,6 +927,25 @@ export interface components {
             count: number;
             results: components["schemas"]["FacilityNearby"][];
         };
+        /**
+         * @description What was sent to this patient. Read-only: a notification is a record of
+         *     something that happened, never something a client authors.
+         */
+        Notification: {
+            readonly id: number;
+            readonly kind: string;
+            readonly kind_label: string;
+            readonly channel: string;
+            readonly body: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly sent_at: string | null;
+        };
+        NotificationList: {
+            count: number;
+            results: components["schemas"]["Notification"][];
+        };
         OTPRequest: {
             phone: string;
         };
@@ -790,6 +977,10 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
+        PatchedPreferenceUpdate: {
+            kind?: string;
+            enabled?: boolean;
+        };
         Patient: {
             readonly id: number;
             readonly phone: string;
@@ -807,28 +998,33 @@ export interface components {
             role_title: string;
             services: string[];
         };
+        Preference: {
+            kind: string;
+            label: string;
+            enabled: boolean;
+            can_disable: boolean;
+        };
+        PreferenceList: {
+            results: components["schemas"]["Preference"][];
+        };
         Provider: {
-            slug: string;
+            readonly slug: string;
             readonly display_name: string;
-            full_name: string;
+            readonly full_name: string;
             readonly initials: string;
-            /** Format: uri */
-            photo_url?: string;
-            /** @description Languages this clinician can consult in. */
-            languages?: components["schemas"]["LanguagesEnum"][];
+            readonly photo_url: string;
+            readonly languages: string[];
             readonly specialties: string[];
             readonly placements: components["schemas"]["Placement"][];
             readonly verified: boolean;
         };
         ProviderDetail: {
-            slug: string;
+            readonly slug: string;
             readonly display_name: string;
-            full_name: string;
+            readonly full_name: string;
             readonly initials: string;
-            /** Format: uri */
-            photo_url?: string;
-            /** @description Languages this clinician can consult in. */
-            languages?: components["schemas"]["LanguagesEnum"][];
+            readonly photo_url: string;
+            readonly languages: string[];
             readonly specialties: string[];
             readonly placements: components["schemas"]["Placement"][];
             readonly verified: boolean;
@@ -913,11 +1109,67 @@ export interface components {
             /** Format: double */
             lng: number;
         };
+        ReportAppointments: {
+            total: number;
+            no_shows: number;
+            /** Format: double */
+            no_show_rate: number | null;
+        };
+        ReportDemand: {
+            service: string;
+            count: number;
+        };
+        ReportPeriod: {
+            checked_in: number;
+            served: number;
+            left_without_being_seen: number;
+        };
+        ReportToday: {
+            checked_in: number;
+            waiting: number;
+            served: number;
+        };
+        ReportWait: {
+            /** Format: double */
+            median_minutes: number | null;
+            sample_size: number;
+            /** Format: double */
+            this_week_minutes: number | null;
+            /** Format: double */
+            last_week_minutes: number | null;
+            enough_data: boolean;
+        };
+        SearchGroup: {
+            kind: components["schemas"]["KindEnum"];
+            results: components["schemas"]["SearchResult"][];
+        };
+        SearchResponse: {
+            query: string;
+            groups: components["schemas"]["SearchGroup"][];
+        };
+        SearchResult: {
+            code: string;
+            label: string;
+            label_rw?: string;
+            label_fr?: string;
+            sublabel?: string;
+            distance_m?: number | null;
+            href: string;
+            routable: boolean;
+        };
         ServiceBrief: {
             code: string;
             name_rw: string;
             name_en: string;
             name_fr: string;
+            wait: components["schemas"]["Wait"];
+            coverage: components["schemas"]["ServiceCoverage"][];
+        };
+        ServiceCoverage: {
+            insurer: string;
+            insurer_name: string;
+            coverage: string;
+            note: string;
         };
         ServiceGroup: {
             service: string;
@@ -951,6 +1203,7 @@ export interface components {
         SlotDays: {
             facility: string;
             service: string;
+            provider: string | null;
             as_of: string;
             days: components["schemas"]["SlotDay"][];
         };
@@ -965,6 +1218,35 @@ export interface components {
         };
         SpecialtyList: {
             results: components["schemas"]["Specialty"][];
+        };
+        /**
+         * @description One row on the facility's appointment list.
+         *
+         *     Staff at the facility a patient booked with see the patient's name and
+         *     phone: they have to call somebody who has not arrived, and reception has
+         *     always had this. It is scoped to their own facility and written to the
+         *     audit log - see apps/patients/models.PatientAccessLog.
+         */
+        StaffAppointment: {
+            id: number;
+            reference: string;
+            /** Format: date-time */
+            slot_start: string;
+            /** Format: date-time */
+            slot_end: string;
+            status: string;
+            booked_via: string;
+            service: string;
+            service_code: string;
+            provider: string | null;
+            patient_name: string;
+            patient_phone: string | null;
+        };
+        StaffAppointmentList: {
+            /** Format: date */
+            date: string;
+            count: number;
+            results: components["schemas"]["StaffAppointment"][];
         };
         StaffFacility: {
             id: number;
@@ -1074,6 +1356,8 @@ export interface components {
          *     TypeScript client gets a closed union and a client that forgets to
          *     handle one of the four states fails to compile. There is deliberately
          *     no value meaning "estimated" - we never guess a wait time.
+         *
+         *     Defined above ServiceBriefSerializer because that one embeds it.
          */
         Wait: {
             status: components["schemas"]["WaitStatusEnum"];
@@ -1134,6 +1418,27 @@ export interface operations {
                 "multipart/form-data": components["schemas"]["Booking"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Appointment"];
+                };
+            };
+        };
+    };
+    appointment_detail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -1334,6 +1639,8 @@ export interface operations {
             query: {
                 date_from?: string;
                 date_to?: string;
+                /** @description Provider slug. Omit for the facility general clinic - 'any available', which is the default and the common case. */
+                provider?: string;
                 service: string;
             };
             header?: never;
@@ -1483,6 +1790,69 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    notification_preferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferenceList"];
+                };
+            };
+        };
+    };
+    notification_preferences_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPreferenceUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPreferenceUpdate"];
+                "multipart/form-data": components["schemas"]["PatchedPreferenceUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferenceList"];
+                };
+            };
+        };
+    };
+    notification_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationList"];
+                };
             };
         };
     };
@@ -1669,6 +2039,30 @@ export interface operations {
             };
         };
     };
+    global_search: {
+        parameters: {
+            query: {
+                /** @description Orders facilities by distance */
+                lat?: number;
+                lng?: number;
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResponse"];
+                };
+            };
+        };
+    };
     service_types_retrieve: {
         parameters: {
             query?: never;
@@ -1707,6 +2101,57 @@ export interface operations {
             };
         };
     };
+    staff_appointments_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Defaults to today, in the facility's local time. */
+                date?: string;
+                /** @description Filter by status. Defaults to everything not cancelled. */
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffAppointmentList"];
+                };
+            };
+        };
+    };
+    staff_appointments_status_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppointmentStatus"];
+                "application/x-www-form-urlencoded": components["schemas"]["AppointmentStatus"];
+                "multipart/form-data": components["schemas"]["AppointmentStatus"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffAppointment"];
+                };
+            };
+        };
+    };
     staff_me_retrieve: {
         parameters: {
             query?: never;
@@ -1722,6 +2167,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StaffMe"];
+                };
+            };
+        };
+    };
+    staff_reports_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Window length, 1-90. Defaults to 30. */
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacilityReport"];
                 };
             };
         };

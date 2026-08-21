@@ -28,3 +28,17 @@ export type QueueRow = Schemas["QueueEntry"] & {
 export type QueueStatus = Schemas["QueueEntryStatusEnum"]
 
 export type TransitionAction = "call" | "serve" | "skip" | "cancel"
+
+// ---------------------------------------------------------------- workspace
+
+export type StaffAppointment = Schemas["StaffAppointment"]
+export type StaffAppointmentList = Schemas["StaffAppointmentList"]
+export type FacilityReport = Schemas["FacilityReport"]
+export type FacilityDetail = Schemas["FacilityDetail"]
+export type ProviderList = Schemas["ProviderList"]
+export type Provider = Schemas["Provider"]
+export type ServiceBrief = Schemas["ServiceBrief"]
+export type InsurerBrief = Schemas["InsurerBrief"]
+
+/** The three transitions reception performs from the appointment list. */
+export type AppointmentAction = "arrived" | "served" | "no_show"
