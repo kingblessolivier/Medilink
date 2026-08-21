@@ -28,6 +28,9 @@ export function Register() {
     username: "",
     password: "",
   })
+  // Unticked by default and required by the server. A pre-ticked box is not
+  // consent - Rwanda Law 058/2021, docs/08 section 6.
+  const [consent, setConsent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -35,7 +38,10 @@ export function Register() {
     setForm((f) => ({ ...f, [key]: value }))
 
   const ready =
-    form.phone.trim() && form.username.trim().length >= 3 && form.password.length >= 8
+    form.phone.trim() &&
+    form.username.trim().length >= 3 &&
+    form.password.length >= 8 &&
+    consent
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
@@ -47,6 +53,7 @@ export function Register() {
         password: form.password,
         phone: form.phone.trim(),
         full_name: form.full_name.trim() || undefined,
+        consent,
       })
       tokens.save(result.access, result.refresh)
       await reload()
@@ -123,6 +130,21 @@ export function Register() {
               />
             )}
           </Field>
+
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-line bg-surface-sunken/50 p-3">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-5 w-5 shrink-0 accent-primary"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+            />
+            <span className="text-small text-ink">
+              {t("auth_consent")}{" "}
+              <Link to="/privacy" className="font-medium text-primary underline">
+                {t("auth_privacy_notice")}
+              </Link>
+            </span>
+          </label>
 
           {error && (
             <p role="alert" className="text-small text-danger">

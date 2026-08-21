@@ -2520,7 +2520,10 @@ components:
         full_name:
           type: string
           maxLength: 150
+        consent:
+          type: boolean
       required:
+      - consent
       - password
       - phone
       - username

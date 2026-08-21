@@ -26,6 +26,17 @@ class RegisterSerializer(serializers.Serializer):
     password = serializers.CharField(min_length=8, max_length=128, trim_whitespace=False)
     phone = serializers.CharField(max_length=20)
     full_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    # Required, and required to be TRUE. A checkbox that can be sent as false
+    # and still register somebody is not consent, it is decoration.
+    # Rwanda Law 058/2021; docs/08 section 6.
+    consent = serializers.BooleanField()
+
+    def validate_consent(self, value):
+        if value is not True:
+            raise serializers.ValidationError(
+                "You must agree to the privacy notice to create an account."
+            )
+        return value
 
     def validate_phone(self, value):
         try:

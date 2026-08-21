@@ -252,6 +252,7 @@ def test_registering_creates_a_patient_and_signs_them_in(api, db):
             "password": PASSWORD,
             "phone": "0788444555",
             "full_name": "B. Habimana",
+            "consent": True,
         },
         format="json",
     )
@@ -273,7 +274,12 @@ def test_a_ussd_patient_can_claim_web_credentials(api, db):
 
     response = api.post(
         REGISTER,
-        {"username": "claire", "password": PASSWORD, "phone": "0788777888"},
+        {
+            "username": "claire",
+            "password": PASSWORD,
+            "phone": "0788777888",
+            "consent": True,
+        },
         format="json",
     )
 
@@ -289,7 +295,12 @@ def test_registering_an_existing_account_cannot_reset_its_password(api, patient)
     by 'registering' it."""
     response = api.post(
         REGISTER,
-        {"username": "someone-else", "password": "attacker-chosen", "phone": "0788111222"},
+        {
+            "username": "someone-else",
+            "password": "attacker-chosen",
+            "phone": "0788111222",
+            "consent": True,
+        },
         format="json",
     )
 
@@ -305,7 +316,7 @@ def test_a_patient_cannot_take_a_staff_username(api, receptionist):
     could never sign in again."""
     response = api.post(
         REGISTER,
-        {"username": "desk", "password": PASSWORD, "phone": "0788444555"},
+        {"username": "desk", "password": PASSWORD, "phone": "0788444555", "consent": True},
         format="json",
     )
 
@@ -317,7 +328,7 @@ def test_a_patient_cannot_take_a_staff_username(api, receptionist):
 def test_username_uniqueness_ignores_case(api, receptionist, db):
     response = api.post(
         REGISTER,
-        {"username": "DESK", "password": PASSWORD, "phone": "0788444555"},
+        {"username": "DESK", "password": PASSWORD, "phone": "0788444555", "consent": True},
         format="json",
     )
 
@@ -328,7 +339,7 @@ def test_username_uniqueness_ignores_case(api, receptionist, db):
 def test_two_patients_cannot_share_a_username(api, patient):
     response = api.post(
         REGISTER,
-        {"username": "alice", "password": PASSWORD, "phone": "0788444555"},
+        {"username": "alice", "password": PASSWORD, "phone": "0788444555", "consent": True},
         format="json",
     )
 
@@ -340,7 +351,7 @@ def test_a_username_that_looks_like_a_phone_number_is_refused(api, db):
     """It would be ambiguous at sign-in, where the same field accepts both."""
     response = api.post(
         REGISTER,
-        {"username": "+250788444555", "password": PASSWORD, "phone": "0788444555"},
+        {"username": "+250788444555", "password": PASSWORD, "phone": "0788444555", "consent": True},
         format="json",
     )
 
@@ -351,7 +362,7 @@ def test_a_username_that_looks_like_a_phone_number_is_refused(api, db):
 def test_a_short_password_is_refused(api, db):
     response = api.post(
         REGISTER,
-        {"username": "shorty", "password": "abc", "phone": "0788444555"},
+        {"username": "shorty", "password": "abc", "phone": "0788444555", "consent": True},
         format="json",
     )
 
@@ -362,7 +373,7 @@ def test_a_short_password_is_refused(api, db):
 def test_a_bad_phone_number_is_refused(api, db):
     response = api.post(
         REGISTER,
-        {"username": "bosco", "password": PASSWORD, "phone": "12"},
+        {"username": "bosco", "password": PASSWORD, "phone": "12", "consent": True},
         format="json",
     )
 
@@ -451,3 +462,59 @@ def test_repeated_guesses_get_throttled(api, patient, settings):
         LOGIN, {"username": "alice", "password": PASSWORD}, format="json"
     ).status_code == 429
     cache.clear()
+
+
+# --------------------------------------------------------------------------
+# 7. Consent - Rwanda Law 058/2021, docs/08 section 6
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_registering_records_consent_with_a_timestamp_and_version(api, db):
+    """"Captured and recorded" means both: when, and to WHAT. A later
+    revision of the notice does not retroactively become what somebody
+    agreed to."""
+    api.post(
+        REGISTER,
+        {
+            "username": "bosco",
+            "password": PASSWORD,
+            "phone": "0788444555",
+            "consent": True,
+        },
+        format="json",
+    )
+
+    patient = Patient.objects.get(username="bosco")
+    assert patient.consented_at is not None
+    assert patient.consent_version != ""
+    assert patient.has_consented is True
+
+
+@pytest.mark.django_db
+def test_registration_without_consent_is_refused(api, db):
+    for payload in ({}, {"consent": False}):
+        response = api.post(
+            REGISTER,
+            {
+                "username": "bosco",
+                "password": PASSWORD,
+                "phone": "0788444555",
+                **payload,
+            },
+            format="json",
+        )
+        assert response.status_code == 400, payload
+
+    assert not Patient.objects.filter(username="bosco").exists()
+
+
+@pytest.mark.django_db
+def test_a_ussd_patient_has_no_consent_recorded(db):
+    """Null, not a backfilled timestamp. Nobody collected it, and inventing a
+    record of consent is worse than having none - it is the one field you can
+    never honestly reconstruct."""
+    patient = Patient.objects.create(phone="+250788777888")
+
+    assert patient.consented_at is None
+    assert patient.has_consented is False

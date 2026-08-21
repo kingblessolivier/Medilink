@@ -286,6 +286,8 @@ export const api = {
     password: string
     phone: string
     full_name?: string
+    /** Required by the server, and required to be true. See docs/08 s6. */
+    consent: boolean
   }) =>
     request<SignInResponse>("/auth/register", {
       method: "POST",

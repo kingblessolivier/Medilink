@@ -76,8 +76,23 @@ class Patient(models.Model):
     national_id_hash = models.CharField(max_length=64, blank=True)
     home_location = models.PointField(geography=True, null=True, blank=True)
 
+    # Rwanda Law 058/2021 requires consent to be captured and recorded, with a
+    # timestamp and against a specific version of what was agreed to. Null for
+    # every patient created before web registration existed - USSD and
+    # WhatsApp callers among them - and null is the honest value: nobody
+    # collected it, and backfilling a timestamp would be manufacturing a
+    # record of something that did not happen.
+    consented_at = models.DateTimeField(null=True, blank=True)
+    # The privacy notice version agreed to. A later revision does not
+    # retroactively become what somebody consented to.
+    consent_version = models.CharField(max_length=20, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     last_seen_at = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def has_consented(self) -> bool:
+        return self.consented_at is not None
 
     def set_password(self, raw_password: str) -> None:
         """Hash with Django's configured hasher - never store the raw value."""
