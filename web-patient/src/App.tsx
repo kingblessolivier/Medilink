@@ -5,6 +5,9 @@ import { AuthProvider } from "./hooks/useAuth"
 import { Home } from "./routes/Home"
 import { FindCare } from "./routes/FindCare"
 import { Compare } from "./routes/Compare"
+import { Doctors } from "./routes/Doctors"
+import { DoctorProfile } from "./routes/DoctorProfile"
+import { ServiceDetail } from "./routes/ServiceDetail"
 import { FacilityDetail } from "./routes/FacilityDetail"
 import { SignIn } from "./routes/SignIn"
 import { Book } from "./routes/Book"
@@ -39,6 +42,9 @@ export function App() {
               <Route path="/" element={<Home />} />
               <Route path="/search" element={<FindCare />} />
               <Route path="/compare" element={<Compare />} />
+              <Route path="/doctors" element={<Doctors />} />
+              <Route path="/doctor/:slug" element={<DoctorProfile />} />
+              <Route path="/service/:code" element={<ServiceDetail />} />
               <Route path="/facility/:slug" element={<FacilityDetail />} />
               <Route path="/facility/:slug/book" element={<Book />} />
               <Route path="/sign-in" element={<SignIn />} />

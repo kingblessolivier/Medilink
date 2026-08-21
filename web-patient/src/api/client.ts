@@ -5,6 +5,7 @@ import type {
   NearbyResponse,
   Patient,
   QueueEntryPublic,
+  ProviderDetail,
   ProviderList,
   SearchResponse,
   ServiceType,
@@ -143,6 +144,8 @@ export const api = {
     request<{ results: ServiceType[] }>("/service-types", { auth: false }),
 
   triageStatus: () => request<TriageStatus>("/triage/status"),
+
+  provider: (slug: string) => request<ProviderDetail>(`/providers/${slug}`),
 
   providers: (params: Record<string, unknown>) =>
     request<ProviderList>("/providers", { params }),
