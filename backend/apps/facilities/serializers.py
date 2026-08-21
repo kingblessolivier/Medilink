@@ -16,6 +16,7 @@ class NearbyQuerySerializer(serializers.Serializer):
     """
 
     lat = serializers.FloatField(
+        required=False,
         min_value=settings.RWANDA_BOUNDS["lat"][0],
         max_value=settings.RWANDA_BOUNDS["lat"][1],
         error_messages={
@@ -30,6 +31,7 @@ class NearbyQuerySerializer(serializers.Serializer):
         },
     )
     lng = serializers.FloatField(
+        required=False,
         min_value=settings.RWANDA_BOUNDS["lng"][0],
         max_value=settings.RWANDA_BOUNDS["lng"][1],
         error_messages={
@@ -61,6 +63,30 @@ class NearbyQuerySerializer(serializers.Serializer):
     limit = serializers.IntegerField(
         required=False, min_value=1, max_value=50, default=20
     )
+    # The fallback when a browser will not give up a location - denied, an
+    # insecure origin, or a device that simply has no fix. The patient says
+    # which district they are in and gets that district's facilities.
+    district = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        """One of a coordinate pair or a district, and lat/lng come together.
+
+        Enforced here rather than in the view so the error names the field a
+        client can act on, and so the schema marks all three as optional
+        without implying any combination will do.
+        """
+        has_point = attrs.get("lat") is not None and attrs.get("lng") is not None
+        half_a_point = ("lat" in attrs) != ("lng" in attrs)
+
+        if half_a_point:
+            raise serializers.ValidationError(
+                {"lng": "lat and lng must be given together."}
+            )
+        if not has_point and not attrs.get("district"):
+            raise serializers.ValidationError(
+                {"district": "Give lat and lng, or a district."}
+            )
+        return attrs
 
 
 class LocationField(serializers.Serializer):
@@ -148,8 +174,17 @@ class FacilityNearbySerializer(serializers.ModelSerializer):
             "bookable",
         ]
 
-    def get_distance_m(self, obj) -> int:
-        return round(obj.distance.m)
+    @extend_schema_field(serializers.IntegerField(allow_null=True))
+    def get_distance_m(self, obj) -> int | None:
+        """Null when the search had no origin.
+
+        A district search knows the patient is in Gasabo and nothing more, so
+        there is no honest distance to report. Null rather than 0 or a
+        district-centroid guess: the client hides the line, which is correct,
+        whereas a fabricated number would be acted on.
+        """
+        distance = getattr(obj, "distance", None)
+        return round(distance.m) if distance is not None else None
 
     @extend_schema_field(LocationField)
     def get_location(self, obj) -> dict:
@@ -302,8 +337,10 @@ class FacilityDetailSerializer(serializers.ModelSerializer):
 
 
 class NearbyQueryEchoSerializer(serializers.Serializer):
-    lat = serializers.FloatField()
-    lng = serializers.FloatField()
+    # Null on a district search - there was no coordinate to echo back.
+    lat = serializers.FloatField(allow_null=True)
+    lng = serializers.FloatField(allow_null=True)
+    district = serializers.CharField(allow_null=True)
     radius = serializers.IntegerField()
     radius_expanded = serializers.BooleanField()
     insurer = serializers.CharField(allow_null=True)

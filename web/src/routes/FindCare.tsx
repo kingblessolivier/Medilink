@@ -40,13 +40,21 @@ export function FindCare() {
   const service = params.get("service") ?? undefined
   const specialty = params.get("specialty") ?? undefined
   const openNow = params.get("open") === "1"
+  // In the URL like every other filter, so a reloaded or shared link
+  // reproduces the same list.
+  const district = params.get("district") ?? undefined
 
   useEffect(() => {
     locate()
   }, [locate])
 
   const coords = geo.status === "ready" ? { lat: geo.lat, lng: geo.lng } : null
-  const query = useNearbyFacilities(coords, { insurer, service, specialty, openNow })
+  // A real location wins: it gives distances, which a district cannot.
+  const query = useNearbyFacilities(
+    coords,
+    { insurer, service, specialty, openNow },
+    district,
+  )
 
   const { data: serviceData } = useServiceTypes()
   const { data: specialtyData } = useSpecialties()
@@ -169,6 +177,8 @@ export function FindCare() {
                     ? t("out_of_bounds")
                     : t("location_denied")
                 }
+                selected={district}
+                onPick={(picked) => setParam("district", picked)}
                 onRetry={locate}
               />
             </div>

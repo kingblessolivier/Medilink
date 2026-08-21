@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useI18n } from "../i18n"
 import { useGeolocation } from "../hooks/useGeolocation"
 import {
@@ -33,6 +33,7 @@ import { Button, Card, EmptyState, ErrorState, ListSkeleton, Notice } from "../u
  */
 export function Home() {
   const { t, lang } = useI18n()
+  const navigate = useNavigate()
   const { state: geo, locate } = useGeolocation()
   const { insurer, setInsurer } = useInsurerPreference()
   const patient = usePatient()
@@ -122,11 +123,17 @@ export function Home() {
 
         {geoFailed && (
           <div className="mb-6">
+            {/* Home is a summary. Picking a district hands off to /search,
+                where the filters and the full list already live, rather than
+                growing a second half-featured results list here. */}
             <DistrictPicker
               message={
                 geo.status === "out_of_bounds"
                   ? t("out_of_bounds")
                   : t("location_denied")
+              }
+              onPick={(district) =>
+                navigate(`/search?district=${encodeURIComponent(district)}`)
               }
               onRetry={locate}
             />

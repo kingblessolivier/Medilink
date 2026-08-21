@@ -38,6 +38,8 @@ export function FacilityCard({
 }: Props) {
   const { t } = useI18n()
 
+  const distance = formatDistance(facility.distance_m, t("distance_nearby"))
+
   return (
     <Card
       as="article"
@@ -62,9 +64,13 @@ export function FacilityCard({
             {facility.sector ? ` · ${facility.sector}` : ""}
           </p>
         </div>
-        <span className="shrink-0 text-small font-medium text-ink-muted">
-          {formatDistance(facility.distance_m, t("distance_nearby"))}
-        </span>
+        {/* Hidden, not blanked: a district search has no distance to show,
+            and an empty slot reads as a value that failed to load. */}
+        {distance && (
+          <span className="shrink-0 text-small font-medium text-ink-muted">
+            {distance}
+          </span>
+        )}
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5">
@@ -78,7 +84,13 @@ export function FacilityCard({
         )}
       </div>
 
-      <WaitLine wait={facility.wait} className="mt-2.5" />
+      {/* The OpenState chip above already says the facility is closed, and
+          `wait.status === "closed"` renders the same word again - so a shut
+          facility read "Closed · Closed". The wait line has nothing to add
+          once the door is shut. */}
+      {facility.wait.status !== "closed" && (
+        <WaitLine wait={facility.wait} className="mt-2.5" />
+      )}
 
       <div className="mt-4 flex gap-2">
         <a

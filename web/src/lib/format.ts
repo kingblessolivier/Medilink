@@ -1,4 +1,15 @@
-export function formatDistance(metres: number, nearbyLabel: string): string {
+/**
+ * A distance, or nothing at all.
+ *
+ * Null when the search had no origin - a district search knows the patient is
+ * in Gasabo and nothing more. Returning "0 m" or a guess would put a number
+ * on screen that somebody would act on.
+ */
+export function formatDistance(
+  metres: number | null | undefined,
+  nearbyLabel: string,
+): string | null {
+  if (metres === null || metres === undefined) return null
   if (metres < 100) return nearbyLabel
   if (metres < 1000) return `${Math.round(metres / 50) * 50} m`
   return `${(metres / 1000).toFixed(1)} km`

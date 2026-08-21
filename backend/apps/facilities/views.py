@@ -26,8 +26,17 @@ from .wait import wait_snapshot
         "simply do not report."
     ),
     parameters=[
-        OpenApiParameter("lat", float, required=True),
-        OpenApiParameter("lng", float, required=True),
+        OpenApiParameter("lat", float, description="With lng. Or give district."),
+        OpenApiParameter("lng", float, description="With lat. Or give district."),
+        OpenApiParameter(
+            "district",
+            str,
+            description=(
+                "The fallback when a browser gives no location. Returns that "
+                "district's facilities with distance_m null - there is no "
+                "origin to measure from."
+            ),
+        ),
         OpenApiParameter("radius", int, description="Metres. Default 5000, max 50000."),
         OpenApiParameter("insurer", str, description="Insurer code, e.g. mutuelle"),
         OpenApiParameter("service", str, description="Service type code"),
@@ -49,8 +58,9 @@ def nearby(request):
     v = params.validated_data
 
     facilities, effective_radius, expanded = find_nearby(
-        lat=v["lat"],
-        lng=v["lng"],
+        lat=v.get("lat"),
+        lng=v.get("lng"),
+        district=v.get("district") or None,
         radius_m=v["radius"],
         insurer=v.get("insurer"),
         service=v.get("service"),
@@ -66,8 +76,9 @@ def nearby(request):
         {
             "as_of": timezone.localtime().isoformat(),
             "query": {
-                "lat": v["lat"],
-                "lng": v["lng"],
+                "lat": v.get("lat"),
+                "lng": v.get("lng"),
+                "district": v.get("district") or None,
                 "radius": effective_radius,
                 "radius_expanded": expanded,
                 "insurer": v.get("insurer"),
