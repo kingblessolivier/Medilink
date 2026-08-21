@@ -255,5 +255,7 @@
   "profile_save_failed": "Ntibyakunze kubika impinduka. Ongera ugerageze.",
   "compare_partial": "Ibigo {n} ntibyashoboye kuzana amakuru. Ibindi birerekanwa.",
   "queue_load_failed": "Ntibyakunze kureba aho ugeze mu murongo.",
-  "queue_load_failed_body": "Ibi ntibisobanura ko wavuye mu murongo. Ongera ugerageze."
+  "queue_load_failed_body": "Ibi ntibisobanura ko wavuye mu murongo. Ongera ugerageze.",
+  "queue_title": "Aho ugeze mu murongo",
+  "appointment_title": "Igihe cyawe kwa muganga"
 }

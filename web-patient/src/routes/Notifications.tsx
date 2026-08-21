@@ -40,6 +40,7 @@ export function Notifications() {
   if (!patient) {
     return (
       <div className="ml-page py-6">
+        <h1 className="mb-4 text-h1">{t("notifications_title")}</h1>
         <EmptyState
           title={t("sign_in_to_track")}
           action={

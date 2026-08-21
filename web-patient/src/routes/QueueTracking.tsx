@@ -28,6 +28,7 @@ export function QueueTracking() {
   if (!patient) {
     return (
       <div className="ml-page py-6">
+        <h1 className="mb-4 text-h1">{t("queue_title")}</h1>
         <EmptyState
           title={t("sign_in_to_track")}
           action={
@@ -90,6 +91,10 @@ export function QueueTracking() {
 
   return (
     <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24">
+      {/* Visually the facility name leads, but the page still has to SAY what
+          it is - the position and the departure time below carry the weight,
+          so the heading stays small rather than competing with them. */}
+      <h1 className="sr-only">{t("queue_title")}</h1>
       <p className="text-center text-body text-ink-muted">
         {entry.facility.name}
       </p>

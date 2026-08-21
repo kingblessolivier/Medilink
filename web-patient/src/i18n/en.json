@@ -255,5 +255,7 @@
   "profile_save_failed": "That change was not saved. Please try again.",
   "compare_partial": "{n} facilities could not be loaded. The rest are shown.",
   "queue_load_failed": "Could not check your place in the queue.",
-  "queue_load_failed_body": "This does not mean you have lost your place. Please try again."
+  "queue_load_failed_body": "This does not mean you have lost your place. Please try again.",
+  "queue_title": "Your place in the queue",
+  "appointment_title": "Your appointment"
 }
