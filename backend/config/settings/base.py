@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "apps.scheduling",
     "apps.notifications",
     "apps.platform_admin",
+    "apps.accounts",
     # Local - Phase 3
     "apps.gateway",
     # Local - Phase 4
@@ -152,6 +153,9 @@ REST_FRAMEWORK = {
         "anon": "60/min",
         "user": "600/min",
         "otp": "3/15min",
+        # Password guessing, kept off the general anon bucket so ordinary
+        # browsing cannot spend an attacker's budget or vice versa.
+        "signin": "10/min",
     },
     "EXCEPTION_HANDLER": "config.exceptions.rfc7807_exception_handler",
 }

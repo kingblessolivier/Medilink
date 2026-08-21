@@ -112,6 +112,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/Appointment'
           description: ''
+  /api/v1/auth/login:
+    post:
+      operationId: auth_login_create
+      description: One endpoint for patients, facility staff and platform admins.
+        The response says which kind the caller is; the client routes on that. A patient
+        may use either their username or their phone number.
+      summary: Sign in with a username and password
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Login'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignInResponse'
+          description: ''
   /api/v1/auth/otp/request:
     post:
       operationId: auth_otp_request_create
@@ -169,6 +199,54 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenPair'
+          description: ''
+  /api/v1/auth/register:
+    post:
+      operationId: auth_register_create
+      description: Creates a patient account, or attaches web credentials to a phone
+        number that has only ever used USSD. Staff and admin accounts are created
+        by MediLink, never self-served.
+      summary: Register as a patient
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Register'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Register'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignInResponse'
+          description: ''
+  /api/v1/auth/session:
+    get:
+      operationId: auth_session_retrieve
+      description: The client calls this on load to decide which surface to show.
+        It accepts either principal - a staff/admin JWT or a patient JWT.
+      summary: The signed-in caller and what kind of thing they are
+      tags:
+      - auth
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
           description: ''
   /api/v1/auth/token:
     post:
@@ -1811,6 +1889,18 @@ components:
       required:
       - lat
       - lng
+    Login:
+      type: object
+      properties:
+        username:
+          type: string
+          maxLength: 150
+        password:
+          type: string
+          maxLength: 128
+      required:
+      - password
+      - username
     NearbyQueryEcho:
       type: object
       properties:
@@ -2401,6 +2491,26 @@ components:
       required:
       - lat
       - lng
+    Register:
+      type: object
+      properties:
+        username:
+          type: string
+          pattern: ^[A-Za-z0-9._-]{3,150}$
+        password:
+          type: string
+          maxLength: 128
+          minLength: 8
+        phone:
+          type: string
+          maxLength: 20
+        full_name:
+          type: string
+          maxLength: 150
+      required:
+      - password
+      - phone
+      - username
     ReportAppointments:
       type: object
       properties:
@@ -2614,6 +2724,57 @@ components:
             $ref: '#/components/schemas/ServiceType'
       required:
       - results
+    Session:
+      type: object
+      properties:
+        kind:
+          type: string
+          nullable: true
+        display_name:
+          type: string
+        username:
+          type: string
+        facility:
+          allOf:
+          - $ref: '#/components/schemas/SessionFacility'
+          nullable: true
+        can_manage_queue:
+          type: boolean
+      required:
+      - can_manage_queue
+      - display_name
+      - facility
+      - kind
+      - username
+    SessionFacility:
+      type: object
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        name:
+          type: string
+        district:
+          type: string
+      required:
+      - district
+      - id
+      - name
+      - slug
+    SignInResponse:
+      type: object
+      properties:
+        access:
+          type: string
+        refresh:
+          type: string
+        session:
+          $ref: '#/components/schemas/Session'
+      required:
+      - access
+      - refresh
+      - session
     Slot:
       type: object
       properties:
