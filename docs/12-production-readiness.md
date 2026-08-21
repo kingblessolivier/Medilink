@@ -1,0 +1,147 @@
+# Production readiness
+
+**Question asked:** is MediLink ready to be used by companies?
+
+**Answer:** the software is ready. The *service* is not, and most of what is
+missing cannot be written in code.
+
+This document separates those two things, because conflating them is how a
+health product gets deployed with a symptom checker no clinician approved and
+a database in the wrong country.
+
+---
+
+## 1. Where the software stands
+
+| | |
+|---|---|
+| Backend tests | 560 passing, 93% coverage |
+| Frontend tests | 25 passing |
+| API operations | 47, schema generated with zero warnings |
+| Screens | 30 across three surfaces |
+| Translations | 320 keys × 3 languages, parity enforced by test |
+| Patient bundle | 107 KB gzipped (budget 150 KB) |
+| `npm audit` | 0 vulnerabilities |
+| `pip-audit` | clean, excluding `pip` itself (the installer, not shipped) |
+| Django | 5.2 LTS |
+
+Run `python manage.py readiness` for the settings-level launch checks. It
+exits non-zero on a blocker, so it can gate a deploy.
+
+### What works end to end
+
+Verified by driving a browser, not by reading code:
+
+- Patient discovery — search by location or district, facility and doctor
+  directories, insurance filtering
+- One sign-in for all three user types, routing on the session `kind`
+- Facility workspace — keyboard-first check-in measured at **2.6 s** against
+  a 10 s budget, appointments, reports
+- Platform portal — verification queue, adoption figures, Care Guide
+  monitoring
+- Offline reception: check-ins queue locally and sync on reconnect
+
+---
+
+## 2. What blocks a real launch
+
+None of these are code. All of them are real.
+
+### Clinical
+
+- **No clinician has signed off a triage protocol.** The Care Guide is
+  therefore switched off — `apps/triage/gate.py` returns 503 on every triage
+  endpoint until four settings are configured, and the UI hides the entry
+  points entirely. This is the feature working correctly, not a bug. The rest
+  of MediLink delivers its value without it.
+- **Ministry of Health and Rwanda FDA have not been consulted** on whether the
+  Care Guide is a regulated medical device.
+
+### Legal
+
+- **The privacy notice has not been reviewed by a lawyer.** `/privacy` exists
+  in all three languages and describes what the code actually does, but it
+  says plainly on the page that it is a draft. Consent captured against an
+  unreviewed notice may not be valid consent.
+- **No data processing agreements are signed** with any processor — SMS
+  gateway, hosting provider, WhatsApp.
+- **Hosting location is undecided.** Rwanda Law 058/2021 constrains where
+  personal data may live. This has to be settled *before* the first patient
+  record exists, not after.
+
+### Operational
+
+- **Nothing has ever been deployed.** `infra/deploy.sh`,
+  `docker-compose.prod.yml` and `nginx.conf` are written and have never run.
+- **GitHub Actions has never executed a single job.** Every run fails in ~2
+  seconds with no runner assigned (`runner_id: 0`, empty `steps`) — an
+  account-level Actions block, not a repository problem. **Every test result
+  quoted in this document was produced locally.** Until CI runs, there is no
+  independent verification that the suite passes on a clean machine.
+- **No encrypted backup and no rehearsed restore.** An untested backup is not
+  a backup.
+- **Admin is not behind an IP allowlist or MFA.**
+
+### Data
+
+- **The 25 seeded facilities are demonstration data.** Coordinates are
+  approximate. Before launch, facility locations must be captured on site —
+  a patient sent 400 m in the wrong direction in Kigali traffic is a real
+  harm, and one wrong pin is worse than no pin.
+- **Map tiles come from OpenStreetMap's community servers**, which are
+  volunteer-funded and explicitly not for production traffic. A paid tile
+  provider or a self-hosted instance is required.
+
+### Channels
+
+- **No USSD shortcode.** Requires RURA and the mobile operators; realistically
+  months.
+- **No approved WhatsApp templates.** Requires Meta review.
+
+### Not yet tested
+
+- **On a real low-end Android phone on a real 3G connection.** The bundle
+  budget and the offline behaviour were verified with throttling in a desktop
+  browser, which is not the same thing.
+- **A pilot.** docs/09 specifies five unaided days at one facility with a
+  stopwatch baseline taken *before* MediLink is installed. Without the
+  baseline there is no way to claim the wait times improved.
+
+---
+
+## 3. What "ready for companies" means here
+
+Two different customers, two different answers.
+
+**A facility buying the reception tool** — the workspace is genuinely usable
+today. Check-in is measured and fast, the queue works offline, and the reports
+answer the four questions a facility manager actually has. What stops a sale
+is not the software: it is that nobody has deployed it, no data agreement is
+signed, and there is no pilot to point at.
+
+**A patient-facing launch** — blocked on the data quality and legal items
+above. Publishing approximate coordinates and an unreviewed privacy notice to
+the public is not a soft failure.
+
+---
+
+## 4. Suggested order
+
+1. Decide hosting location, then deploy — nothing else can be validated first
+2. Get GitHub Actions unblocked, so the suite is verified somewhere other than
+   one laptop
+3. Lawyer review of the privacy notice; sign DPAs
+4. Field-verify facility coordinates for the pilot facility and its neighbours
+5. Encrypted backup with a restore drill
+6. Pilot: stopwatch baseline first, then five unaided days
+7. Paid map tiles before any public traffic
+8. Clinical sign-off — or ship without the Care Guide, which is what the gate
+   is designed for
+
+Items 1–6 are weeks. Items 7–8 and the USSD shortcode are months, and none of
+them block the facility-facing product.
+
+---
+
+*Last verified 2026-08-21. Every figure here was measured on the date shown,
+locally, because CI has never run.*
