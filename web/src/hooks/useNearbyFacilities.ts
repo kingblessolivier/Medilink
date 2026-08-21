@@ -11,23 +11,37 @@ export type NearbyFilters = {
   radius?: number
 }
 
+/**
+ * Facilities near a point, or in a district.
+ *
+ * `district` is an alternative ORIGIN, not an extra filter: it is what a
+ * patient gives when their browser will not hand over a location. Results
+ * then come back with `distance_m: null`, because there is genuinely no
+ * point to measure from.
+ */
 export function useNearbyFacilities(
   coords: Coordinates | null,
   filters: NearbyFilters = {},
+  district?: string | null,
 ) {
+  const origin = coords
+    ? { lat: coords.lat, lng: coords.lng }
+    : district
+      ? { district }
+      : null
+
   return useQuery({
-    queryKey: ["nearby", coords, filters],
+    queryKey: ["nearby", origin, filters],
     queryFn: () =>
       api.nearby({
-        lat: coords!.lat,
-        lng: coords!.lng,
+        ...origin!,
         insurer: filters.insurer,
         service: filters.service,
         specialty: filters.specialty,
         open_now: filters.openNow,
         radius: filters.radius,
       }),
-    enabled: coords !== null,
+    enabled: origin !== null,
     // A facility list does not change minute to minute.
     staleTime: 60_000,
     // Keep for a day so the offline fallback has something to show.

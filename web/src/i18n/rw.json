@@ -286,5 +286,8 @@
   "nav_reports": "Raporo",
   "nav_overview": "Incamake",
   "nav_verification": "Kwemeza",
-  "nav_care_guide_monitoring": "Gukurikirana inama"
+  "nav_care_guide_monitoring": "Gukurikirana inama",
+  "districts_unavailable": "Ntibyakunze kuzana urutonde rw'uturere.",
+  "retry_location": "Ongera ugerageze kumenya aho ndi",
+  "searching_district": "Amavuriro yo mu karere ka {district}. Nta ntera ivuzwe kuko tutamenya aho uri."
 }

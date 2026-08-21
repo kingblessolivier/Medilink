@@ -148,8 +148,10 @@ async function request<T>(
 export const api = {
   // --- discovery (public) ---
   nearby: (params: {
-    lat: number
-    lng: number
+    /** With lng. Omit both and give `district` instead. */
+    lat?: number
+    lng?: number
+    district?: string
     radius?: number
     insurer?: string
     service?: string

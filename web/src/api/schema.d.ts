@@ -1010,7 +1010,7 @@ export interface components {
             district: string;
             sector?: string;
             readonly location: components["schemas"]["LocationField"];
-            readonly distance_m: number;
+            readonly distance_m: number | null;
             phone?: string;
             readonly is_open: boolean;
             readonly opens_at: string | null;
@@ -1084,9 +1084,10 @@ export interface components {
         };
         NearbyQueryEcho: {
             /** Format: double */
-            lat: number;
+            lat: number | null;
             /** Format: double */
-            lng: number;
+            lng: number | null;
+            district: string | null;
             radius: number;
             radius_expanded: boolean;
             insurer: string | null;
@@ -2003,13 +2004,17 @@ export interface operations {
     };
     facilities_nearby_retrieve: {
         parameters: {
-            query: {
+            query?: {
+                /** @description The fallback when a browser gives no location. Returns that district's facilities with distance_m null - there is no origin to measure from. */
+                district?: string;
                 /** @description Insurer code, e.g. mutuelle */
                 insurer?: string;
-                lat: number;
+                /** @description With lng. Or give district. */
+                lat?: number;
                 level?: string[];
                 limit?: number;
-                lng: number;
+                /** @description With lat. Or give district. */
+                lng?: number;
                 open_now?: boolean;
                 /** @description Metres. Default 5000, max 50000. */
                 radius?: number;

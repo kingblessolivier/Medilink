@@ -43,8 +43,9 @@ def _open_now_subquery(now):
 
 def find_nearby(
     *,
-    lat: float,
-    lng: float,
+    lat: float | None = None,
+    lng: float | None = None,
+    district: str | None = None,
     radius_m: int | None = None,
     insurer: str | None = None,
     service: str | None = None,
@@ -63,7 +64,7 @@ def find_nearby(
     # PostGIS takes x then y: longitude BEFORE latitude. Getting this backwards
     # is silent - every Kigali facility lands in the Indian Ocean and distances
     # look merely "wrong" rather than obviously broken.
-    point = Point(lng, lat, srid=4326)
+    point = Point(lng, lat, srid=4326) if lat is not None and lng is not None else None
     now = timezone.localtime()
 
     qs = (
@@ -122,6 +123,8 @@ def find_nearby(
             if codes
             else qs.none()
         )
+    if district:
+        qs = qs.filter(district__iexact=district)
     if levels:
         qs = qs.filter(level__in=levels)
     if open_now:
@@ -142,6 +145,20 @@ def find_nearby(
             output_field=IntegerField(),
         )
     )
+
+    # ---------------------------------------------------------- no origin
+    #
+    # A district search knows the patient is in Gasabo and nothing more. There
+    # is no point to measure from, so there is no radius to expand and no
+    # distance to report - `distance` stays unannotated and the serializer
+    # sends null. Ordering falls back to the tiering, then level and name.
+    #
+    # Guessing a district centroid was the alternative and was rejected: it
+    # would put a number on the screen that a patient would act on, computed
+    # from a location nobody gave us.
+    if point is None:
+        results = list(qs.order_by("tier", "level", "name")[:limit])
+        return results, radius_m, False
 
     expanded = False
     steps = [s for s in settings.SEARCH_EXPANSION_STEPS_M if s >= radius_m]

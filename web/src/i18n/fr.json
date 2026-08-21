@@ -286,5 +286,8 @@
   "nav_reports": "Rapports",
   "nav_overview": "Vue d'ensemble",
   "nav_verification": "Verification",
-  "nav_care_guide_monitoring": "Suivi du guide de soins"
+  "nav_care_guide_monitoring": "Suivi du guide de soins",
+  "districts_unavailable": "La liste des districts n'a pas pu etre chargee.",
+  "retry_location": "Reessayer avec ma position",
+  "searching_district": "Etablissements a {district}. Sans distances - nous ignorons ou vous etes."
 }

@@ -286,5 +286,8 @@
   "nav_reports": "Reports",
   "nav_overview": "Overview",
   "nav_verification": "Verification",
-  "nav_care_guide_monitoring": "Care Guide monitoring"
+  "nav_care_guide_monitoring": "Care Guide monitoring",
+  "districts_unavailable": "The district list could not be loaded.",
+  "retry_location": "Try using my location again",
+  "searching_district": "Facilities in {district}. No distances - we do not know where you are."
 }
