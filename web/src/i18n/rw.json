@@ -318,5 +318,13 @@
   "privacy_rights_body": "Ushobora gusohora amakuru yawe yose, cyangwa kuyasiba, igihe icyo ari cyo cyose. Iyo uyasibye, amavuriro abika imibare gusa - ntawe ukimenya ko ari wowe.",
   "privacy_rights_action": "Jya ku mwirondoro wawe",
   "privacy_contact_title": "Kutubaza",
-  "privacy_contact_body": "Aderesi yo kubaza ku makuru yawe izashyirwaho mbere y'uko MediLink itangira gukoreshwa."
+  "privacy_contact_body": "Aderesi yo kubaza ku makuru yawe izashyirwaho mbere y'uko MediLink itangira gukoreshwa.",
+  "nav_primary": "Ibyerekezo by'ibanze",
+  "language": "Ururimi",
+  "switch_language_to": "Hindura ururimi ujye kuri {language}",
+  "tab_home": "Ahabanza",
+  "tab_facilities": "Amavuriro",
+  "tab_visits": "Ingendo",
+  "tab_profile": "Konti",
+  "cover_none": "Ntabwo nshyizeho ubwishingizi - erekana byose"
 }

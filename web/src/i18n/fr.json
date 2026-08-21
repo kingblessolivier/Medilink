@@ -318,5 +318,13 @@
   "privacy_rights_body": "Vous pouvez exporter ou effacer vos donnees a tout moment.",
   "privacy_rights_action": "Aller a votre profil",
   "privacy_contact_title": "Nous contacter",
-  "privacy_contact_body": "Une adresse de contact sera publiee avant la mise en production."
+  "privacy_contact_body": "Une adresse de contact sera publiee avant la mise en production.",
+  "nav_primary": "Navigation principale",
+  "language": "Langue",
+  "switch_language_to": "Changer la langue en {language}",
+  "tab_home": "Accueil",
+  "tab_facilities": "Soins",
+  "tab_visits": "Visites",
+  "tab_profile": "Profil",
+  "cover_none": "Aucun assureur - tout afficher"
 }

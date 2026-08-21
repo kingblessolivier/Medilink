@@ -1,6 +1,7 @@
 import { useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useI18n } from "../i18n"
+import { useMediaQuery } from "../hooks/useMediaQuery"
 import { useGeolocation } from "../hooks/useGeolocation"
 import {
   useInsurers,
@@ -76,6 +77,10 @@ export function Home() {
   const triage = useTriageStatus()
 
   const insurerName = insurerData?.results.find((i) => i.code === insurer)?.name
+  // Three on a phone, six once the grid has columns to fill. Home is a
+  // summary; the full list is one tap away and always was.
+  const wide = useMediaQuery("(min-width: 768px)")
+  const nearbyLimit = wide ? 6 : 3
   const busy = geo.status === "locating" || nearby.isLoading
   const geoFailed =
     geo.status === "denied" ||
@@ -260,7 +265,7 @@ export function Home() {
           {/* A grid, not a stack. Three full-width cards on a 1440px monitor
               was a column of 1100px-wide boxes with one line of text in each. */}
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {nearby.data?.results.slice(0, 6).map((facility) => (
+            {nearby.data?.results.slice(0, nearbyLimit).map((facility) => (
               <FacilityCard
                 key={facility.id}
                 facility={facility}

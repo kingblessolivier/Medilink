@@ -71,6 +71,27 @@ Then complete the remaining items in
 [docs/08 section 8](../../../docs/08-security-and-compliance.md): Ministry of
 Health and Rwanda FDA consultation, and the disclaimer wording review.
 
+## Seeing the flow without clinical content
+
+To watch the mechanism work - red-flag escalation, routing, the hand-off to
+the facility directory - point the gate at the structural example. The version
+must match it exactly, which is the deliberate act that stops this happening
+by accident:
+
+```bash
+# backend/.env - LOCAL ONLY
+TRIAGE_PROTOCOL_VERSION=0.0-example
+TRIAGE_APPROVED_BY=DEMO - NOT A CLINICIAN
+TRIAGE_APPROVED_ON=2026-08-22
+TRIAGE_PROTOCOL_FILE=apps/triage/protocols/routing.example.json
+```
+
+Then `docker compose -f infra/docker-compose.yml restart api`.
+
+`manage.py readiness` reports this as a **BLOCKER**, so a deployment cannot
+carry it to patients even if somebody forgets to unset it. Unset the four
+values to close the gate again.
+
 ## If in doubt, leave it off
 
 The rest of MediLink delivers its value without a symptom checker. Shipping one

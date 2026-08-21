@@ -52,7 +52,7 @@ export function FacilityCard({
       // tallest in the row, and without this the buttons floated at different
       // heights across a row - which reads as misalignment, not as content.
       className={
-        "flex h-full flex-col p-4 " +
+        "flex h-full min-w-0 flex-col p-4 " +
         (selected ? "border-primary-border bg-primary-subtle/40" : "")
       }
     >
