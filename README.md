@@ -209,29 +209,32 @@ Windows** - run the backend in Docker or WSL2. See
 [docs/07-development-setup.md](docs/07-development-setup.md).
 
 ```bash
-# 1. Infrastructure
-docker compose -f infra/docker-compose.yml up -d       # postgis :5432, redis :6380
+# 1. Everything: postgis, redis, and the API on :8000
+cp backend/.env.example backend/.env          # first time only
+docker compose -f infra/docker-compose.yml up -d
 
-# 2. Backend (in WSL2, or via the backend Dockerfile)
-cd backend
-cp .env.example .env
-pip install -r requirements-dev.txt
-python manage.py migrate
-python manage.py loaddata fixtures/insurers.json fixtures/service_types.json fixtures/kigali_facilities.json
-python manage.py seed_demo          # development data - prints a warning, read it
-python manage.py createsuperuser
-python manage.py runserver
+# 2. Schema and data (inside the API container)
+docker compose -f infra/docker-compose.yml exec api python manage.py migrate
+docker compose -f infra/docker-compose.yml exec api python manage.py loaddata fixtures/insurers.json fixtures/service_types.json fixtures/kigali_facilities.json
+docker compose -f infra/docker-compose.yml exec api python manage.py seed_demo
+docker compose -f infra/docker-compose.yml exec api python manage.py createsuperuser
+
+# 3. Frontend
+cd web && npm install && npm run dev          # http://localhost:5173
 ```
 
-```bash
-# 3. Frontends
-cd web && npm install && npm run dev                   # http://localhost:5173
-```
+The API is a compose service, so there is no separate `runserver` step and no
+virtualenv to activate. `backend/` is bind-mounted - edits reload without a
+rebuild.
 
-The provider app needs a staff account. Create one after `createsuperuser`:
+**A `.venv` on Windows will not work.** GeoDjango needs GDAL, GEOS and PROJ as
+native libraries; a failed install leaves an empty venv, which shows up as
+`ModuleNotFoundError: No module named 'django'`.
+
+The facility workspace needs a staff account. Create one after `createsuperuser`:
 
 ```bash
-python manage.py shell -c "
+docker compose -f infra/docker-compose.yml exec api python manage.py shell -c "
 from django.contrib.auth.models import User
 from apps.facilities.models import Facility
 from apps.staff.models import StaffMember
