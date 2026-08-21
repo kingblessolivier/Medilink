@@ -4,6 +4,7 @@ import { I18nProvider } from "./i18n"
 import { AuthProvider } from "./hooks/useAuth"
 import { Home } from "./routes/Home"
 import { FindCare } from "./routes/FindCare"
+import { CareGuide } from "./routes/CareGuide"
 import { Compare } from "./routes/Compare"
 import { Doctors } from "./routes/Doctors"
 import { DoctorProfile } from "./routes/DoctorProfile"
@@ -44,6 +45,9 @@ export function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/search" element={<FindCare />} />
+              {/* Reachable by URL even when the gate is shut - the screen
+                  explains why rather than 404ing on a feature that exists. */}
+              <Route path="/care-guide" element={<CareGuide />} />
               <Route path="/compare" element={<Compare />} />
               <Route path="/doctors" element={<Doctors />} />
               <Route path="/doctor/:slug" element={<DoctorProfile />} />
