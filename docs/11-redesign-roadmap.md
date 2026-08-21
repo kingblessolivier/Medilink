@@ -310,7 +310,7 @@ The brief's highest priority, and the strongest screen in the product.
    Now `config/settings/test.py` disables throttling and uses a local-memory
    cache. Rate limits belong in tests that assert them explicitly.
 
-### R3 - Facility profile `IN PROGRESS`
+### R3 - Facility profile `DONE`
 
 - [x] Header: name, location, verified, open state, book, directions
 - [x] Tabs: Overview / Services / Doctors / Insurance / Opening hours
@@ -318,9 +318,26 @@ The brief's highest priority, and the strongest screen in the product.
       and the same sample gate as everywhere else
 - [x] **`FacilityServiceInsurer`** - gap 3 from section 3 is now closed
 - [x] Doctor list on the facility, using R1
-- [ ] Doctor profile page and the global doctors directory
-- [ ] Service detail page
-- [ ] Appointments and Queue tabs (they belong with R4)
+- [x] Global doctors directory, filtered by specialty, language and name
+- [x] Doctor profile page
+- [x] Service detail page
+- [x] Doctors added to the bottom navigation (five items, still the cap)
+- [ ] Appointments and Queue tabs - deferred to R4, where the booking
+      redesign lives
+
+**Two more decisions:**
+
+- **Language is a first-class filter in the doctors directory.** A patient who
+  is only comfortable in Kinyarwanda needs to know which clinician can consult
+  in it *before* they travel - exactly the kind of thing a directory answers
+  and a phone call does not.
+- **An unverified doctor profile carries a warning, not just a chip.** It is a
+  public page about a named person; the page says plainly that MediLink has
+  not confirmed it with the facility.
+- **Service detail is a lens, not a record.** It composes entirely from
+  existing endpoints - facilities offering it, doctors delivering it, the
+  specialties behind it - because a service is a view over the directory
+  rather than a thing with its own row.
 
 **Decisions worth keeping:**
 
@@ -396,8 +413,8 @@ Mostly a redesign - the backend is complete.
 51 screens. `—` not started, `~` in progress, `✓` done.
 
 **Public (23):** ✓ Homepage · ✓ Find Care · ✓ Map discovery · ✓ Search results ·
-— Facility profile · — Facility overview · — Facility doctors · — Doctor
-profile · — Facility services · — Service detail · — Facility insurance ·
+✓ Facility profile · ✓ Facility overview · ✓ Facility doctors · ✓ Doctor
+profile · ✓ Facility services · ✓ Service detail · ✓ Facility insurance ·
 — Global insurance · — Booking · — Confirmation · — Queue tracking · — Care
 Guide landing · — Symptom assessment · — AI processing · — AI result · — AI
 recommended facilities · ✓ Compare · — About · — Help
@@ -443,3 +460,4 @@ them for visual convenience.
 | 2026-08-20 | R2 part 1: `/search` global endpoint (14 tests), Find Care with synchronised list and map, MapLibre lazy-loaded and excluded from precache (1329 KB -> 283 KB). Fixed duplicate facilities, missing markers, and an order-dependent test suite. 444 backend tests, 92% coverage. |
 | 2026-08-20 | R2 done: homepage discovery sections, search-as-you-type combobox with keyboard navigation, DoctorCard, compare, old list route retired. Care Guide entry points correctly hidden while the clinical gate is shut. 6 of 51 screens done. Patient bundle 88 KB gz. |
 | 2026-08-20 | R3 part 1: per-service wait status, FacilityServiceInsurer (gap 3 closed), facility profile with five tabs. 13 new tests. 457 backend tests, 92% coverage. Insurance verified live: green only where confirmed, grey (?) everywhere else. |
+| 2026-08-21 | R3 done: doctors directory with language filter, doctor profile, service detail, doctors in the nav. 13 of 51 screens. Patient bundle 92 KB gz. |
