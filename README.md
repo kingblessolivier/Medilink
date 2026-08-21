@@ -58,6 +58,13 @@ the build order in [docs/09-roadmap-and-milestones.md](docs/09-roadmap-and-miles
 | USSD           | Africa's Talking (or equivalent aggregator) |
 | WhatsApp       | Meta WhatsApp Business Cloud API        |
 
+## Is it ready?
+
+[docs/12-production-readiness.md](docs/12-production-readiness.md) answers that
+honestly: the software is ready, the service is not, and most of what is
+missing cannot be written in code. Run `python manage.py readiness` for the
+settings-level checks.
+
 ## Documentation
 
 | # | Document | What it covers |
