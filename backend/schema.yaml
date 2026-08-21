@@ -569,6 +569,139 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotificationList'
           description: ''
+  /api/v1/platform/overview:
+    get:
+      operationId: platform_overview_retrieve
+      summary: Platform-wide counts
+      parameters:
+      - in: query
+        name: days
+        schema:
+          type: integer
+        description: 1-365. Defaults to 30.
+      tags:
+      - platform
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminOverview'
+          description: ''
+  /api/v1/platform/triage-monitoring:
+    get:
+      operationId: platform_triage_monitoring_retrieve
+      summary: Triage outcome aggregates - never answers
+      parameters:
+      - in: query
+        name: days
+        schema:
+          type: integer
+        description: 1-365. Defaults to 30.
+      tags:
+      - platform
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriageMonitoring'
+          description: ''
+  /api/v1/platform/verification:
+    get:
+      operationId: platform_verification_retrieve
+      summary: Facilities and providers awaiting verification
+      tags:
+      - platform
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationQueue'
+          description: ''
+  /api/v1/platform/verification/facilities/{id}:
+    post:
+      operationId: platform_verification_facilities_create
+      summary: Verify a facility, making it visible to patients
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - platform
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Verify'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Verify'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Verify'
+        required: true
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Verified'
+          description: ''
+  /api/v1/platform/verification/providers/{id}:
+    post:
+      operationId: platform_verification_providers_create
+      summary: Verify a provider's listing
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - platform
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Verify'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Verify'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Verify'
+        required: true
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Verified'
+          description: ''
   /api/v1/providers:
     get:
       operationId: provider_list
@@ -1080,6 +1213,44 @@ paths:
           description: ''
 components:
   schemas:
+    Activity:
+      type: object
+      properties:
+        check_ins:
+          type: integer
+        appointments:
+          type: integer
+        by_channel:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChannelCount'
+      required:
+      - appointments
+      - by_channel
+      - check_ins
+    AdminOverview:
+      type: object
+      properties:
+        days:
+          type: integer
+        as_of:
+          type: string
+          format: date-time
+        facilities:
+          $ref: '#/components/schemas/FacilityCounts'
+        providers:
+          $ref: '#/components/schemas/ProviderCounts'
+        patients:
+          $ref: '#/components/schemas/PatientCounts'
+        activity:
+          $ref: '#/components/schemas/Activity'
+      required:
+      - activity
+      - as_of
+      - days
+      - facilities
+      - patients
+      - providers
     Answer:
       type: object
       properties:
@@ -1227,6 +1398,16 @@ components:
       - facility
       - service
       - slot_start
+    ChannelCount:
+      type: object
+      properties:
+        channel:
+          type: string
+        count:
+          type: integer
+      required:
+      - channel
+      - count
     CheckIn:
       type: object
       description: |-
@@ -1329,6 +1510,22 @@ components:
             type: string
       required:
       - results
+    FacilityCounts:
+      type: object
+      properties:
+        total:
+          type: integer
+        verified:
+          type: integer
+        awaiting_verification:
+          type: integer
+        reporting_queue:
+          type: integer
+      required:
+      - awaiting_verification
+      - reporting_queue
+      - total
+      - verified
     FacilityDetail:
       type: object
       properties:
@@ -1817,6 +2014,56 @@ components:
       - home_location
       - id
       - phone
+    PatientCounts:
+      type: object
+      properties:
+        registered:
+          type: integer
+      required:
+      - registered
+    PendingFacility:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        district:
+          type: string
+        level:
+          type: string
+        ownership:
+          type: string
+        phone:
+          type: string
+      required:
+      - district
+      - id
+      - level
+      - name
+      - ownership
+      - phone
+      - slug
+    PendingProvider:
+      type: object
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        full_name:
+          type: string
+        specialties:
+          type: array
+          items:
+            type: string
+      required:
+      - full_name
+      - id
+      - slug
+      - specialties
     Placement:
       type: object
       properties:
@@ -1908,6 +2155,19 @@ components:
       - placements
       - slug
       - specialties
+      - verified
+    ProviderCounts:
+      type: object
+      properties:
+        total:
+          type: integer
+        verified:
+          type: integer
+        awaiting_verification:
+          type: integer
+      required:
+      - awaiting_verification
+      - total
       - verified
     ProviderDetail:
       type: object
@@ -2681,6 +2941,40 @@ components:
       - en
       - fr
       - rw
+    TriageMonitoring:
+      type: object
+      properties:
+        days:
+          type: integer
+        sessions:
+          type: integer
+        escalations:
+          type: integer
+        escalation_rate:
+          type: number
+          format: double
+          nullable: true
+        enough_data:
+          type: boolean
+        minimum_sessions:
+          type: integer
+        by_service:
+          type: array
+          items:
+            $ref: '#/components/schemas/TriageServiceCount'
+        by_version:
+          type: array
+          items:
+            $ref: '#/components/schemas/TriageVersion'
+      required:
+      - by_service
+      - by_version
+      - days
+      - enough_data
+      - escalation_rate
+      - escalations
+      - minimum_sessions
+      - sessions
     TriageOption:
       type: object
       properties:
@@ -2709,6 +3003,16 @@ components:
       - options
       - red_flag
       - text
+    TriageServiceCount:
+      type: object
+      properties:
+        service:
+          type: string
+        count:
+          type: integer
+      required:
+      - count
+      - service
     TriageSession:
       type: object
       properties:
@@ -2764,6 +3068,19 @@ components:
       - available
       - protocol_version
       - reason
+    TriageVersion:
+      type: object
+      properties:
+        protocol_version:
+          type: string
+        sessions:
+          type: integer
+        escalations:
+          type: integer
+      required:
+      - escalations
+      - protocol_version
+      - sessions
     TypeEnum:
       enum:
       - check_in
@@ -2778,6 +3095,52 @@ components:
         * `serve` - serve
         * `skip` - skip
         * `cancel` - cancel
+    VerificationQueue:
+      type: object
+      properties:
+        facilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/PendingFacility'
+        providers:
+          type: array
+          items:
+            $ref: '#/components/schemas/PendingProvider'
+      required:
+      - facilities
+      - providers
+    Verified:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        verified_at:
+          type: string
+          format: date-time
+        verified_by:
+          type: string
+          nullable: true
+      required:
+      - id
+      - name
+      - verified_at
+      - verified_by
+    Verify:
+      type: object
+      description: |-
+        Verifying is an assertion that somebody checked documents.
+
+        The note is required for exactly that reason: an approval with no record
+        of what was checked is indistinguishable from a mis-click, and this one
+        puts a facility in front of patients.
+      properties:
+        note:
+          type: string
+          maxLength: 500
+      required:
+      - note
     Wait:
       type: object
       description: |-

@@ -79,7 +79,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [web-patient, web-provider]
+        app: [web-patient, web-provider, web-admin]
 
     defaults:
       run:
@@ -109,8 +109,11 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
+      # --if-present rather than a placeholder script: web-admin has no
+      # tests yet, and a `test` script that echoes and exits 0 would report
+      # green for a suite that does not exist.
       - name: Tests
-        run: npm test
+        run: npm test --if-present
 
       - name: Build
         run: npx vite build

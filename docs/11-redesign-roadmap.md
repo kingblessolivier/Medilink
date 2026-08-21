@@ -486,10 +486,45 @@ instead. Changing this needs an admin approval step first (R7), not a form.
 
 ### R7 - Admin portal
 
-- [ ] Shell, dashboard, facility verification queue
-- [ ] Patients, providers, appointments, queues, insurance
-- [ ] AI monitoring, reading `TriageOutcome` aggregates only - never answers
-- [ ] Platform analytics and settings
+- [x] Shell, overview, facility and provider verification queue
+- [x] Care Guide monitoring, reading `TriageOutcome` aggregates only
+- [x] Platform analytics: adoption, verification backlog, booking channels
+- [x] Providers - verification workflow. CRUD stays in Django admin
+
+Lives in a third Vite app, `web-admin` on port 5175, superuser-only.
+
+**Why a third app rather than a section of the reception app.** The provider
+app's entire session model is "which facility am I?" - `/staff/me` requires a
+`StaffMember` row. Platform admin is the opposite: it crosses every facility
+and has no facility at all. Bolting an unscoped surface onto a scoped app
+would put the two permission models one routing mistake apart.
+
+**`is_staff` is not enough; it takes a superuser.** `is_staff` only means "may
+open Django admin" and gets granted to whoever needs to edit one lookup table.
+Reading platform-wide figures and approving a hospital into patient-facing
+search is a different privilege, and conflating them is how a lookup-table
+editor ends up verifying hospitals.
+
+**Verification requires a note, and the button stays disabled without one.**
+An approval with no record of what was checked is indistinguishable from a
+mis-click, and this mis-click puts a facility in front of patients. There is
+no "reject" and no "unverify": rejection is a conversation, and un-verifying
+would overwrite the record of who approved it. Both stay in Django admin.
+
+**Not built, and why:**
+
+- **Patients.** The brief listed a patients section. It was not built and the
+  backend cannot serve one: `/platform/overview` returns a patient COUNT, and
+  there is no endpoint that returns patient records to an admin. A
+  country-wide searchable patient index is the single largest privacy exposure
+  this product could create, and nothing in platform administration needs it.
+  A test pins the payload shape so widening it is deliberate.
+- **Appointments, queues, insurance CRUD.** Django admin already registers
+  every model. Rebuilding forty change forms would add surface area and an
+  audit gap; the sidebar links across to it instead.
+- **Settings.** The settings that matter - the clinical gate, SMS credentials,
+  aggregator allow-lists - are environment variables on purpose. A web form
+  that edits them would be a way to open the triage gate by mis-click.
 
 ### R8 - Cross-cutting
 
@@ -558,3 +593,4 @@ them for visual convenience.
 | 2026-08-21 | R4 done: notification centre and preferences, honoured by the sender. Right to object from docs/08 s7 now implemented. 493 backend tests, 93% coverage. 18 of 51 screens. |
 | 2026-08-21 | R6 done: facility workspace. Sidebar shell, appointments, doctors, services, reports; Reception rebuilt on the design tokens. Found and fixed a live regression - the provider app's `card` / `field` / `btn-primary` classes had been dropped when `index.css` became the design-system import, leaving the check-in button unstyled. Management screens shipped read-only on purpose (see R6). 497 backend tests, 39 API operations, provider bundle 74.7 KB gzipped. 22 of 51 screens. |
 | 2026-08-21 | R5 done: Care Guide UI. Gate untouched and still shut - verified against the real 503 (no entry points, honest explanation) and with intercepted responses to drive the flow. Result routes service -> filtered search -> booking. Disclaimer on every step in rw/en/fr. 248 i18n keys per language, parity enforced by test. Patient bundle 100.5 KB gzipped (150 KB budget). 26 of 51 screens. |
+| 2026-08-21 | R7 done: admin portal. Third Vite app (`web-admin`, :5175), superuser-only, backed by a new `platform_admin` Django app. Overview, verification queue, Care Guide monitoring. No patient records reachable - the backend serves a count and a test pins the payload shape. Verification requires a note. Found and fixed: the sidebar username was blank because SimpleJWT issues `user_id`, not `username`. 521 backend tests, 44 API operations, admin bundle 71.4 KB gzipped. 29 of 51 screens. |

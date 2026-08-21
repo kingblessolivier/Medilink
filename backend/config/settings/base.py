@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # Local - Phase 2
     "apps.scheduling",
     "apps.notifications",
+    "apps.platform_admin",
     # Local - Phase 3
     "apps.gateway",
     # Local - Phase 4
