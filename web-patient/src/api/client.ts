@@ -3,7 +3,9 @@ import type {
   FacilityDetail,
   Insurer,
   NearbyResponse,
+  NotificationList,
   Patient,
+  PreferenceList,
   QueueEntryPublic,
   ProviderDetail,
   ProviderList,
@@ -208,6 +210,17 @@ export const api = {
     request<Appointment>("/appointments", {
       method: "POST",
       body: payload,
+    }),
+
+  notifications: () => request<NotificationList>("/me/notifications"),
+
+  notificationPreferences: () =>
+    request<PreferenceList>("/me/notification-preferences"),
+
+  updateNotificationPreference: (kind: string, enabled: boolean) =>
+    request<PreferenceList>("/me/notification-preferences", {
+      method: "PATCH",
+      body: { kind, enabled },
     }),
 
   appointment: (id: number) => request<Appointment>(`/appointments/${id}`),

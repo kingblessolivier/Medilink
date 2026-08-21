@@ -10,6 +10,7 @@ import { DoctorProfile } from "./routes/DoctorProfile"
 import { ServiceDetail } from "./routes/ServiceDetail"
 import { AppointmentDetail } from "./routes/AppointmentDetail"
 import { QueueTracking } from "./routes/QueueTracking"
+import { Notifications } from "./routes/Notifications"
 import { FacilityDetail } from "./routes/FacilityDetail"
 import { SignIn } from "./routes/SignIn"
 import { Book } from "./routes/Book"
@@ -49,6 +50,7 @@ export function App() {
               <Route path="/service/:code" element={<ServiceDetail />} />
               <Route path="/appointment/:id" element={<AppointmentDetail />} />
               <Route path="/queue" element={<QueueTracking />} />
+              <Route path="/notifications" element={<Notifications />} />
               <Route path="/facility/:slug" element={<FacilityDetail />} />
               <Route path="/facility/:slug/book" element={<Book />} />
               <Route path="/sign-in" element={<SignIn />} />
