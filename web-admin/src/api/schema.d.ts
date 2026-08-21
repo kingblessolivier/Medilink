@@ -1141,7 +1141,7 @@ export interface components {
             readonly initials: string;
             readonly photo_url: string;
             readonly languages: string[];
-            readonly specialties: string[];
+            readonly specialties: components["schemas"]["SpecialtyBrief"][];
             readonly placements: components["schemas"]["Placement"][];
             readonly verified: boolean;
         };
@@ -1157,7 +1157,7 @@ export interface components {
             readonly initials: string;
             readonly photo_url: string;
             readonly languages: string[];
-            readonly specialties: string[];
+            readonly specialties: components["schemas"]["SpecialtyBrief"][];
             readonly placements: components["schemas"]["Placement"][];
             readonly verified: boolean;
             /** @description Short professional summary. Never enter qualifications or claims that have not been verified - see docs/11 section 7. */
@@ -1347,6 +1347,16 @@ export interface components {
             description_en?: string;
             readonly service_types: string[];
             is_triage_target?: boolean;
+        };
+        /**
+         * @description A specialty as a client renders it: the code to filter on, and the
+         *     name in all three languages so the client picks without a round trip.
+         */
+        SpecialtyBrief: {
+            code: string;
+            name_rw: string;
+            name_en: string;
+            name_fr: string;
         };
         SpecialtyList: {
             results: components["schemas"]["Specialty"][];

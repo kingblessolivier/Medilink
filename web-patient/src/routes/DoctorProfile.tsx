@@ -2,7 +2,7 @@ import { Link, useParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "../api/client"
 import { useI18n } from "../i18n"
-import { useSpecialties } from "../hooks/useSpecialties"
+import { specialtyNames } from "../lib/specialty"
 import { Card, Chip, ErrorState, ListSkeleton, Notice } from "../ui"
 import type { Provider } from "../api/types"
 
@@ -26,7 +26,6 @@ const LANGUAGE_NAME: Record<string, string> = {
 export function DoctorProfile() {
   const { slug = "" } = useParams()
   const { t, lang } = useI18n()
-  const { data: specialtyData } = useSpecialties()
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["provider", slug],
@@ -57,12 +56,6 @@ export function DoctorProfile() {
     )
   }
 
-  const specialtyName = (code: string) => {
-    const found = specialtyData?.results.find((s) => s.code === code)
-    if (!found) return code
-    return lang === "rw" ? found.name_rw : lang === "fr" ? found.name_fr : found.name_en
-  }
-
   return (
     <div className="ml-page py-6 pb-24">
       <Link to="/doctors" className="text-small font-medium text-primary">
@@ -75,7 +68,7 @@ export function DoctorProfile() {
           <h1 className="text-h1">{data.display_name}</h1>
           {data.specialties.length > 0 && (
             <p className="mt-1 text-body-lg text-ink-muted">
-              {data.specialties.map(specialtyName).join(" · ")}
+              {specialtyNames(data.specialties, lang)}
             </p>
           )}
           <div className="mt-2 flex flex-wrap gap-1.5">

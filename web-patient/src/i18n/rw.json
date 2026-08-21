@@ -247,5 +247,13 @@
   "care_guide_nearest_hospital": "Ibitaro bikwegereye",
   "care_guide_unavailable": "Inama ku buvuzi ntiraboneka. Igitegereje kwemezwa na muganga.",
   "care_guide_unavailable_body": "Ushobora gushakisha ibigo n'abaganga muri iki gihe.",
-  "emergency_number": "912"
+  "emergency_number": "912",
+  "visits_none_body": "Iyo ufashe igihe cyo kwa muganga, kizagaragara hano.",
+  "visits_none_past": "Nta bisura byabanje.",
+  "visits_load_failed": "Ntibyakunze kuzana urutonde rw'ibisura.",
+  "visits_cancel_failed": "Ntibyakunze guhagarika. Ongera ugerageze.",
+  "profile_save_failed": "Ntibyakunze kubika impinduka. Ongera ugerageze.",
+  "compare_partial": "Ibigo {n} ntibyashoboye kuzana amakuru. Ibindi birerekanwa.",
+  "queue_load_failed": "Ntibyakunze kureba aho ugeze mu murongo.",
+  "queue_load_failed_body": "Ibi ntibisobanura ko wavuye mu murongo. Ongera ugerageze."
 }

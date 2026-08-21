@@ -23,8 +23,8 @@ export function BottomNav() {
               to={tab.to}
               end={tab.to === "/"}
               className={({ isActive }) =>
-                "flex min-h-touch items-center justify-center py-2 text-sm " +
-                (isActive ? "font-semibold text-primary" : "text-neutral-500")
+                "flex min-h-touch items-center justify-center py-2 text-small " +
+                (isActive ? "font-semibold text-primary" : "text-ink-muted")
               }
             >
               {t(tab.key)}

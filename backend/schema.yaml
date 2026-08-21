@@ -2136,7 +2136,7 @@ components:
         specialties:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/SpecialtyBrief'
           readOnly: true
         placements:
           type: array
@@ -2195,7 +2195,7 @@ components:
         specialties:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/SpecialtyBrief'
           readOnly: true
         placements:
           type: array
@@ -2698,6 +2698,25 @@ components:
       - name_fr
       - name_rw
       - service_types
+    SpecialtyBrief:
+      type: object
+      description: |-
+        A specialty as a client renders it: the code to filter on, and the
+        name in all three languages so the client picks without a round trip.
+      properties:
+        code:
+          type: string
+        name_rw:
+          type: string
+        name_en:
+          type: string
+        name_fr:
+          type: string
+      required:
+      - code
+      - name_en
+      - name_fr
+      - name_rw
     SpecialtyList:
       type: object
       properties:

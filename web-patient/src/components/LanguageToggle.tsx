@@ -14,11 +14,15 @@ export function LanguageToggle() {
           key={code}
           onClick={() => setLang(code)}
           aria-pressed={lang === code}
+          // 36x26 before this: below any usable touch target, on a control
+          // that appears on every screen and is the FIRST thing a Kinyarwanda
+          // speaker looking at an English page needs to hit.
           className={
-            "rounded-lg px-2 py-1 text-xs font-medium uppercase " +
+            "inline-flex min-h-touch min-w-touch items-center justify-center " +
+            "rounded-lg px-3 text-caption font-medium uppercase " +
             (lang === code
               ? "bg-primary text-white"
-              : "bg-white text-neutral-600 border border-neutral-300")
+              : "bg-surface text-ink-muted border border-line")
           }
         >
           {code}

@@ -9,7 +9,7 @@ import { useProviders } from "../hooks/useProviders"
 import { useSpecialties } from "../hooks/useSpecialties"
 import { FacilityCard } from "../components/FacilityCard"
 import { DoctorCard } from "../components/DoctorCard"
-import { EmptyState, ListSkeleton, Notice } from "../ui"
+import { EmptyState, ErrorState, ListSkeleton, Notice } from "../ui"
 
 /**
  * One service, and everywhere it can be had.
@@ -103,6 +103,20 @@ export function ServiceDetail() {
 
         {(geo.status === "locating" || facilities.isLoading) && (
           <ListSkeleton rows={3} />
+        )}
+
+        {facilities.isError && (
+          <ErrorState
+            title={t("error_generic")}
+            action={
+              <button
+                className="ml-btn-secondary ml-btn-sm"
+                onClick={() => facilities.refetch()}
+              >
+                {t("retry")}
+              </button>
+            }
+          />
         )}
 
         {facilities.data?.query.radius_expanded && (

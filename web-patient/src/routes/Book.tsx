@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { api, ApiRequestError } from "../api/client"
 import { useI18n } from "../i18n"
+import { specialtyNames } from "../lib/specialty"
 import { usePatient } from "../hooks/useAuth"
 import { useProviders } from "../hooks/useProviders"
 import { useInsurerPreference } from "../hooks/useInsurerPreference"
@@ -203,7 +204,7 @@ export function Book() {
                       {doctor.display_name}
                     </span>
                     <span className="block truncate text-small text-ink-muted">
-                      {doctor.specialties.join(" · ")}
+                      {specialtyNames(doctor.specialties, lang)}
                     </span>
                   </span>
                   <span aria-hidden="true" className="text-ink-subtle">

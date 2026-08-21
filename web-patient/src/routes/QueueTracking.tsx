@@ -2,7 +2,7 @@ import { Link } from "react-router-dom"
 import { useI18n } from "../i18n"
 import { useCurrentQueueEntry } from "../hooks/useQueue"
 import { usePatient } from "../hooks/useAuth"
-import { Card, Chip, EmptyState, ListSkeleton, Notice } from "../ui"
+import { Card, Chip, EmptyState, ErrorState, ListSkeleton, Notice } from "../ui"
 import { timeAgo } from "../lib/format"
 import type { QueueEntryPublic } from "../api/types"
 
@@ -44,6 +44,27 @@ export function QueueTracking() {
     return (
       <div className="ml-page py-6">
         <ListSkeleton rows={1} />
+      </div>
+    )
+  }
+
+  // Distinguished from "no active queue" on purpose. Telling somebody who IS
+  // in a queue that they are not would send them home.
+  if (query.isError) {
+    return (
+      <div className="ml-page py-6">
+        <ErrorState
+          title={t("queue_load_failed")}
+          body={t("queue_load_failed_body")}
+          action={
+            <button
+              className="ml-btn-secondary ml-btn-sm"
+              onClick={() => query.refetch()}
+            >
+              {t("retry")}
+            </button>
+          }
+        />
       </div>
     )
   }

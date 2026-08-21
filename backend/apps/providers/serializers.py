@@ -36,6 +36,16 @@ class PlacementSerializer(serializers.Serializer):
     services = serializers.ListField(child=serializers.CharField())
 
 
+class SpecialtyBriefSerializer(serializers.Serializer):
+    """A specialty as a client renders it: the code to filter on, and the
+    name in all three languages so the client picks without a round trip."""
+
+    code = serializers.CharField()
+    name_rw = serializers.CharField()
+    name_en = serializers.CharField()
+    name_fr = serializers.CharField()
+
+
 class ProviderSerializer(serializers.ModelSerializer):
     display_name = serializers.CharField(read_only=True)
     initials = serializers.CharField(read_only=True)
@@ -67,9 +77,26 @@ class ProviderSerializer(serializers.ModelSerializer):
             "verified",
         ]
 
-    @extend_schema_field(serializers.ListField(child=serializers.CharField()))
+    @extend_schema_field(SpecialtyBriefSerializer(many=True))
     def get_specialties(self, obj) -> list:
-        return [s.code for s in obj.specialties.all()]
+        """Code AND the three names.
+
+        It used to return codes alone, which put "general-medicine" on a
+        patient's screen where a name belonged. One client worked around it
+        with a lookup against /specialties; the other two did not, so the
+        display text lives here now - the same shape ServiceBrief uses.
+
+        The code stays because it is what `?specialty=` filters on.
+        """
+        return [
+            {
+                "code": s.code,
+                "name_rw": s.name_rw,
+                "name_en": s.name_en,
+                "name_fr": s.name_fr,
+            }
+            for s in obj.specialties.all()
+        ]
 
     def get_verified(self, obj) -> bool:
         return obj.is_verified

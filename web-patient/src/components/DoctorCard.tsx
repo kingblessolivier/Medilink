@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom"
 import { useI18n } from "../i18n"
+import { specialtyNames } from "../lib/specialty"
 import { Card, Chip } from "../ui"
 import type { Provider } from "../api/types"
 
@@ -16,18 +17,24 @@ import type { Provider } from "../api/types"
  *   identical to a checked one. There are no ratings anywhere.
  */
 export function DoctorCard({ doctor }: { doctor: Provider }) {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const placement = doctor.placements?.[0]
 
   return (
-    <Card as="article" interactive className="flex gap-3 p-4">
+    // `relative` anchors the stretched link below. Safe here because the name
+    // is the card's ONLY link - FacilityCard has three (name, directions,
+    // book) and must not have one covering the whole card.
+    <Card as="article" interactive className="relative flex gap-3 p-4">
       <Avatar doctor={doctor} />
 
       <div className="min-w-0 flex-1">
         <h3 className="text-h3 leading-snug">
+          {/* The visible text is 20px tall; the ::after makes the whole card
+              the tap target without adding a second link for a screen reader
+              to announce. */}
           <Link
             to={`/doctor/${doctor.slug}`}
-            className="hover:text-primary hover:underline"
+            className="hover:text-primary hover:underline after:absolute after:inset-0 after:content-['']"
           >
             {doctor.display_name}
           </Link>
@@ -35,7 +42,7 @@ export function DoctorCard({ doctor }: { doctor: Provider }) {
 
         {doctor.specialties.length > 0 && (
           <p className="mt-0.5 truncate text-small text-ink-muted">
-            {doctor.specialties.join(" · ")}
+            {specialtyNames(doctor.specialties, lang)}
           </p>
         )}
 

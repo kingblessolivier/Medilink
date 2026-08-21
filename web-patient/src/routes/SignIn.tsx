@@ -55,17 +55,17 @@ export function SignIn() {
 
   return (
     <div className="mx-auto mt-16 max-w-sm px-4">
-      <h1 className="mb-1 text-xl font-semibold">{t("auth_title")}</h1>
-      <p className="mb-6 text-sm text-neutral-500">{t("auth_subtitle")}</p>
+      <h1 className="mb-1 text-h1">{t("auth_title")}</h1>
+      <p className="mb-6 text-small text-ink-muted">{t("auth_subtitle")}</p>
 
       {step === "phone" ? (
-        <form onSubmit={sendCode} className="card space-y-3">
+        <form onSubmit={sendCode} className="ml-card space-y-3 p-4">
           <label className="block">
-            <span className="mb-1 block text-sm text-neutral-600">
+            <span className="mb-1 block text-small text-ink-muted">
               {t("auth_phone")}
             </span>
             <input
-              className="min-h-touch w-full rounded-lg border border-neutral-300 px-3 text-base"
+              className="ml-field"
               inputMode="tel"
               autoComplete="tel"
               placeholder="078..."
@@ -74,22 +74,22 @@ export function SignIn() {
               autoFocus
             />
           </label>
-          {error && <p className="text-sm text-danger">{error}</p>}
-          <button className="btn-primary w-full" disabled={busy || !phone.trim()}>
+          {error && <p className="text-small text-danger">{error}</p>}
+          <button className="ml-btn-primary w-full" disabled={busy || !phone.trim()}>
             {t("auth_send_code")}
           </button>
         </form>
       ) : (
-        <form onSubmit={verify} className="card space-y-3">
-          <p className="text-sm text-neutral-600">
+        <form onSubmit={verify} className="ml-card space-y-3 p-4">
+          <p className="text-small text-ink-muted">
             {t("auth_code_sent", { phone })}
           </p>
           <label className="block">
-            <span className="mb-1 block text-sm text-neutral-600">
+            <span className="mb-1 block text-small text-ink-muted">
               {t("auth_code")}
             </span>
             <input
-              className="min-h-touch w-full rounded-lg border border-neutral-300 px-3 text-center text-2xl tracking-[0.4em]"
+              className="ml-field text-center text-2xl tracking-[0.4em]"
               inputMode="numeric"
               autoComplete="one-time-code"
               maxLength={6}
@@ -98,16 +98,16 @@ export function SignIn() {
               autoFocus
             />
           </label>
-          {error && <p className="text-sm text-danger">{error}</p>}
+          {error && <p className="text-small text-danger">{error}</p>}
           <button
-            className="btn-primary w-full"
+            className="ml-btn-primary w-full"
             disabled={busy || code.length !== 6}
           >
             {t("auth_verify")}
           </button>
           <button
             type="button"
-            className="w-full py-2 text-sm text-primary"
+            className="w-full py-2 text-small text-primary"
             onClick={() => {
               setStep("phone")
               setCode("")

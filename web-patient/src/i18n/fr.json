@@ -247,5 +247,13 @@
   "care_guide_nearest_hospital": "Hopital le plus proche",
   "care_guide_unavailable": "Le guide de soins n'est pas encore disponible. Il attend la validation d'un clinicien.",
   "care_guide_unavailable_body": "Vous pouvez toujours rechercher des etablissements et des medecins entre-temps.",
-  "emergency_number": "912"
+  "emergency_number": "912",
+  "visits_none_body": "Lorsque vous prendrez rendez-vous, il apparaitra ici.",
+  "visits_none_past": "Aucune visite passee.",
+  "visits_load_failed": "Impossible de charger vos rendez-vous.",
+  "visits_cancel_failed": "Impossible d'annuler ce rendez-vous. Veuillez reessayer.",
+  "profile_save_failed": "Cette modification n'a pas ete enregistree. Veuillez reessayer.",
+  "compare_partial": "{n} etablissements n'ont pas pu etre charges. Les autres sont affiches.",
+  "queue_load_failed": "Impossible de verifier votre place dans la file.",
+  "queue_load_failed_body": "Cela ne signifie pas que vous avez perdu votre place. Veuillez reessayer."
 }
