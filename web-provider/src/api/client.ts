@@ -1,8 +1,14 @@
 import type { PendingAction } from "../lib/offlineQueue"
 import type {
+  AppointmentAction,
   Board,
   CheckInResponse,
+  FacilityDetail,
+  FacilityReport,
   Me,
+  ProviderList,
+  StaffAppointment,
+  StaffAppointmentList,
   SyncResult,
   TransitionAction,
 } from "./types"
@@ -12,7 +18,16 @@ const ACCESS_KEY = "medilink.access"
 const REFRESH_KEY = "medilink.refresh"
 
 export type {
+  AppointmentAction,
   Board,
+  FacilityDetail,
+  FacilityReport,
+  InsurerBrief,
+  Provider,
+  ProviderList,
+  ServiceBrief,
+  StaffAppointment,
+  StaffAppointmentList,
   CheckInResponse,
   Me,
   QueueRow,
@@ -133,6 +148,33 @@ export const api = {
 
   transition: (id: number, action: TransitionAction) =>
     request<CheckInResponse>(`/queue/entries/${id}/${action}`, { method: "POST" }),
+
+  // ------------------------------------------------------------ workspace
+
+  appointments: (params: { date?: string; status?: string } = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v) as [string, string][],
+    ).toString()
+    return request<StaffAppointmentList>(
+      "/staff/appointments" + (query ? `?${query}` : ""),
+    )
+  },
+
+  setAppointmentStatus: (id: number, status: AppointmentAction) =>
+    request<StaffAppointment>(`/staff/appointments/${id}/status`, {
+      method: "POST",
+      body: JSON.stringify({ status }),
+    }),
+
+  reports: (days = 30) => request<FacilityReport>(`/staff/reports?days=${days}`),
+
+  // The workspace reads its own facility through the PUBLIC endpoints for
+  // doctors and services: it is the same data patients see, and a facility
+  // checking how it appears to them is exactly the point of those screens.
+  facility: (slug: string) => request<FacilityDetail>(`/facilities/${slug}`),
+
+  facilityProviders: (slug: string) =>
+    request<ProviderList>(`/facilities/${slug}/providers`),
 
   sync: (actions: PendingAction[]) =>
     request<SyncResult>("/queue/sync", {

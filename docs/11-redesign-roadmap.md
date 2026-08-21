@@ -429,12 +429,33 @@ provider-aware first.
 
 ### R6 - Facility workspace
 
-- [ ] Sidebar shell, distinct from the patient surface
-- [ ] Dashboard with operational metrics
-- [ ] Appointments, queue (keep the keyboard-first check-in - it is measured
-      and it works), patients
-- [ ] Doctor / service / insurance / schedule management
-- [ ] Reports: appointments, no-shows, median wait, service demand
+- [x] Sidebar shell, distinct from the patient surface
+- [x] Queue, keeping the keyboard-first check-in - re-verified in a browser
+      after the rebuild: focus lands in the phone field on arrival and returns
+      there after every submit, round trip 2.0 s against a 10 s budget
+- [x] Appointments: today's list, arrive / serve / no-show, and a way back
+      from a mis-tapped no-show
+- [x] Doctors and Services, as a patient sees them
+- [x] Reports: appointments, no-shows, median wait, service demand
+
+**Scope decision - management screens are read-only.** The brief asked for
+"doctor / service / insurance management". Built as read-only instead, because
+a facility that can edit its own coverage and its clinicians' credentials is a
+facility that can publish "you are covered" and unverified qualifications - the
+two things rule 5 and rule 6 exist to prevent. Both screens say who to contact
+instead. Changing this needs an admin approval step first (R7), not a form.
+
+**Not built, and why:**
+
+- **Dashboard.** The Reports screen opens on a "Today" band carrying the three
+  numbers a dashboard would have shown. A second screen repeating them earns
+  nothing.
+- **Patients list.** A facility-wide searchable patient index is the highest
+  standing privacy risk in the product and the appointment and queue screens
+  already name the people actually attending today. It needs the docs/08
+  access-log review designed around it before it is built, not after.
+- **Schedule management.** No endpoint exists for editing `ScheduleTemplate`,
+  and shipping the nav item before the endpoint would be a door onto nothing.
 
 ### R7 - Admin portal
 
@@ -508,3 +529,4 @@ them for visual convenience.
 | 2026-08-21 | R3 done: doctors directory with language filter, doctor profile, service detail, doctors in the nav. 13 of 51 screens. Patient bundle 92 KB gz. |
 | 2026-08-21 | R4 part 1: provider-aware slots and booking (separate capacity pools), appointment detail endpoint, four-step booking flow, confirmation, full-screen queue tracking. Booking driven end to end in a browser. 469 backend tests, 93% coverage. |
 | 2026-08-21 | R4 done: notification centre and preferences, honoured by the sender. Right to object from docs/08 s7 now implemented. 493 backend tests, 93% coverage. 18 of 51 screens. |
+| 2026-08-21 | R6 done: facility workspace. Sidebar shell, appointments, doctors, services, reports; Reception rebuilt on the design tokens. Found and fixed a live regression - the provider app's `card` / `field` / `btn-primary` classes had been dropped when `index.css` became the design-system import, leaving the check-in button unstyled. Management screens shipped read-only on purpose (see R6). 497 backend tests, 39 API operations, provider bundle 74.7 KB gzipped. 22 of 51 screens. |

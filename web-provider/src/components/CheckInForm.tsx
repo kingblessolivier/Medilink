@@ -52,12 +52,12 @@ export function CheckInForm({ services, onCheckIn }: Props) {
   }
 
   return (
-    <form onSubmit={submit} className="card p-4">
+    <form onSubmit={submit} className="ml-card p-4">
       <div className="flex flex-wrap items-end gap-3">
         <label className="min-w-48 flex-1">
-          <span className="mb-1 block text-sm text-neutral-600">Service</span>
+          <span className="mb-1 block text-small text-ink-muted">Service</span>
           <select
-            className="field"
+            className="ml-field"
             value={service}
             onChange={(e) => setService(e.target.value)}
           >
@@ -70,12 +70,12 @@ export function CheckInForm({ services, onCheckIn }: Props) {
         </label>
 
         <label className="min-w-64 flex-[2]">
-          <span className="mb-1 block text-sm text-neutral-600">
+          <span className="mb-1 block text-small text-ink-muted">
             {walkIn ? "Patient name" : "Phone number"}
           </span>
           <input
             ref={inputRef}
-            className="field"
+            className="ml-field"
             inputMode={walkIn ? "text" : "tel"}
             placeholder={walkIn ? "Uwase Alice" : "078..."}
             value={value}
@@ -84,12 +84,12 @@ export function CheckInForm({ services, onCheckIn }: Props) {
           />
         </label>
 
-        <button type="submit" className="btn-primary px-6" disabled={busy || !value.trim()}>
+        <button type="submit" className="ml-btn-primary px-6" disabled={busy || !value.trim()}>
           Check in
         </button>
       </div>
 
-      <label className="mt-3 flex items-center gap-2 text-sm">
+      <label className="mt-3 flex items-center gap-2 text-small">
         <input
           type="checkbox"
           className="h-5 w-5"

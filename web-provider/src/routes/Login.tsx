@@ -23,16 +23,16 @@ export function Login({ onSignedIn }: { onSignedIn: () => void }) {
 
   return (
     <div className="mx-auto mt-24 max-w-sm px-4">
-      <h1 className="mb-1 text-xl font-semibold">MediLink Reception</h1>
-      <p className="mb-6 text-sm text-neutral-500">
+      <h1 className="mb-1 text-h2">MediLink Reception</h1>
+      <p className="mb-6 text-small text-ink-muted">
         Sign in with the account your facility administrator created.
       </p>
 
-      <form onSubmit={submit} className="card space-y-3 p-4">
+      <form onSubmit={submit} className="ml-card space-y-3 p-4">
         <label className="block">
-          <span className="mb-1 block text-sm text-neutral-600">Username</span>
+          <span className="mb-1 block text-small text-ink-muted">Username</span>
           <input
-            className="field"
+            className="ml-field"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             autoFocus
@@ -41,9 +41,9 @@ export function Login({ onSignedIn }: { onSignedIn: () => void }) {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-sm text-neutral-600">Password</span>
+          <span className="mb-1 block text-small text-ink-muted">Password</span>
           <input
-            className="field"
+            className="ml-field"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -51,9 +51,9 @@ export function Login({ onSignedIn }: { onSignedIn: () => void }) {
           />
         </label>
 
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {error && <p className="text-small text-danger">{error}</p>}
 
-        <button className="btn-primary w-full" disabled={busy}>
+        <button className="ml-btn-primary w-full" disabled={busy}>
           Sign in
         </button>
       </form>
