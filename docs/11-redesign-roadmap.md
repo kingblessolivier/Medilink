@@ -182,7 +182,7 @@ display 40 / queue 72. Inter, tabular numerals.
 Ordered by the brief's own priority list (§ Final Instruction), with the data
 gaps slotted in where they unblock screens.
 
-### R0 - Design system foundations `IN PROGRESS`
+### R0 - Design system foundations `DONE`
 
 - [x] `design/tailwind-preset.js` - colour, type, radius, shadow, spacing
 - [x] `design/base.css` - base layer, component classes, reduced-motion
@@ -193,11 +193,50 @@ gaps slotted in where they unblock screens.
 - [x] `WaitLine` rebuilt on the `unknown` palette - the honesty rule made visual
 - [x] `FacilityCard` rebuilt: distance, open state, insurance, wait, actions
 - [x] Home rebuilt on the system, with the B/C/A state ordering explicit
-- [ ] Copy `src/ui` into web-provider (currently patient-only)
-- [ ] Remaining healthcare components: DoctorCard, ServiceCard, InsuranceBadge,
-      AvailabilityPicker, MapMarker, Timeline
-- [ ] Dialog / Sheet primitives
-- [ ] Component gallery route for visual regression by eye
+- [x] `src/ui` copied into web-provider (R6) and web-admin (R7)
+- [x] DoctorCard, MapMarker (`.ml-marker`)
+- [x] Component gallery at `/_gallery`, lazy-loaded and excluded from precache
+
+**Not built: ServiceCard, InsuranceBadge, AvailabilityPicker, Timeline,
+Dialog, Sheet.** Nothing imports them. Services render inline where they
+appear, insurance is a `Chip`, slot selection lives in Book, and no screen
+needs a modal - cancelling deliberately has no confirmation dialog. Extracting
+a component pays at the SECOND call site; building one before that is guessing
+at an API for a caller that does not exist.
+
+**The gallery earned itself immediately.** It exists because the same failure
+happened three times: `index.css` became the design-system import, the old
+classes stopped existing, and screens not touched since rendered unstyled -
+with type checks, tests and the build all green. On first render it exposed
+two more:
+
+- `Spinner` was a bare `<span>`, which is `display: inline`, so `h-4 w-4` did
+  nothing and it collapsed to a 2px sliver. It only ever looked right because
+  every call site so far had it inside an `inline-flex` button, which
+  blockifies its children. Fixed in all three copies.
+- `Button`'s `variant` defaults to `secondary`, not `primary`. That is correct
+  - a button nobody thought about should not claim the emphasis of the one
+  action on the screen - but it was undocumented. The gallery now states it.
+
+**Contrast, now measured rather than assumed.** R8 recorded that contrast had
+not been machine-verified. It has been now, and three token pairs failed:
+
+| Token | Was | Ratio | Now | Ratio |
+|---|---|---|---|---|
+| `ink-subtle` | `#8B948F` | 3.12 | `#69726D` | 4.77 |
+| `unknown` | `#8B948F` | 2.84 | `#69726D` | 4.52 |
+| `ink-muted` | `#66716C` | 4.44 on danger-subtle | `#4F5A55` | 6.22 worst case |
+
+`unknown` mattered most: "Not confirmed" is the honesty label, and being the
+quietest thing on the screen must not mean a patient cannot read it.
+
+`ink-muted` had to move as well. Darkening `ink-subtle` alone would have
+collapsed it into `ink-muted`, leaving two tokens that looked identical. The
+measurement also showed a real limit: **no three-tier grey scale clears 4.5:1
+on the tinted status backgrounds**, so `ink-subtle` is documented as
+surface-and-sunken only - the tinted surfaces carry their own text colour.
+
+Verified: every text/background pair across eight routes now meets WCAG AA.
 
 **Gotcha worth keeping:** `design/base.css` must be imported *before* the
 `@tailwind` directives and needs `postcss-import` first in the PostCSS chain.
@@ -637,3 +676,4 @@ them for visual convenience.
 | 2026-08-21 | R5 done: Care Guide UI. Gate untouched and still shut - verified against the real 503 (no entry points, honest explanation) and with intercepted responses to drive the flow. Result routes service -> filtered search -> booking. Disclaimer on every step in rw/en/fr. 248 i18n keys per language, parity enforced by test. Patient bundle 100.5 KB gzipped (150 KB budget). 26 of 51 screens. |
 | 2026-08-21 | R7 done: admin portal. Third Vite app (`web-admin`, :5175), superuser-only, backed by a new `platform_admin` Django app. Overview, verification queue, Care Guide monitoring. No patient records reachable - the backend serves a count and a test pins the payload shape. Verification requires a note. Found and fixed: the sidebar username was blank because SimpleJWT issues `user_id`, not `username`. 521 backend tests, 44 API operations, admin bundle 71.4 KB gzipped. 29 of 51 screens. |
 | 2026-08-21 | R8 done: cross-cutting pass. Found three live styling regressions (patient SignIn/Profile/Visits + six components still on the dead pre-R0 classes; `.ml-card` padding) and two behavioural bugs (Profile saved on blur with failures invisible; specialty CODES shown to patients as `general-medicine`). Specialty API now returns code + three names. Measured: focus visible 12/12 tab stops, no overflow at 390/820/1440 px across eight routes, no unlabelled controls. 521 backend tests, 21 frontend tests, 257 i18n keys per language. Bundles: patient 101.2 KB, provider 74.6 KB, admin 71.4 KB gzipped. |
+| 2026-08-21 | R0 closed out: component gallery at `/_gallery`, lazy-loaded and out of the precache. It immediately found two primitive bugs (Spinner collapsed to a 2px sliver outside a flex container; Button's secondary default undocumented). Contrast measured for the first time and three tokens failed - `unknown` at 2.84 on the honesty label mattered most. Palette retuned; every text/background pair across eight routes now meets WCAG AA. Speculative components (ServiceCard, Timeline, Dialog, Sheet) deliberately not built - nothing imports them. All of R0-R8 complete. |

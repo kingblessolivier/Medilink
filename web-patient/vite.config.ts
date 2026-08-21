@@ -13,7 +13,10 @@ export default defineConfig({
         // every phone at install time and undo the lazy import - a patient who
         // never opens the map must never pay for it. Fetched on demand, then
         // cached for a month once they have.
-        globIgnores: ["**/maplibre-gl-*.{js,css}"],
+        // The map is heavy and only some journeys need it. Gallery is a
+        // developer tool - precaching it would put it back on every patient's
+        // phone, which is the whole thing lazy-loading it avoided.
+        globIgnores: ["**/maplibre-gl-*.{js,css}", "**/Gallery-*.js"],
         runtimeCaching: [
           {
             urlPattern: /maplibre-gl-.*\.(js|css)$/,

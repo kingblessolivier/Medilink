@@ -32,8 +32,16 @@ export default {
         "line-strong": "#CDD6D1", // input borders, dividers that must read
 
         ink: "#17201C", // primary text
-        "ink-muted": "#66716C", // secondary text
-        "ink-subtle": "#8B948F", // captions, placeholders, stale data
+        // Darkened from #66716C, which measured 4.44 against danger-subtle
+        // under ErrorState - just under AA, and it had to move anyway to
+        // leave a visible gap above ink-subtle once that was fixed.
+        "ink-muted": "#4F5A55", // secondary text - 7.18 on surface
+        // Was #8B948F, which measured 3.12 on surface - well under AA on
+        // text a patient has to read. 4.77 on surface, 4.52 on sunken.
+        // NOT for use on a tinted status background: nothing clears 4.5
+        // there without collapsing into ink-muted. Those surfaces carry
+        // their own text colour (text-danger, text-info) instead.
+        "ink-subtle": "#69726D", // captions, placeholders, stale data
 
         primary: {
           DEFAULT: "#0B6B55",
@@ -52,7 +60,10 @@ export default {
         // Unknown data. Deliberately the quietest thing on the screen: a
         // patient must be able to tell "we do not know" from "we know" at a
         // glance, without reading. See the wait-status rule in docs/04.
-        unknown: { DEFAULT: "#8B948F", subtle: "#F2F5F3", border: "#E3E8E5" },
+        // "Not confirmed" is the honesty label - the quietest thing on the
+        // screen, but a patient still has to be able to READ it. #8B948F
+        // measured 2.84 on its own subtle background.
+        unknown: { DEFAULT: "#69726D", subtle: "#F2F5F3", border: "#E3E8E5" },
       },
 
       fontFamily: {
