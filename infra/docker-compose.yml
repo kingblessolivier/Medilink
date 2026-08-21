@@ -17,11 +17,45 @@ services:
   redis:
     image: redis:7-alpine
     container_name: medilink-redis
-    ports: ["6380:6379"]   # 6379 often taken by another local project
+    # No published port. Nothing on the HOST needs to reach Redis - the API
+    # talks to it over the compose network on 6379. Publishing it only created
+    # a conflict with whatever else on this machine wanted 6380, which is
+    # exactly what stopped the stack coming up.
+    expose: ["6379"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       retries: 10
+
+  api:
+    # The API belongs HERE, not in a hand-typed `docker run`. It used to be
+    # assembled by hand, which meant it vanished on every Docker restart and
+    # had to be rebuilt from memory - including the network name and the two
+    # service hostnames. `docker compose up` now brings up all three.
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: medilink-api
+    command: python manage.py runserver 0.0.0.0:8000
+    ports: ["8000:8000"]
+    volumes:
+      # Bind-mounted so the reloader picks up edits without a rebuild.
+      - ../backend:/app
+    environment:
+      # `db` and `redis`, not localhost: inside the compose network these are
+      # the service names. Redis is on 6379 internally - the 6380 in the
+      # published port exists because another local project holds 6379 on the
+      # host, and that mapping does not apply between containers.
+      DATABASE_URL: postgis://medilink:medilink@db:5432/medilink
+      REDIS_URL: redis://redis:6379/0
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+    env_file:
+      - ../backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
 volumes:
   pgdata:

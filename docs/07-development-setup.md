@@ -56,8 +56,14 @@ volumes:
 ```
 
 ```bash
+# Brings up all three: postgis, redis, and the API on :8000.
 docker compose -f infra/docker-compose.yml up -d
 docker compose -f infra/docker-compose.yml ps      # all healthy?
+
+# First time only - copy the example env. The compose file overrides
+# DATABASE_URL and REDIS_URL to the service hostnames, so the localhost
+# values in the example are only for a native WSL2 run.
+cp backend/.env.example backend/.env
 ```
 
 Use the **`postgis/postgis` image, not plain `postgres`.** Adding PostGIS to a
@@ -88,6 +94,18 @@ any of them and Django raises `OSError: could not find the GDAL library` at
 import time.
 
 ## 5. Backend, WSL2 native (faster iteration)
+
+> **On Windows, use Docker instead - section 4.** This section is WSL2 or
+> Linux only. GeoDjango needs GDAL, GEOS and PROJ as native libraries, and the
+> `apt` packages below do not exist on Windows. A `.venv` created in
+> PowerShell will fail at `pip install` on the GDAL bindings, or import-time
+> with `OSError: could not find the GDAL library` - which surfaces confusingly
+> as `ModuleNotFoundError: No module named 'django'` if the install aborted
+> part-way and left the venv empty.
+>
+> `docker compose -f infra/docker-compose.yml up -d` brings up the database,
+> Redis and the API together. Edits are bind-mounted, so the reloader picks
+> them up without a rebuild - the iteration speed is the same.
 
 ```bash
 sudo apt update
