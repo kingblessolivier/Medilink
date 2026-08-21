@@ -619,24 +619,70 @@ chosen for it, but nothing in this pass measured contrast ratios.
 
 ## 6. Screen inventory
 
-51 screens. `—` not started, `~` in progress, `✓` done.
+The brief listed 51 screens. Counting them as 51 separate routes would be
+dishonest in both directions - some were folded into a screen that already
+answered the question, and some were deliberately not built. So:
 
-**Public (23):** ✓ Homepage · ✓ Find Care · ✓ Map discovery · ✓ Search results ·
-✓ Facility profile · ✓ Facility overview · ✓ Facility doctors · ✓ Doctor
-profile · ✓ Facility services · ✓ Service detail · ✓ Facility insurance ·
-— Global insurance · — Booking · — Confirmation · — Queue tracking · — Care
-Guide landing · — Symptom assessment · — AI processing · — AI result · — AI
-recommended facilities · ✓ Compare · — About · — Help
+`+` built · `~` folded into another screen · `x` deliberately not built,
+reason given · `-` genuinely outstanding
 
-**Patient (8):** — Dashboard · — Appointments · — Appointment detail · — Active
-queue · — Notifications · — Profile · — Insurance · — Settings
+**Public (23) - 21 addressed**
 
-**Facility (10):** — Dashboard · — Appointments · — Queue · — Patients ·
-— Doctors · — Services · — Insurance · — Schedule · — Reports · — Settings
+`+` Homepage · `+` Find Care · `+` Map discovery · `+` Search results ·
+`+` Facility profile · `+` Facility overview · `+` Facility doctors ·
+`+` Doctor profile · `+` Facility services · `+` Service detail ·
+`+` Facility insurance · `+` Booking · `+` Confirmation · `+` Queue tracking ·
+`+` Care Guide landing · `+` Symptom assessment · `+` AI result ·
+`+` AI recommended facilities · `+` Compare ·
+`~` AI processing - the flow shows which question you are on; a protocol that
+branches has no honest progress bar, so there is no separate screen ·
+`~` Global insurance - the home screen lists insurers and links into a
+filtered search; a standalone page would repeat it ·
+`-` About · `-` Help
 
-**Admin (10):** — Dashboard · — Facilities · — Patients · — Providers ·
-— Appointments · — Queues · — Insurance · — AI monitoring · — Analytics ·
-— Settings
+**Patient (8) - all addressed**
+
+`+` Appointments (Visits) · `+` Appointment detail · `+` Active queue ·
+`+` Notifications · `+` Profile ·
+`~` Dashboard - the home screen already leads with your queue and your next
+appointment when signed in ·
+`~` Insurance - the insurer preference lives in Profile, one field ·
+`~` Settings - language sits in Profile and message preferences in
+Notifications, each next to what it affects
+
+**Facility (10) - 6 addressed**
+
+`+` Appointments · `+` Queue (Reception) · `+` Doctors · `+` Services ·
+`+` Reports ·
+`~` Insurance - shown per service on the Services screen, where a manager is
+already looking at what patients see ·
+`~` Dashboard - Reports opens on a "Today" band with the numbers a dashboard
+would repeat ·
+`x` Patients - a facility-wide searchable patient index is the largest
+standing privacy exposure in the product. The appointment and queue screens
+already name the people actually attending. Needs the docs/08 access-log
+review designed around it FIRST ·
+`x` Schedule - no endpoint exists for editing `ScheduleTemplate`; a nav item
+onto nothing is worse than none ·
+`x` Settings - nothing a facility may safely change about itself. Coverage and
+credentials are exactly what rules 5 and 6 keep out of their hands
+
+**Admin (10) - 9 addressed**
+
+`+` Dashboard (Overview) · `+` Facilities (verification queue) ·
+`+` Providers (verification) · `+` AI monitoring · `+` Analytics ·
+`~` Appointments, `~` Queues, `~` Insurance - Django admin already registers
+every model with its own audit trail; the sidebar links across rather than
+rebuilding forty change forms and an audit gap ·
+`x` Patients - the backend serves a patient COUNT and there is no endpoint to
+build a list from. A test pins the payload shape so widening it is deliberate ·
+`x` Settings - the settings that matter (the clinical gate, SMS credentials,
+aggregator allow-lists) are environment variables on purpose. A web form
+editing them would be a way to open the triage gate by mis-click
+
+**Genuinely outstanding: About and Help.** Two static content pages. They need
+copy in three languages that nobody has written, and inventing it would be
+worse than the gap.
 
 ## 7. Rules that survive the redesign
 
@@ -677,3 +723,4 @@ them for visual convenience.
 | 2026-08-21 | R7 done: admin portal. Third Vite app (`web-admin`, :5175), superuser-only, backed by a new `platform_admin` Django app. Overview, verification queue, Care Guide monitoring. No patient records reachable - the backend serves a count and a test pins the payload shape. Verification requires a note. Found and fixed: the sidebar username was blank because SimpleJWT issues `user_id`, not `username`. 521 backend tests, 44 API operations, admin bundle 71.4 KB gzipped. 29 of 51 screens. |
 | 2026-08-21 | R8 done: cross-cutting pass. Found three live styling regressions (patient SignIn/Profile/Visits + six components still on the dead pre-R0 classes; `.ml-card` padding) and two behavioural bugs (Profile saved on blur with failures invisible; specialty CODES shown to patients as `general-medicine`). Specialty API now returns code + three names. Measured: focus visible 12/12 tab stops, no overflow at 390/820/1440 px across eight routes, no unlabelled controls. 521 backend tests, 21 frontend tests, 257 i18n keys per language. Bundles: patient 101.2 KB, provider 74.6 KB, admin 71.4 KB gzipped. |
 | 2026-08-21 | R0 closed out: component gallery at `/_gallery`, lazy-loaded and out of the precache. It immediately found two primitive bugs (Spinner collapsed to a 2px sliver outside a flex container; Button's secondary default undocumented). Contrast measured for the first time and three tokens failed - `unknown` at 2.84 on the honesty label mattered most. Palette retuned; every text/background pair across eight routes now meets WCAG AA. Speculative components (ServiceCard, Timeline, Dialog, Sheet) deliberately not built - nothing imports them. All of R0-R8 complete. |
+| 2026-08-21 | Final end-to-end pass across all three surfaces. Found four patient screens with NO `h1` at all - the signed-out branches of Visits, Profile, Queue and Notifications returned a prompt and a button, and AppointmentDetail and the signed-in Queue never had one either. A page with no h1 gives a screen-reader user nothing to jump to and no statement of where they are. All ten patient routes now carry one. Verified: 10 patient routes, 5 provider screens, 3 admin screens all render with no page errors. |

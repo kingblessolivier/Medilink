@@ -40,6 +40,9 @@ export function Visits() {
   if (!signedIn) {
     return (
       <div className="mx-auto max-w-md px-4 pt-8 text-center">
+        {/* Every page states where it is. Without an h1 a screen-reader user
+            has nothing to jump to and no idea which screen they landed on. */}
+        <h1 className="mb-2 text-h1">{t("visits_title")}</h1>
         <p className="mb-4 text-small text-ink-muted">{t("auth_prompt")}</p>
         <Link to="/sign-in" className="ml-btn-primary w-full">
           {t("auth_sign_in")}

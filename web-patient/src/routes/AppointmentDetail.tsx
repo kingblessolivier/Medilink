@@ -77,9 +77,12 @@ export function AppointmentDetail() {
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="ml-label">{t("next_appointment")}</p>
-            <p className="mt-1 text-h1">
+            {/* The time IS the heading here - it is what somebody opens this
+                screen to read - so it carries the h1 rather than having a
+                second, quieter title above it. */}
+            <h1 className="mt-1 text-h1">
               {start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-            </p>
+            </h1>
             <p className="text-body-lg text-ink-muted">
               {start.toLocaleDateString(undefined, {
                 weekday: "long",

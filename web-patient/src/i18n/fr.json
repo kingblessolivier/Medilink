@@ -255,5 +255,7 @@
   "profile_save_failed": "Cette modification n'a pas ete enregistree. Veuillez reessayer.",
   "compare_partial": "{n} etablissements n'ont pas pu etre charges. Les autres sont affiches.",
   "queue_load_failed": "Impossible de verifier votre place dans la file.",
-  "queue_load_failed_body": "Cela ne signifie pas que vous avez perdu votre place. Veuillez reessayer."
+  "queue_load_failed_body": "Cela ne signifie pas que vous avez perdu votre place. Veuillez reessayer.",
+  "queue_title": "Votre place dans la file",
+  "appointment_title": "Votre rendez-vous"
 }
