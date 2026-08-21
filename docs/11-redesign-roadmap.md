@@ -421,11 +421,38 @@ provider-aware first.
 
 ### R5 - Care Guide (UI only; gate untouched)
 
-- [ ] Landing, symptom entry, dynamic follow-ups, staged progress, result
-- [ ] Urgency/red-flag presentation with immediate escalation
-- [ ] Result → specialty → doctors → facilities → insurance → booking
-- [ ] **Entry points hidden entirely when `/triage/status` reports unavailable**
-- [ ] Disclaimer on every step, in all three languages
+- [x] Landing, dynamic follow-ups, staged progress, result
+- [x] Urgency/red-flag presentation with immediate escalation
+- [x] Result → service → facilities → booking
+- [x] **Entry points hidden entirely when `/triage/status` reports unavailable**
+- [x] Disclaimer on every step, in all three languages
+
+**The gate was not touched.** It is still shut in every environment, and the
+screen was verified in both states: unstubbed against the real 503 (zero entry
+points on Home, and a typed URL explains it is awaiting a clinician), and with
+intercepted responses to drive the flow itself. Opening the gate to test the
+UI would have been the wrong trade.
+
+Decisions worth keeping:
+
+- **The result is a SERVICE, never a specialty or a condition.** The protocol
+  returns a service code and nothing else, so there is no path by which a
+  condition name can reach the screen. `?service=` is already the search
+  screen's filter, so the result hands straight off to a filtered search.
+- **The service NAME comes from the backend**, which holds all three
+  languages. `t()` returns the key itself for a miss, so a client-side lookup
+  would have rendered `service_dialysis` at a patient.
+- **Progress counts answers rather than showing a bar.** The protocol
+  branches, so the total is unknown; a bar would jump backwards when a branch
+  turned out to be longer than the last.
+- **Escalation is terminal in the UI as well as the engine.** No control on
+  the emergency screen leads back into the flow - a patient told to seek
+  emergency care must not be able to answer their way out of that advice.
+- **The red-flag chip is kept despite the priming risk.** Labelling a
+  screening question "urgent" may push a frightened patient toward "yes", but
+  an unnecessary hospital trip is a far cheaper mistake than a missed red flag.
+- **The emergency number lives in the language bundle**, not in JSX, so a
+  safety-critical value is correctable without a code change.
 
 ### R6 - Facility workspace
 
@@ -530,3 +557,4 @@ them for visual convenience.
 | 2026-08-21 | R4 part 1: provider-aware slots and booking (separate capacity pools), appointment detail endpoint, four-step booking flow, confirmation, full-screen queue tracking. Booking driven end to end in a browser. 469 backend tests, 93% coverage. |
 | 2026-08-21 | R4 done: notification centre and preferences, honoured by the sender. Right to object from docs/08 s7 now implemented. 493 backend tests, 93% coverage. 18 of 51 screens. |
 | 2026-08-21 | R6 done: facility workspace. Sidebar shell, appointments, doctors, services, reports; Reception rebuilt on the design tokens. Found and fixed a live regression - the provider app's `card` / `field` / `btn-primary` classes had been dropped when `index.css` became the design-system import, leaving the check-in button unstyled. Management screens shipped read-only on purpose (see R6). 497 backend tests, 39 API operations, provider bundle 74.7 KB gzipped. 22 of 51 screens. |
+| 2026-08-21 | R5 done: Care Guide UI. Gate untouched and still shut - verified against the real 503 (no entry points, honest explanation) and with intercepted responses to drive the flow. Result routes service -> filtered search -> booking. Disclaimer on every step in rw/en/fr. 248 i18n keys per language, parity enforced by test. Patient bundle 100.5 KB gzipped (150 KB budget). 26 of 51 screens. |

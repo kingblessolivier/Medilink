@@ -14,6 +14,7 @@ import type {
   Specialty,
   SlotDays,
   TokenPair,
+  TriageSession,
   TriageStatus,
 } from "./types"
 
@@ -146,6 +147,20 @@ export const api = {
     request<{ results: ServiceType[] }>("/service-types", { auth: false }),
 
   triageStatus: () => request<TriageStatus>("/triage/status"),
+
+  // Both return 503 until a named clinician has signed off a protocol. That
+  // is the gate working, not an outage - the UI must already have hidden the
+  // entry point, and treats a 503 here as "not available yet", never as an
+  // error to retry. See docs/08 section 8.
+  triageStart: () =>
+    request<TriageSession>("/triage/sessions", { method: "POST", auth: false }),
+
+  triageAnswer: (sessionId: string, question: string, option: string) =>
+    request<TriageSession>(`/triage/sessions/${sessionId}/answer`, {
+      method: "POST",
+      body: { question, option },
+      auth: false,
+    }),
 
   provider: (slug: string) => request<ProviderDetail>(`/providers/${slug}`),
 
