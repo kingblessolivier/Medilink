@@ -80,7 +80,7 @@ export function Verification() {
 
       {facilities.length > 0 && (
         <section className="mt-8">
-          <h2 className="ml-label mb-3">
+          <h2 className="text-h3 mb-3">
             Facilities ({facilities.length})
           </h2>
           <ul className="space-y-3">
@@ -97,7 +97,7 @@ export function Verification() {
 
       {providers.length > 0 && (
         <section className="mt-8">
-          <h2 className="ml-label mb-3">Doctors ({providers.length})</h2>
+          <h2 className="text-h3 mb-3">Doctors ({providers.length})</h2>
           <ul className="space-y-3">
             {providers.map((provider) => (
               <ProviderRow

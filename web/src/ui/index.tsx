@@ -285,6 +285,96 @@ export function TableSkeleton({ rows = 4 }: { rows?: number }) {
   )
 }
 
+/* --------------------------------------------------------------------- Stat */
+
+/**
+ * One measured number, with room to say why it is missing.
+ *
+ * Three screens defined their own copy of this - Reports, the platform
+ * Overview, and Care Guide monitoring - and they had already drifted apart on
+ * spacing. Shared, because a facility manager comparing two of them is
+ * comparing numbers, and inconsistent framing makes that harder than it
+ * needs to be.
+ *
+ * `value` takes a string so a caller can pass an em dash. That is deliberate:
+ * every one of these screens has a state where the honest answer is "not
+ * enough data", and `hint` is where that gets explained rather than being
+ * papered over with a zero.
+ */
+export function StatCard({
+  label,
+  value,
+  hint,
+  icon,
+  tone = "neutral",
+  chip,
+}: {
+  label: string
+  value: string | number
+  hint?: string
+  icon?: ReactNode
+  /** Tints only the icon plate. The number itself stays ink - a figure
+   *  coloured green reads as "good", which is a judgement we cannot make. */
+  tone?: "neutral" | "primary" | "warning" | "danger"
+  chip?: ReactNode
+}) {
+  const plate = {
+    neutral: "bg-surface-sunken text-ink-muted",
+    primary: "bg-primary-subtle text-primary",
+    warning: "bg-warning-subtle text-warning",
+    danger: "bg-danger-subtle text-danger",
+  }[tone]
+
+  return (
+    <div className="ml-card flex h-full flex-col p-4">
+      <div className="flex items-start gap-3">
+        {icon && <span className={cx("ml-icon-plate", plate)}>{icon}</span>}
+        <p className="ml-label mt-1.5 min-w-0 flex-1">{label}</p>
+      </div>
+      <p className="mt-2 text-h1 tabular-nums">{value}</p>
+      {chip && <div className="mt-2">{chip}</div>}
+      {hint && <p className="mt-1.5 text-caption text-ink-subtle">{hint}</p>}
+    </div>
+  )
+}
+
+/**
+ * A labelled proportion bar.
+ *
+ * Illustrative only - the count beside it is the fact. Rendered with
+ * `role="presentation"` for exactly that reason: a screen reader gets the
+ * number, which is the part that means something.
+ */
+export function BarRow({
+  label,
+  count,
+  max,
+}: {
+  label: string
+  count: number
+  max: number
+}) {
+  return (
+    <li>
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="min-w-0 truncate text-body">{label}</span>
+        <span className="shrink-0 tabular-nums text-body font-medium text-ink-muted">
+          {count}
+        </span>
+      </div>
+      <div
+        className="mt-1.5 h-2 overflow-hidden rounded-full bg-surface-sunken"
+        role="presentation"
+      >
+        <span
+          className="block h-full rounded-full bg-primary transition-all duration-500"
+          style={{ width: `${Math.max(2, Math.round((count / max) * 100))}%` }}
+        />
+      </div>
+    </li>
+  )
+}
+
 /* ------------------------------------------------------- Empty / error / info */
 
 /**

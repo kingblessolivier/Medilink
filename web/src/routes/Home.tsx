@@ -19,7 +19,28 @@ import { InsurerChip } from "../components/InsurerChip"
 import { DistrictPicker } from "../components/DistrictPicker"
 import { QueueCard } from "../components/QueueCard"
 import { AppointmentCard } from "../components/AppointmentCard"
-import { Button, Card, EmptyState, ErrorState, ListSkeleton, Notice } from "../ui"
+import { Button, EmptyState, ErrorState, ListSkeleton, Notice } from "../ui"
+import {
+  IconChevronRight,
+  IconClock,
+  IconHeart,
+  IconPin,
+  IconSearch,
+  IconShieldCheck,
+  IconStethoscope,
+} from "../ui/icons"
+
+/**
+ * What MediLink is, in three lines.
+ *
+ * No numbers. We have no honest adoption figures to quote yet, and inventing
+ * them on a health service is exactly what docs/11 rule 1 forbids.
+ */
+const VALUE_POINTS = [
+  { Glyph: IconPin, title: "value_nearby", body: "value_nearby_body" },
+  { Glyph: IconClock, title: "value_wait", body: "value_wait_body" },
+  { Glyph: IconShieldCheck, title: "value_insurance", body: "value_insurance_body" },
+] as const
 
 /**
  * Home - healthcare discovery, and the state ordering IS the product.
@@ -65,64 +86,113 @@ export function Home() {
     lang === "rw" ? s.name_rw : lang === "fr" ? s.name_fr : s.name_en
 
   return (
-    <div className="pb-24">
-      <div className="mx-auto w-full max-w-3xl px-4 pt-4">
-        {/* The language toggle moved to the top bar when the three apps
-            became one - it belongs somewhere every surface has, not on the
-            patient home page alone. What stays here is the greeting. */}
-        <p className="mb-5 text-h3">
-          {patient?.full_name
-            ? t("greeting_named", { name: patient.full_name })
-            : t("greeting")}
-        </p>
+    <div className="pb-24 md:pb-10">
+      {/* ---- States B and C sit ABOVE the hero and outside it.
+             A patient already in a queue must not scroll past a search box
+             to find out what number they are. ---- */}
+      {(queue.data || nextAppointment) && (
+        <div className="ml-shell pt-4">
+          {queue.data ? (
+            <section aria-label={t("your_queue")}>
+              <QueueCard entry={queue.data} />
+            </section>
+          ) : (
+            <section aria-label={t("next_appointment")}>
+              <AppointmentCard appointment={nextAppointment!} />
+            </section>
+          )}
+        </div>
+      )}
 
-        {/* ---- State B: in a queue. Above everything. ---- */}
-        {queue.data && (
-          <section className="mb-6" aria-label={t("your_queue")}>
-            <QueueCard entry={queue.data} />
-          </section>
-        )}
+      {/* ---- Hero. Demoted to a strip when something is active, never
+             removed: discovery is still the product. ---- */}
+      {!queue.data && (
+        <section
+          className={
+            "relative overflow-hidden bg-hero-wash text-white " +
+            (nextAppointment ? "mt-4" : "")
+          }
+        >
+          {/* A faint grid rather than a photograph. Stock imagery of smiling
+              clinicians is the visual language of marketing, and this is a
+              tool people open when they are unwell. */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-hero-grid bg-grid opacity-60"
+          />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/5"
+          />
 
-        {/* ---- State C: an appointment is coming up. ---- */}
-        {!queue.data && nextAppointment && (
-          <section className="mb-6" aria-label={t("next_appointment")}>
-            <AppointmentCard appointment={nextAppointment} />
-          </section>
-        )}
+          <div className="ml-shell relative grid gap-10 py-10 sm:py-14 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-center lg:gap-16 lg:py-20">
+            <div className="max-w-2xl">
+              <p className="text-small font-medium text-white/70">
+                {patient?.full_name
+                  ? t("greeting_named", { name: patient.full_name })
+                  : t("greeting")}
+              </p>
+              <h1 className="mt-2 text-h1 sm:text-display">{t("hero_title")}</h1>
+              <p className="mt-3 max-w-prose text-body-lg text-white/80">
+                {t("hero_body")}
+              </p>
 
-        {/* ---- Hero. Demoted when something is active, never removed. ---- */}
-        {!queue.data && (
-          <section className="mb-8">
-            <h1 className="text-h1">{t("hero_title")}</h1>
-            <p className="mt-1.5 max-w-prose text-body-lg text-ink-muted">
-              {t("hero_body")}
-            </p>
+              <div className="mt-6 [--tw-ring-color:transparent]">
+                <GlobalSearch coords={coords} />
+              </div>
 
-            <div className="mt-4">
-              <GlobalSearch coords={coords} />
-            </div>
-
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Link to="/search" className="ml-btn-primary">
-                {t("find_care")}
-              </Link>
-              {/* Hidden entirely when no clinician has signed off a protocol.
-                  A button that errors is worse than no button. */}
-              {triage.available && (
-                <Link to="/care-guide" className="ml-btn-secondary">
-                  {t("start_care_guide")}
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link
+                  to="/search"
+                  className="ml-btn inline-flex bg-white text-primary hover:bg-white/90"
+                >
+                  <IconSearch size={17} />
+                  {t("find_care")}
                 </Link>
-              )}
+                {/* Hidden entirely when no clinician has signed off a
+                    protocol. A button that errors is worse than no button. */}
+                {triage.available && (
+                  <Link
+                    to="/care-guide"
+                    className="ml-btn inline-flex border border-white/30 text-white hover:bg-white/10"
+                  >
+                    <IconHeart size={17} />
+                    {t("start_care_guide")}
+                  </Link>
+                )}
+              </div>
             </div>
 
-            <div className="mt-4">
-              <InsurerChip insurer={insurer} onChange={setInsurer} />
-            </div>
-          </section>
-        )}
+            {/* Three plain facts about what this is. They sit in the hero's
+                right-hand column on a wide screen - which is what stops a
+                1440px viewport being half empty green - and fall back to a
+                strip underneath the copy on anything narrower. */}
+            <ul className="grid gap-5 border-t border-white/15 pt-6 sm:grid-cols-3 lg:grid-cols-1 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+              {VALUE_POINTS.map(({ Glyph, title, body }) => (
+                <li key={title} className="flex gap-3">
+                  <span className="ml-icon-plate bg-white/10 text-white">
+                    <Glyph size={18} />
+                  </span>
+                  <span>
+                    <span className="block text-body font-medium">{t(title)}</span>
+                    <span className="mt-0.5 block text-small text-white/70">
+                      {t(body)}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      <div className="ml-shell pt-8">
+        <div className="mb-6">
+          <InsurerChip insurer={insurer} onChange={setInsurer} />
+        </div>
 
         {geoFailed && (
-          <div className="mb-6">
+          <div className="mb-6 max-w-2xl">
             {/* Home is a summary. Picking a district hands off to /search,
                 where the filters and the full list already live, rather than
                 growing a second half-featured results list here. */}
@@ -187,8 +257,10 @@ export function Home() {
             />
           )}
 
-          <div className="space-y-3">
-            {nearby.data?.results.slice(0, 3).map((facility) => (
+          {/* A grid, not a stack. Three full-width cards on a 1440px monitor
+              was a column of 1100px-wide boxes with one line of text in each. */}
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {nearby.data?.results.slice(0, 6).map((facility) => (
               <FacilityCard
                 key={facility.id}
                 facility={facility}
@@ -209,7 +281,7 @@ export function Home() {
               </Link>
             }
           >
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {doctors.data?.results.map((doctor) => (
                 <DoctorCard key={doctor.slug} doctor={doctor} />
               ))}
@@ -218,15 +290,27 @@ export function Home() {
         )}
 
         {/* ---- Services. A list of links, not a wall of cards. ---- */}
+        {/* Services were eight identical grey pills - indistinguishable, and
+            impossible to scan for the one you came for. Now a tile each, with
+            the same icon plate the rest of the product uses as an anchor. */}
         <Section title={t("popular_services")}>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {(serviceData?.results ?? []).slice(0, 8).map((service) => (
               <Link
                 key={service.code}
                 to={`/search?service=${service.code}`}
-                className="ml-btn-secondary ml-btn-sm"
+                className="ml-card-interactive group flex items-center gap-3 p-3.5"
               >
-                {serviceLabel(service)}
+                <span className="ml-icon-plate bg-primary-subtle text-primary">
+                  <IconStethoscope size={18} />
+                </span>
+                <span className="min-w-0 flex-1 truncate text-body font-medium">
+                  {serviceLabel(service)}
+                </span>
+                <IconChevronRight
+                  size={16}
+                  className="shrink-0 text-ink-subtle transition-transform group-hover:translate-x-0.5"
+                />
               </Link>
             ))}
           </div>
@@ -234,36 +318,55 @@ export function Home() {
 
         {/* ---- Insurance ---- */}
         <Section title={t("insurance_title")}>
-          <p className="mb-3 max-w-prose text-body text-ink-muted">
-            {t("insurance_body")}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {(insurerData?.results ?? []).slice(0, 6).map((option) => (
-              <Link
-                key={option.code}
-                to={`/search?insurer=${option.code}`}
-                className="ml-btn-secondary ml-btn-sm"
-              >
-                {option.name}
-              </Link>
-            ))}
+          <div className="ml-panel overflow-hidden">
+            <div className="flex flex-col gap-6 p-5 sm:flex-row sm:items-start sm:p-6">
+              <span className="ml-icon-plate h-11 w-11 bg-primary-subtle text-primary">
+                <IconShieldCheck size={22} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="max-w-prose text-body text-ink-muted">
+                  {t("insurance_body")}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {(insurerData?.results ?? []).slice(0, 8).map((option) => (
+                    <Link
+                      key={option.code}
+                      to={`/search?insurer=${option.code}`}
+                      className="ml-btn-secondary ml-btn-sm"
+                    >
+                      {option.name}
+                    </Link>
+                  ))}
+                </div>
+                {/* Rule 6, on the screen rather than only in the docs: we say
+                    what a facility ACCEPTS, never that a patient is covered. */}
+                <p className="mt-4 text-caption text-ink-subtle">
+                  {t("insurance_accepts_note")}
+                </p>
+              </div>
+            </div>
           </div>
         </Section>
 
         {/* ---- Care Guide. Present only when a clinician has signed off. ---- */}
         {triage.available && (
           <Section title={t("care_guide_title")}>
-            <Card className="p-5">
-              <p className="max-w-prose text-body text-ink-muted">
-                {t("care_guide_body")}
-              </p>
-              <Link to="/care-guide" className="ml-btn-primary mt-4">
-                {t("start_care_guide")}
-              </Link>
-              <p className="mt-3 text-caption text-ink-subtle">
-                {t("care_guide_disclaimer")}
-              </p>
-            </Card>
+            <div className="ml-panel flex flex-col gap-6 p-5 sm:flex-row sm:items-start sm:p-6">
+              <span className="ml-icon-plate h-11 w-11 bg-primary-subtle text-primary">
+                <IconHeart size={22} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="max-w-prose text-body text-ink-muted">
+                  {t("care_guide_body")}
+                </p>
+                <Link to="/care-guide" className="ml-btn-primary mt-4">
+                  {t("start_care_guide")}
+                </Link>
+                <p className="mt-3 text-caption text-ink-subtle">
+                  {t("care_guide_disclaimer")}
+                </p>
+              </div>
+            </div>
           </Section>
         )}
       </div>
@@ -283,8 +386,10 @@ function Section({
 }) {
   return (
     <section className="ml-section">
-      <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h2 className="ml-label">{title}</h2>
+      {/* Was a 12px grey uppercase label that read as a form field caption.
+          A section heading on a page this wide has to hold its own column. */}
+      <div className="ml-section-head">
+        <h2 className="text-h2">{title}</h2>
         {action}
       </div>
       {children}

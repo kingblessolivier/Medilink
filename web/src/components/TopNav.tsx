@@ -59,8 +59,8 @@ export function TopNav({
   const isPatientSurface = !session || session.kind === "patient"
 
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-surface">
-      <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-3">
+    <header className="sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80">
+      <div className="ml-shell flex items-center gap-4 py-3">
         <Link to={homeFor(session)} className="shrink-0">
           <span className="block text-caption font-semibold uppercase tracking-widest text-primary">
             MediLink
@@ -140,7 +140,7 @@ export function TopNav({
 
       {!isPatientSurface && open && (
         <nav id="topnav-mobile" className="border-t border-line sm:hidden">
-          <ul className="mx-auto max-w-6xl px-2 py-2">
+          <ul className="ml-shell py-2">
             {items.map((item) => (
               <li key={item.to}>
                 <NavLink

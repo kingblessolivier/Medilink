@@ -101,7 +101,7 @@ export function WorkspaceServices() {
 
           {/* -------------------------------------------------- insurers */}
           <section className="mt-8">
-            <h2 className="ml-label mb-3">Insurers listed</h2>
+            <h2 className="text-h3 mb-3">Insurers listed</h2>
             {facility.insurers.length === 0 ? (
               <p className="text-body text-ink-muted">
                 No insurers recorded. Patients filtering by insurance will not
@@ -120,7 +120,7 @@ export function WorkspaceServices() {
 
           {/* -------------------------------------------------- services */}
           <section className="mt-8">
-            <h2 className="ml-label mb-3">Services offered</h2>
+            <h2 className="text-h3 mb-3">Services offered</h2>
 
             {services.length === 0 ? (
               <EmptyState

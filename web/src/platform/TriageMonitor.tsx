@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { api, type TriageMonitoring } from "../api/client"
-import { ErrorState, Notice, Skeleton } from "../ui"
+import { BarRow, ErrorState, Notice, Skeleton, StatCard } from "../ui"
+import { IconAlert, IconHeart } from "../ui/icons"
 
 /**
  * Care Guide monitoring.
@@ -106,9 +107,9 @@ function Body({ data }: { data: TriageMonitoring }) {
     <>
       <section className="mt-6">
         <div className="grid gap-3 sm:grid-cols-3">
-          <Stat label="Sessions" value={data.sessions} />
-          <Stat label="Escalated to emergency" value={data.escalations} />
-          <Stat
+          <StatCard label="Sessions" value={data.sessions} icon={<IconHeart size={18} />} />
+          <StatCard label="Escalated to emergency" value={data.escalations} icon={<IconAlert size={18} />} tone="danger" />
+          <StatCard
             label="Escalation rate"
             value={
               data.escalation_rate === null
@@ -136,7 +137,7 @@ function Body({ data }: { data: TriageMonitoring }) {
       )}
 
       <section className="mt-8">
-        <h2 className="ml-label mb-3">Where sessions were sent</h2>
+        <h2 className="text-h3 mb-3">Where sessions were sent</h2>
         {data.by_service.length === 0 ? (
           <p className="text-body text-ink-muted">
             No service recommendations in this period.
@@ -152,7 +153,7 @@ function Body({ data }: { data: TriageMonitoring }) {
       </section>
 
       <section className="mt-8">
-        <h2 className="ml-label mb-3">By protocol version</h2>
+        <h2 className="text-h3 mb-3">By protocol version</h2>
         <p className="mb-3 text-small text-ink-muted">
           A rule change has to be traceable to what it did to these numbers.
         </p>
@@ -197,47 +198,14 @@ function Body({ data }: { data: TriageMonitoring }) {
 function Bars({ rows }: { rows: { label: string; count: number }[] }) {
   const highest = Math.max(...rows.map((r) => r.count), 1)
   return (
-    <ul className="space-y-2">
+    <ul className="max-w-2xl space-y-3">
       {rows.map((row) => (
-        <li key={row.label}>
-          <div className="flex items-baseline justify-between gap-3">
-            <span className="text-body">{row.label}</span>
-            <span className="tabular-nums text-body text-ink-muted">
-              {row.count}
-            </span>
-          </div>
-          <div
-            className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-sunken"
-            role="presentation"
-          >
-            <span
-              className="block h-full rounded-full bg-primary"
-              style={{ width: `${Math.round((row.count / highest) * 100)}%` }}
-            />
-          </div>
-        </li>
+        <BarRow key={row.label} label={row.label} count={row.count} max={highest} />
       ))}
     </ul>
   )
 }
 
-function Stat({
-  label,
-  value,
-  hint,
-}: {
-  label: string
-  value: string | number
-  hint?: string
-}) {
-  return (
-    <div className="rounded-lg border border-line bg-surface p-4">
-      <p className="ml-label">{label}</p>
-      <p className="mt-1 text-h2 tabular-nums">{value}</p>
-      {hint && <p className="mt-1 text-caption text-ink-subtle">{hint}</p>}
-    </div>
-  )
-}
 
 function humanise(code: string) {
   return code.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase())
