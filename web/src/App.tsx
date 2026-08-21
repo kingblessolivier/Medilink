@@ -28,6 +28,7 @@ import { Visits } from "./routes/Visits"
 import { Profile } from "./routes/Profile"
 import { SignIn } from "./routes/SignIn"
 import { Register } from "./routes/Register"
+import { Privacy } from "./routes/Privacy"
 
 
 import { OfflineBanner } from "./components/OfflineBanner"
@@ -180,6 +181,9 @@ function Shell() {
         {/* ------------------------------------------------------- auth */}
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/register" element={<Register />} />
+        {/* Linked from the consent checkbox. Consenting to a notice that
+            does not exist is not consent. */}
+        <Route path="/privacy" element={<Privacy />} />
 
         {/* -------------------------------------------------- workspace */}
         <Route

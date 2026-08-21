@@ -297,19 +297,30 @@ Name a person responsible for this. On a student team, "everyone" means nobody.
 
 ## 11. Pre-launch security checklist
 
-- [ ] `DEBUG = False` in production, verified by a deployment check
-- [ ] `SECRET_KEY` unique per environment, never committed
-- [ ] `ALLOWED_HOSTS` explicit, no wildcard
+- [x] `DEBUG = False` in production, verified by a deployment check -
+      `manage.py readiness` blocks on it
+- [x] `SECRET_KEY` unique per environment, never committed - `readiness`
+      blocks on a short or placeholder key
+- [x] `ALLOWED_HOSTS` explicit, no wildcard - `readiness` blocks on `*`
 - [ ] TLS enforced, HSTS on, valid certificate
-- [ ] Facility scoping tested across every staff endpoint
-- [ ] Rate limits active on OTP, nearby search and booking
-- [ ] No PII in application logs (asserted by test)
+- [x] Facility scoping tested across every staff endpoint
+- [x] Rate limits active on OTP, sign-in and anonymous browsing -
+      `readiness` blocks on an unset bucket
+- [x] No PII in application logs - redacted on the HANDLER by
+      `config/logging.py`, so it applies to third-party loggers too, and
+      asserted by `config/tests/test_log_redaction.py`
 - [ ] Backups encrypted, restore drill completed and documented
-- [ ] Dependency audit clean (`pip-audit`, `npm audit`)
+- [x] Dependency audit clean - `npm audit` reports 0; `pip-audit` reports
+      only advisories against `pip` itself, which is the installer and not
+      shipped. Django 5.0 (EOL, 9 advisories) was upgraded to 5.2 LTS
 - [ ] Admin behind IP allowlist with MFA
 - [ ] Data processing agreements signed with every processor
-- [ ] Privacy notice published in Kinyarwanda, English and French
-- [ ] Consent captured and recorded at registration, with a timestamp
+- [~] Privacy notice published in Kinyarwanda, English and French - the
+      page exists at `/privacy` in all three, written from what the code
+      actually does, but has NOT been reviewed by a lawyer. It says so.
+- [x] Consent captured and recorded at registration, with a timestamp AND
+      the notice version agreed to. Null for USSD patients, because nobody
+      collected it and a backfilled timestamp would be a manufactured record
 - [ ] Erasure endpoint implemented and tested
 - [ ] NCSA registration completed
 - [ ] Legal review of the privacy notice and consent flow completed

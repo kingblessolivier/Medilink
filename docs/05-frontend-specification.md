@@ -336,12 +336,12 @@ glance without reading.
 
 ## 10. Frontend definition of done
 
-- [ ] Every user-facing string in all three language files
+- [x] Every user-facing string in all three language files
 - [ ] Layout survives Kinyarwanda text at 1.4x English length
-- [ ] All four `wait.status` values have a distinct, tested rendering
-- [ ] Home screen renders correctly in states A, B and C
-- [ ] Geolocation denied path reaches the district picker
+- [x] All four `wait.status` values have a distinct, tested rendering
+- [x] Home screen renders correctly in states A, B and C
+- [x] Geolocation denied path reaches the district picker
 - [ ] Bundle within the performance budget on a 3G throttle
-- [ ] Reception check-in completes in under 10 s with keyboard only
-- [ ] Reception works fully with the network disabled, and syncs on reconnect
+- [x] Reception check-in completes in under 10 s with keyboard only
+- [x] Reception works fully with the network disabled, and syncs on reconnect
 - [ ] Tested on a real low-end Android device, not only the emulator

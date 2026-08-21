@@ -483,13 +483,13 @@ To hold these:
 
 ## 11. Verification checklist before this feature ships
 
-- [ ] `Point(lng, lat)` ordering asserted by a test against a known distance
+- [x] `Point(lng, lat)` ordering asserted by a test against a known distance
 - [ ] `EXPLAIN ANALYZE` on the nearby query confirms an **Index Scan**, not a Seq Scan
-- [ ] Query count per request asserted (`assertNumQueries`) to catch N+1 regressions
-- [ ] All four `wait.status` values render correctly in the UI
-- [ ] Denied-geolocation path reaches the district picker
-- [ ] Radius auto-expansion tested with a deliberately empty rural coordinate
-- [ ] Out-of-bounds coordinate returns `400`, not a crash
+- [x] Query count per request asserted (`assertNumQueries`) to catch N+1 regressions
+- [x] All four `wait.status` values render correctly in the UI
+- [x] Denied-geolocation path reaches the district picker
+- [x] Radius auto-expansion tested with a deliberately empty rural coordinate
+- [x] Out-of-bounds coordinate returns `400`, not a crash
 - [ ] Offline mode shows cached results with a visible timestamp
 - [ ] Tested on a real low-end Android phone on a real 3G connection, not on the emulator
 - [ ] At least 50 real Kigali facilities loaded and field-verified

@@ -1311,6 +1311,7 @@ export interface components {
             password: string;
             phone: string;
             full_name?: string;
+            consent: boolean;
         };
         ReportAppointments: {
             total: number;

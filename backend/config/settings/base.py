@@ -219,6 +219,17 @@ SMS_SENDER_ID = env("SMS_SENDER_ID", default="MEDILINK")
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default=env("REDIS_URL", default=""))
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_TIMEZONE = TIME_ZONE
+
+# The version of the privacy notice a patient agrees to at registration,
+# recorded against their consent. Bump it when the notice changes materially -
+# a later revision does not retroactively become what somebody agreed to, and
+# this is how you find who needs asking again. See docs/08 section 6.
+# Patient identifiers are scrubbed on the way OUT, on the handler, so it
+# applies to third-party loggers too. See config/logging.py for why this is a
+# filter rather than a rule people are asked to remember.
+from config.logging import LOGGING  # noqa: E402,F401
+
+PRIVACY_NOTICE_VERSION = env("PRIVACY_NOTICE_VERSION", default="2026-08")
 CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=False)
 
 # --- Phase 3: USSD and WhatsApp ----------------------------------------------

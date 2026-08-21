@@ -13,9 +13,11 @@ One entry point for three kinds of principal. The rules that matter:
   facility-scoping model together.
 """
 
+from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.db import transaction
+from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.patients.auth import tokens_for_patient
@@ -82,7 +84,12 @@ def sign_in(username: str, password: str) -> tuple[dict, dict]:
 
 @transaction.atomic
 def register_patient(
-    *, username: str, password: str, phone: str, full_name: str = ""
+    *,
+    username: str,
+    password: str,
+    phone: str,
+    full_name: str = "",
+    consent: bool = False,
 ) -> Patient:
     """Create, or attach web credentials to, a patient.
 
@@ -117,6 +124,13 @@ def register_patient(
     patient.set_password(password)
     if full_name:
         patient.full_name = full_name
+
+    # Recorded at the moment it is given, against the notice version in force.
+    # The serializer has already refused anything but True.
+    if consent:
+        patient.consented_at = timezone.now()
+        patient.consent_version = settings.PRIVACY_NOTICE_VERSION
+
     patient.save()
     return patient
 
