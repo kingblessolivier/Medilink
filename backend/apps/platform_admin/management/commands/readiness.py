@@ -136,15 +136,34 @@ class Command(BaseCommand):
         from apps.triage.gate import approval
 
         record = approval()
-        yield (
-            "Care Guide gate",
-            OK,
-            f"open, protocol {record.protocol_version} approved by "
-            f"{record.approved_by}"
-            if record
-            else "shut - no clinician sign-off configured, which is the "
-            "correct default",
-        )
+        if record is None:
+            yield (
+                "Care Guide gate",
+                OK,
+                "shut - no clinician sign-off configured, which is the "
+                "correct default",
+            )
+        else:
+            # An open gate is fine. An open gate pointed at placeholder
+            # content is not, and it is an easy mistake: somebody opens it to
+            # see the flow, and the setting survives into a deploy.
+            placeholder = (
+                record.protocol_version.startswith("0.0")
+                or "example" in record.protocol_version.lower()
+                or "demo" in record.protocol_version.lower()
+                or "example" in record.protocol_file.lower()
+                or "demo" in record.approved_by.lower()
+                or "not a clinician" in record.approved_by.lower()
+            )
+            yield (
+                "Care Guide gate",
+                BLOCKER if placeholder else OK,
+                f"OPEN on placeholder content ({record.protocol_version}, "
+                f"{record.approved_by}) - this must never reach patients"
+                if placeholder
+                else f"open, protocol {record.protocol_version} approved by "
+                f"{record.approved_by}",
+            )
 
         # Logging redaction, which docs/08 s6 requires.
         logging_config = getattr(settings, "LOGGING", {})

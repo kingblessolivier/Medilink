@@ -318,5 +318,13 @@
   "privacy_rights_body": "You can export everything we hold, or erase it, at any time. After erasure a facility keeps its counts, but nobody can tell they were you.",
   "privacy_rights_action": "Go to your profile",
   "privacy_contact_title": "Contact",
-  "privacy_contact_body": "A contact address for data questions will be published before MediLink goes into production."
+  "privacy_contact_body": "A contact address for data questions will be published before MediLink goes into production.",
+  "nav_primary": "Primary navigation",
+  "language": "Language",
+  "switch_language_to": "Switch language to {language}",
+  "tab_home": "Home",
+  "tab_facilities": "Care",
+  "tab_visits": "Visits",
+  "tab_profile": "Profile",
+  "cover_none": "No insurer set - show everything"
 }

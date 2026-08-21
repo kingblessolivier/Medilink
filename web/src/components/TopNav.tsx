@@ -2,6 +2,19 @@ import { useState } from "react"
 import { Link, NavLink } from "react-router-dom"
 import { useI18n } from "../i18n"
 import { LanguageToggle } from "./LanguageToggle"
+import {
+  IconBell,
+  IconCalendar,
+  IconChart,
+  IconChevronRight,
+  IconGlobe,
+  IconHospital,
+  IconSearch,
+  IconShieldCheck,
+  IconStethoscope,
+  IconUser,
+  IconUsers,
+} from "../ui/icons"
 import type { Session } from "../api/types"
 
 /**
@@ -18,30 +31,31 @@ import type { Session } from "../api/types"
  * desk tools nobody drives one-handed.
  */
 
-type NavItem = { to: string; label: string; end?: boolean }
+type Glyph = typeof IconHospital
+type NavItem = { to: string; label: string; icon: Glyph; end?: boolean }
 
 function itemsFor(session: Session | null, t: (k: string) => string): NavItem[] {
   switch (session?.kind) {
     case "staff":
       return [
-        { to: "/workspace", label: t("nav_reception"), end: true },
-        { to: "/workspace/appointments", label: t("nav_appointments") },
-        { to: "/workspace/doctors", label: t("nav_doctors") },
-        { to: "/workspace/services", label: t("nav_services") },
-        { to: "/workspace/reports", label: t("nav_reports") },
+        { to: "/workspace", label: t("nav_reception"), icon: IconUsers, end: true },
+        { to: "/workspace/appointments", label: t("nav_appointments"), icon: IconCalendar },
+        { to: "/workspace/doctors", label: t("nav_doctors"), icon: IconStethoscope },
+        { to: "/workspace/services", label: t("nav_services"), icon: IconHospital },
+        { to: "/workspace/reports", label: t("nav_reports"), icon: IconChart },
       ]
     case "admin":
       return [
-        { to: "/platform", label: t("nav_overview"), end: true },
-        { to: "/platform/verification", label: t("nav_verification") },
-        { to: "/platform/triage", label: t("nav_care_guide_monitoring") },
+        { to: "/platform", label: t("nav_overview"), icon: IconGlobe, end: true },
+        { to: "/platform/verification", label: t("nav_verification"), icon: IconShieldCheck },
+        { to: "/platform/triage", label: t("nav_care_guide_monitoring"), icon: IconBell },
       ]
     default:
       return [
-        { to: "/", label: t("nav_home"), end: true },
-        { to: "/search", label: t("nav_facilities") },
-        { to: "/doctors", label: t("nav_doctors") },
-        { to: "/visits", label: t("nav_visits") },
+        { to: "/", label: t("nav_home"), icon: IconHospital, end: true },
+        { to: "/search", label: t("nav_facilities"), icon: IconSearch },
+        { to: "/doctors", label: t("nav_doctors"), icon: IconStethoscope },
+        { to: "/visits", label: t("nav_visits"), icon: IconCalendar },
       ]
   }
 }
@@ -61,7 +75,13 @@ export function TopNav({
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80">
       <div className="ml-shell flex items-center gap-4 py-3">
-        <Link to={homeFor(session)} className="shrink-0">
+        {/* The home link was 68x16 - the wordmark's own text box. It is on
+            every screen and it is how you get back, so it gets a real target
+            rather than the height of a caption. */}
+        <Link
+          to={homeFor(session)}
+          className="flex min-h-touch shrink-0 flex-col justify-center rounded-md px-1 -mx-1 hover:bg-surface-sunken"
+        >
           <span className="block text-caption font-semibold uppercase tracking-widest text-primary">
             MediLink
           </span>
@@ -86,19 +106,22 @@ export function TopNav({
           }
         >
           <ul className="flex items-center gap-1 overflow-x-auto">
-            {items.map((item) => (
-              <li key={item.to}>
+            {items.map(({ to, label, icon: Glyph, end }) => (
+              <li key={to}>
                 <NavLink
-                  to={item.to}
-                  end={item.end}
+                  to={to}
+                  end={end}
                   className={({ isActive }) =>
-                    "block whitespace-nowrap rounded-md px-3 py-2 text-body transition-colors " +
+                    "flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-body transition-colors " +
                     (isActive
                       ? "bg-primary-subtle font-medium text-primary"
                       : "text-ink-muted hover:bg-surface-sunken hover:text-ink")
                   }
                 >
-                  {item.label}
+                  {/* Same glyphs as the bottom tab bar, so moving between a
+                      phone and a desktop feels like one product. */}
+                  <Glyph size={17} />
+                  {label}
                 </NavLink>
               </li>
             ))}
@@ -110,8 +133,9 @@ export function TopNav({
 
           {session ? (
             <>
-              <span className="hidden max-w-[10rem] truncate text-small text-ink-muted sm:block">
-                {session.display_name}
+              <span className="hidden max-w-[10rem] items-center gap-1.5 truncate text-small text-ink-muted sm:flex">
+                <IconUser size={15} className="shrink-0 text-ink-subtle" />
+                <span className="truncate">{session.display_name}</span>
               </span>
               <button className="ml-btn-secondary ml-btn-sm" onClick={onSignOut}>
                 {t("sign_out")}
@@ -141,20 +165,22 @@ export function TopNav({
       {!isPatientSurface && open && (
         <nav id="topnav-mobile" className="border-t border-line sm:hidden">
           <ul className="ml-shell py-2">
-            {items.map((item) => (
-              <li key={item.to}>
+            {items.map(({ to, label, icon: Glyph, end }) => (
+              <li key={to}>
                 <NavLink
-                  to={item.to}
-                  end={item.end}
+                  to={to}
+                  end={end}
                   onClick={() => setOpen(false)}
                   className={({ isActive }) =>
-                    "block rounded-md px-3 py-2 text-body " +
+                    "flex min-h-touch items-center gap-3 rounded-md px-3 text-body " +
                     (isActive
                       ? "bg-primary-subtle font-medium text-primary"
                       : "text-ink-muted")
                   }
                 >
-                  {item.label}
+                  <Glyph size={18} />
+                  <span className="flex-1">{label}</span>
+                  <IconChevronRight size={16} className="text-ink-subtle" />
                 </NavLink>
               </li>
             ))}

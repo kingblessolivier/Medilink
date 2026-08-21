@@ -24,7 +24,7 @@ export function DoctorCard({ doctor }: { doctor: Provider }) {
     // `relative` anchors the stretched link below. Safe here because the name
     // is the card's ONLY link - FacilityCard has three (name, directions,
     // book) and must not have one covering the whole card.
-    <Card as="article" interactive className="relative flex gap-3 p-4">
+    <Card as="article" interactive className="relative flex min-w-0 gap-3 p-4">
       <Avatar doctor={doctor} />
 
       <div className="min-w-0 flex-1">

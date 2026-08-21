@@ -1,14 +1,44 @@
 import { NavLink } from "react-router-dom"
 import { useI18n } from "../i18n"
+import {
+  IconCalendar,
+  IconHospital,
+  IconSearch,
+  IconStethoscope,
+  IconUser,
+} from "../ui/icons"
 
-// Five items maximum. Anything beyond that stops being navigation and
-// starts being a menu somebody has to read.
+/**
+ * The primary navigation on a phone, which is how most people reach MediLink.
+ *
+ * It used to be five text labels crammed into a 45px strip. In Kinyarwanda
+ * those labels are long - "Umwirondoro", "Amavuriro" - so at 360px each tab
+ * got about 72px and the text shrank to the point of being scanned rather
+ * than read. Icons carry the meaning; the label confirms it.
+ *
+ * The tab labels are their OWN keys, not the nav ones. A tab needs a word
+ * that fits in 72px; the top bar has room for the fuller phrase. Sharing them
+ * meant "Umwirondoro" clipping against the edge of the screen.
+ *
+ * Sizing, deliberately:
+ *
+ * - The tap target is the whole tab, 56px tall plus the safe area, not just
+ *   the glyph. A miss on a bottom bar is the most annoying miss on a phone.
+ * - `pb-[env(safe-area-inset-bottom)]` keeps the row clear of the home
+ *   indicator on a gesture-navigation phone, where the bottom 20-30px are
+ *   swallowed by the system.
+ * - Labels are `caption` and allowed to truncate rather than wrap. A tab that
+ *   grows to two lines shifts the whole bar and misaligns every icon.
+ *
+ * Five items maximum. Beyond that it stops being navigation and becomes a
+ * menu somebody has to read.
+ */
 const TABS = [
-  { to: "/", key: "nav_home" },
-  { to: "/search", key: "nav_facilities" },
-  { to: "/doctors", key: "nav_doctors" },
-  { to: "/visits", key: "nav_visits" },
-  { to: "/profile", key: "nav_profile" },
+  { to: "/", key: "tab_home", Glyph: IconHospital, end: true },
+  { to: "/search", key: "tab_facilities", Glyph: IconSearch },
+  { to: "/doctors", key: "tab_doctors", Glyph: IconStethoscope },
+  { to: "/visits", key: "tab_visits", Glyph: IconCalendar },
+  { to: "/profile", key: "tab_profile", Glyph: IconUser },
 ] as const
 
 export function BottomNav() {
@@ -16,21 +46,47 @@ export function BottomNav() {
 
   return (
     /* Hidden from `md` up. A thumb reaches the bottom of a phone; on a
-       desktop it is a bar pinned to the bottom of a 1440px window with the
-       same links already in the top bar, which is duplication and clutter. */
-    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface md:hidden">
+       desktop it is a bar pinned to the bottom of a 1440px window carrying
+       the same links already in the top bar. */
+    <nav
+      aria-label={t("nav_primary")}
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+    >
       <ul className="mx-auto flex max-w-2xl">
-        {TABS.map((tab) => (
-          <li key={tab.to} className="flex-1">
+        {TABS.map(({ to, key, Glyph, ...rest }) => (
+          <li key={to} className="flex-1">
             <NavLink
-              to={tab.to}
-              end={tab.to === "/"}
+              to={to}
+              end={"end" in rest ? rest.end : undefined}
               className={({ isActive }) =>
-                "flex min-h-touch items-center justify-center py-2 text-small " +
-                (isActive ? "font-semibold text-primary" : "text-ink-muted")
+                "flex h-14 flex-col items-center justify-center gap-1 px-1 transition-colors " +
+                (isActive ? "text-primary" : "text-ink-muted active:text-ink")
               }
             >
-              {t(tab.key)}
+              {({ isActive }) => (
+                <>
+                  {/* The active tab gets a tinted plate rather than only a
+                      colour change: on a small screen at arm's length, a
+                      shape reads faster than a hue, and it does not rely on
+                      colour alone. */}
+                  <span
+                    className={
+                      "flex h-7 w-12 items-center justify-center rounded-full transition-colors " +
+                      (isActive ? "bg-primary-subtle" : "")
+                    }
+                  >
+                    <Glyph size={20} />
+                  </span>
+                  <span
+                    className={
+                      "max-w-full truncate text-caption leading-none " +
+                      (isActive ? "font-semibold" : "")
+                    }
+                  >
+                    {t(key)}
+                  </span>
+                </>
+              )}
             </NavLink>
           </li>
         ))}
