@@ -129,6 +129,12 @@ class PatientPrincipal:
     is_anonymous = False
     is_staff = False
     is_superuser = False
+    # Part of the contract every permission class assumes of request.user.
+    # Its absence was not a missing feature but a 500: IsPlatformAdmin reads
+    # `user.is_active`, so a patient token aimed at the platform portal raised
+    # AttributeError instead of being refused. Minimal is good; incomplete is
+    # not, and "deny" has to be reachable for a principal that fails the check.
+    is_active = True
 
     def __init__(self, patient: Patient):
         self.patient = patient

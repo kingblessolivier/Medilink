@@ -2,6 +2,7 @@ import hashlib
 
 import phonenumbers
 from django.conf import settings
+from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.gis.db import models
 from django.core.exceptions import ValidationError
 
@@ -49,6 +50,18 @@ class Patient(models.Model):
         FR = "fr", "Francais"
 
     phone = models.CharField(max_length=20, unique=True)
+
+    # Web sign-in. Blank for the many patients who only ever reach MediLink
+    # through USSD or WhatsApp - those channels identify a caller by the phone
+    # number the aggregator hands us, and a feature phone will never hold a
+    # password. See apps/accounts/README.md.
+    #
+    # Uniqueness is enforced across BOTH this column and auth.User at
+    # registration: the login endpoint tries staff before patients, so a
+    # patient allowed to take a staff username could never sign in again.
+    username = models.CharField(max_length=150, unique=True, null=True, blank=True)
+    password = models.CharField(max_length=128, blank=True)
+
     full_name = models.CharField(max_length=150, blank=True)
     language = models.CharField(
         max_length=2, choices=Language.choices, default=Language.RW
@@ -65,6 +78,15 @@ class Patient(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     last_seen_at = models.DateTimeField(null=True, blank=True)
+
+    def set_password(self, raw_password: str) -> None:
+        """Hash with Django's configured hasher - never store the raw value."""
+        self.password = make_password(raw_password)
+
+    def check_password(self, raw_password: str) -> bool:
+        if not self.password:
+            return False
+        return check_password(raw_password, self.password)
 
     class Meta:
         indexes = [models.Index(fields=["phone"], name="patient_phone_idx")]
