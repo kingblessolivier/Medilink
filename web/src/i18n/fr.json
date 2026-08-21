@@ -289,5 +289,12 @@
   "nav_care_guide_monitoring": "Suivi du guide de soins",
   "districts_unavailable": "La liste des districts n'a pas pu etre chargee.",
   "retry_location": "Reessayer avec ma position",
-  "searching_district": "Etablissements a {district}. Sans distances - nous ignorons ou vous etes."
+  "searching_district": "Etablissements a {district}. Sans distances - nous ignorons ou vous etes.",
+  "value_nearby": "Des soins pres de vous",
+  "value_nearby_body": "Etablissements verifies, avec la distance reelle.",
+  "value_wait": "Temps d'attente",
+  "value_wait_body": "Quand nous l'ignorons, nous le disons plutot que de deviner.",
+  "value_insurance": "Assurance",
+  "value_insurance_body": "Voyez qui accepte votre couverture avant de partir.",
+  "insurance_accepts_note": "Nous indiquons ce qu'un etablissement accepte, jamais que vous etes couvert."
 }

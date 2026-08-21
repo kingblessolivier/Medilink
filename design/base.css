@@ -53,6 +53,13 @@
      separation, not elevation. */
   .ml-section { @apply border-t border-line pt-6 mt-6; }
 
+  /* An icon sitting inside a tinted round plate. Gives a card or a stat a
+     fixed visual anchor at its top-left, which is what makes a grid of them
+     scan as a grid rather than as paragraphs. */
+  .ml-icon-plate {
+    @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg;
+  }
+
   .ml-label {
     @apply text-caption font-medium uppercase tracking-wide text-ink-subtle;
   }
@@ -65,8 +72,30 @@
     @apply rounded-xl border border-line bg-surface;
   }
 
+  /* Something you can click. It lifts, rather than only tinting: a flat
+     hover on a flat card is easy to miss, and these are the cards a patient
+     scans in a hurry. Movement is 1px - enough to notice, not enough to
+     shift the layout. */
   .ml-card-interactive {
-    @apply ml-card transition-colors hover:border-line-strong hover:bg-surface-sunken/40;
+    @apply ml-card shadow-raised transition-all duration-150
+           hover:-translate-y-px hover:border-line-strong hover:shadow-raised-hover
+           focus-within:border-primary-border focus-within:shadow-raised-hover;
+  }
+
+  /* Full-width surfaces: the hero, a page-level panel. Not a card. */
+  .ml-panel {
+    @apply rounded-2xl border border-line bg-surface;
+  }
+
+  /* The working width. `ml-page` stays the reading column. */
+  .ml-shell {
+    @apply mx-auto w-full max-w-shell px-4 sm:px-6 lg:px-8;
+  }
+
+  /* A section heading with room to breathe, and an optional action on the
+     right. Replaces the bare uppercase label that read as a form field. */
+  .ml-section-head {
+    @apply mb-4 flex items-end justify-between gap-4;
   }
 
   /* ---------------------------------------------------------------- buttons */

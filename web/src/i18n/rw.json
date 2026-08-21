@@ -289,5 +289,12 @@
   "nav_care_guide_monitoring": "Gukurikirana inama",
   "districts_unavailable": "Ntibyakunze kuzana urutonde rw'uturere.",
   "retry_location": "Ongera ugerageze kumenya aho ndi",
-  "searching_district": "Amavuriro yo mu karere ka {district}. Nta ntera ivuzwe kuko tutamenya aho uri."
+  "searching_district": "Amavuriro yo mu karere ka {district}. Nta ntera ivuzwe kuko tutamenya aho uri.",
+  "value_nearby": "Amavuriro yegereye",
+  "value_nearby_body": "Amavuriro yemejwe, hamwe n'intera nyayo.",
+  "value_wait": "Igihe cyo gutegereza",
+  "value_wait_body": "Iyo tutakizi, turabikubwira aho kugikeka.",
+  "value_insurance": "Ubwishingizi",
+  "value_insurance_body": "Reba ivuriro ryemera ubwishingizi bwawe mbere yo kugenda.",
+  "insurance_accepts_note": "Tuvuga icyo ivuriro ryemera, ntitubwira ko wishyuriwe. Emeza ku ivuriro."
 }

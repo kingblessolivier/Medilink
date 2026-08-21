@@ -15,7 +15,10 @@ export function BottomNav() {
   const { t } = useI18n()
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface">
+    /* Hidden from `md` up. A thumb reaches the bottom of a phone; on a
+       desktop it is a bar pinned to the bottom of a 1440px window with the
+       same links already in the top bar, which is duplication and clutter. */
+    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface md:hidden">
       <ul className="mx-auto flex max-w-2xl">
         {TABS.map((tab) => (
           <li key={tab.to} className="flex-1">

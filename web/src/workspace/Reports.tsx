@@ -1,7 +1,14 @@
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { api, type FacilityReport } from "../api/client"
-import { Chip, ErrorState, Notice, TableSkeleton } from "../ui"
+import { BarRow, Chip, ErrorState, Notice, StatCard, TableSkeleton } from "../ui"
+import {
+  IconAlert,
+  IconCalendar,
+  IconChart,
+  IconClock,
+  IconUsers,
+} from "../ui/icons"
 
 /**
  * What this facility's own numbers say.
@@ -27,7 +34,7 @@ export function WorkspaceReports() {
   })
 
   return (
-    <div className="mx-auto w-full max-w-5xl">
+    <div className="mx-auto w-full max-w-6xl">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-h2">Reports</h1>
@@ -84,28 +91,28 @@ function Body({ report }: { report: FacilityReport }) {
     <>
       {/* ----------------------------------------------------------- today */}
       <section className="mt-6">
-        <h2 className="ml-label mb-3">Today</h2>
+        <h2 className="text-h3 mb-3">Today</h2>
         <div className="grid gap-3 sm:grid-cols-3">
-          <Stat label="Checked in" value={report.today.checked_in} />
-          <Stat label="Waiting now" value={report.today.waiting} />
-          <Stat label="Seen" value={report.today.served} />
+          <StatCard label="Checked in" value={report.today.checked_in} icon={<IconUsers size={18} />} tone="primary" />
+          <StatCard label="Waiting now" value={report.today.waiting} icon={<IconClock size={18} />} tone="warning" />
+          <StatCard label="Seen" value={report.today.served} icon={<IconChart size={18} />} />
         </div>
       </section>
 
       {/* ------------------------------------------------------------ wait */}
       <section className="mt-8">
-        <h2 className="ml-label mb-3">How long people waited</h2>
+        <h2 className="text-h3 mb-3">How long people waited</h2>
         <Wait wait={report.wait} />
       </section>
 
       {/* ---------------------------------------------------- last N days */}
       <section className="mt-8">
-        <h2 className="ml-label mb-3">Last {report.days} days</h2>
+        <h2 className="text-h3 mb-3">Last {report.days} days</h2>
         <div className="grid gap-3 sm:grid-cols-3">
-          <Stat label="Checked in" value={report.period.checked_in} />
-          <Stat label="Seen" value={report.period.served} />
-          <Stat
-            label="Left without being seen"
+          <StatCard label="Checked in" value={report.period.checked_in} icon={<IconUsers size={18} />} />
+          <StatCard label="Seen" value={report.period.served} icon={<IconChart size={18} />} />
+          <StatCard
+            label="Left without being seen" icon={<IconAlert size={18} />} tone="warning"
             value={report.period.left_without_being_seen}
             hint={
               report.period.left_without_being_seen > 0
@@ -118,12 +125,12 @@ function Body({ report }: { report: FacilityReport }) {
 
       {/* --------------------------------------------------- appointments */}
       <section className="mt-8">
-        <h2 className="ml-label mb-3">Appointments</h2>
+        <h2 className="text-h3 mb-3">Appointments</h2>
         <div className="grid gap-3 sm:grid-cols-3">
-          <Stat label="Booked" value={report.appointments.total} />
-          <Stat label="Did not attend" value={report.appointments.no_shows} />
-          <Stat
-            label="No-show rate"
+          <StatCard label="Booked" value={report.appointments.total} icon={<IconCalendar size={18} />} />
+          <StatCard label="Did not attend" value={report.appointments.no_shows} icon={<IconAlert size={18} />} tone="warning" />
+          <StatCard
+            label="No-show rate" icon={<IconChart size={18} />}
             value={
               report.appointments.no_show_rate === null
                 ? "—"
@@ -140,7 +147,7 @@ function Body({ report }: { report: FacilityReport }) {
 
       {/* --------------------------------------------------------- demand */}
       <section className="mt-8">
-        <h2 className="ml-label mb-3">Busiest services</h2>
+        <h2 className="text-h3 mb-3">Busiest services</h2>
         {report.demand.length === 0 ? (
           <p className="text-body text-ink-muted">
             No check-ins recorded in this period.
@@ -182,13 +189,13 @@ function Wait({ wait }: { wait: FacilityReport["wait"] }) {
 
   return (
     <div className="grid gap-3 sm:grid-cols-3">
-      <Stat
-        label="Median wait"
+      <StatCard
+        label="Median wait" icon={<IconClock size={18} />} tone="primary"
         value={`${Math.round(wait.median_minutes!)} min`}
         hint={`Across ${wait.sample_size} visits.`}
       />
-      <Stat
-        label="This week"
+      <StatCard
+        label="This week" icon={<IconClock size={18} />}
         value={
           wait.this_week_minutes === null
             ? "—"
@@ -210,8 +217,8 @@ function Wait({ wait }: { wait: FacilityReport["wait"] }) {
           )
         }
       />
-      <Stat
-        label="Week before"
+      <StatCard
+        label="Week before" icon={<IconClock size={18} />}
         value={
           wait.last_week_minutes === null
             ? "—"
@@ -227,51 +234,19 @@ function Demand({ rows }: { rows: FacilityReport["demand"] }) {
   const highest = Math.max(...rows.map((r) => r.count), 1)
 
   return (
-    <ul className="space-y-2">
+    <ul className="max-w-2xl space-y-3">
       {rows.map((row) => (
-        <li key={row.service}>
-          <div className="flex items-baseline justify-between gap-3">
-            <span className="text-body">{humanise(row.service)}</span>
-            <span className="tabular-nums text-body text-ink-muted">
-              {row.count}
-            </span>
-          </div>
-          {/* Illustrative. The count beside it is the fact. */}
-          <div
-            className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-sunken"
-            role="presentation"
-          >
-            <span
-              className="block h-full rounded-full bg-primary"
-              style={{ width: `${Math.round((row.count / highest) * 100)}%` }}
-            />
-          </div>
-        </li>
+        <BarRow
+          key={row.service}
+          label={humanise(row.service)}
+          count={row.count}
+          max={highest}
+        />
       ))}
     </ul>
   )
 }
 
-function Stat({
-  label,
-  value,
-  hint,
-  chip,
-}: {
-  label: string
-  value: string | number
-  hint?: string
-  chip?: React.ReactNode
-}) {
-  return (
-    <div className="rounded-lg border border-line bg-surface p-4">
-      <p className="ml-label">{label}</p>
-      <p className="mt-1 text-h2 tabular-nums">{value}</p>
-      {chip && <div className="mt-2">{chip}</div>}
-      {hint && <p className="mt-1 text-caption text-ink-subtle">{hint}</p>}
-    </div>
-  )
-}
 
 function humanise(code: string) {
   return code.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase())

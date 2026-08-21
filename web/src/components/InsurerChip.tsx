@@ -13,7 +13,7 @@ export function InsurerChip({ insurer, onChange }: Props) {
   const current = options.find((i) => i.code === insurer)
 
   return (
-    <label className="ml-card flex items-center justify-between gap-3 p-4">
+    <label className="ml-card flex max-w-xl flex-wrap items-center justify-between gap-3 p-4">
       <span className="text-small">
         <span className="text-ink-muted">{t("your_cover")}: </span>
         <span className="font-medium">

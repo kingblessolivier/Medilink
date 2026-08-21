@@ -13,11 +13,18 @@
  *    neutral. A wholly green product reads as marketing, not as a tool
  *    somebody uses while worried.
  *
- * 2. RADIUS IS MODERATE. The scale stops at 12px for containers. Pill shapes
- *    are reserved for status chips, where the shape itself carries meaning.
+ * 2. RADIUS IS MODERATE. Containers stop at 12px. `2xl` (16px) exists only
+ *    for full-width surfaces - a hero or a page panel - where 12px on a
+ *    600px-tall block reads as an accident rather than a decision. Pill
+ *    shapes stay reserved for status chips, where the shape carries meaning.
  *
- * 3. ELEVATION IS ALMOST FLAT. One functional shadow for overlays, one
- *    hairline for everything else. Borders separate; shadows only float.
+ * 3. ELEVATION IS RESTRAINED, NOT ABSENT. It used to be one shadow, which
+ *    left every card looking equally inert and gave hover nothing to say.
+ *    There is now a three-step scale, and the steps are small on purpose:
+ *    `raised` for something you can click, `floating` for something the
+ *    page is briefly about, `overlay` for something on top of the page.
+ *    Borders still do the separating; shadows only ever say "this is
+ *    interactive" or "this is above".
  */
 
 /** @type {import('tailwindcss').Config} */
@@ -103,12 +110,23 @@ export default {
         md: "8px",
         lg: "10px",
         xl: "12px", // containers stop here
+        // Large surfaces only: hero, page panels, the map frame. Never a card.
+        "2xl": "16px",
       },
 
       boxShadow: {
         // Hairline. Reads as a border, not a float.
         hairline: "0 0 0 1px rgba(23, 32, 28, 0.06)",
-        // The only real elevation: things that genuinely sit above the page.
+        // Something you can click. Barely there at rest - it exists so that
+        // `raised-hover` has somewhere to move FROM.
+        raised:
+          "0 1px 2px rgba(23, 32, 28, 0.05), 0 1px 3px -1px rgba(23, 32, 28, 0.05)",
+        "raised-hover":
+          "0 2px 4px rgba(23, 32, 28, 0.06), 0 6px 14px -4px rgba(23, 32, 28, 0.10)",
+        // Something the page is briefly about: a hero panel, a summary block.
+        floating:
+          "0 1px 2px rgba(23, 32, 28, 0.04), 0 12px 32px -8px rgba(23, 32, 28, 0.12)",
+        // Things that genuinely sit on top of the page.
         overlay:
           "0 1px 2px rgba(23, 32, 28, 0.04), 0 8px 24px -4px rgba(23, 32, 28, 0.10)",
         // Focus ring, applied as a shadow so it survives overflow clipping.
@@ -123,7 +141,26 @@ export default {
 
       maxWidth: {
         prose: "68ch",
+        // The reading column - a single stream of text or one list.
         content: "76rem",
+        // The full working width. Wider than `content` because the discovery
+        // and workspace screens lay out in columns rather than one stream,
+        // and a 76rem cap on a 1440px monitor left 350px dead on each side.
+        shell: "88rem",
+      },
+
+      backgroundImage: {
+        // The hero. A single soft wash rather than a photograph: stock
+        // imagery of smiling clinicians is the visual language of marketing,
+        // and this is a tool people open when they are unwell.
+        "hero-wash":
+          "radial-gradient(120% 100% at 15% 0%, #0E7A61 0%, #0B6B55 42%, #084C3D 100%)",
+        "hero-grid":
+          "linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px)",
+      },
+
+      backgroundSize: {
+        grid: "44px 44px",
       },
 
       transitionDuration: {

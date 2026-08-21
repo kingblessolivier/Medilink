@@ -2,6 +2,7 @@ import { Link } from "react-router-dom"
 import { useI18n } from "../i18n"
 import { formatDistance } from "../lib/format"
 import { Card, Chip } from "../ui"
+import { IconHospital, IconPin, IconRoute } from "../ui/icons"
 import type { Facility } from "../api/types"
 import { WaitLine } from "./WaitLine"
 
@@ -47,10 +48,22 @@ export function FacilityCard({
       data-selected={selected || undefined}
       onMouseEnter={() => onHighlight?.(facility.slug)}
       onMouseLeave={() => onHighlight?.(null)}
-      className={selected ? "border-primary-border bg-primary-subtle/40 p-4" : "p-4"}
+            // flex-col + mt-auto on the actions: in a grid, tiles stretch to the
+      // tallest in the row, and without this the buttons floated at different
+      // heights across a row - which reads as misalignment, not as content.
+      className={
+        "flex h-full flex-col p-4 " +
+        (selected ? "border-primary-border bg-primary-subtle/40" : "")
+      }
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+      <div className="flex items-start gap-3">
+        {/* A fixed anchor at the top-left of every card. It is what makes a
+            grid of these scan as a grid rather than as paragraphs. */}
+        <span className="ml-icon-plate bg-primary-subtle text-primary">
+          <IconHospital size={18} />
+        </span>
+
+        <div className="min-w-0 flex-1">
           <h3 className="text-h3 leading-snug">
             <Link
               to={`/facility/${facility.slug}`}
@@ -59,15 +72,17 @@ export function FacilityCard({
               {facility.name}
             </Link>
           </h3>
-          <p className="mt-0.5 text-small text-ink-muted">
+          <p className="mt-0.5 truncate text-small text-ink-muted">
             {LEVEL_LABEL[facility.level] ?? facility.level}
             {facility.sector ? ` · ${facility.sector}` : ""}
           </p>
         </div>
+
         {/* Hidden, not blanked: a district search has no distance to show,
             and an empty slot reads as a value that failed to load. */}
         {distance && (
-          <span className="shrink-0 text-small font-medium text-ink-muted">
+          <span className="flex shrink-0 items-center gap-1 text-small font-medium tabular-nums text-ink-muted">
+            <IconPin size={14} className="text-ink-subtle" />
             {distance}
           </span>
         )}
@@ -92,13 +107,14 @@ export function FacilityCard({
         <WaitLine wait={facility.wait} className="mt-2.5" />
       )}
 
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 flex flex-wrap items-center gap-2 pt-0 [&]:mt-auto">
         <a
           className="ml-btn-secondary ml-btn-sm"
           href={`https://www.google.com/maps/dir/?api=1&destination=${facility.location.lat},${facility.location.lng}`}
           target="_blank"
           rel="noreferrer"
         >
+          <IconRoute size={15} />
           {t("directions")}
         </a>
         <Link

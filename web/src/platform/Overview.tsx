@@ -2,7 +2,14 @@ import { useState } from "react"
 import { Link } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { api, type AdminOverview } from "../api/client"
-import { ErrorState, Notice, Skeleton } from "../ui"
+import { BarRow, ErrorState, Notice, Skeleton, StatCard } from "../ui"
+import {
+  IconGlobe,
+  IconHospital,
+  IconShieldCheck,
+  IconStethoscope,
+  IconUsers,
+} from "../ui/icons"
 
 /**
  * Is the platform being used, and what is blocking it?
@@ -34,7 +41,7 @@ export function Overview() {
   })
 
   return (
-    <div className="mx-auto w-full max-w-5xl">
+    <div className="mx-auto w-full max-w-6xl">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-h2">Overview</h1>
@@ -115,15 +122,15 @@ function Body({ data }: { data: AdminOverview }) {
       )}
 
       <section className="mt-8">
-        <h2 className="ml-label mb-3">Facilities</h2>
+        <h2 className="text-h3 mb-3">Facilities</h2>
         <div className="grid gap-3 sm:grid-cols-4">
-          <Stat label="Listed" value={data.facilities.total} />
-          <Stat label="Verified" value={data.facilities.verified} />
-          <Stat
+          <StatCard label="Listed" value={data.facilities.total} icon={<IconHospital size={18} />} />
+          <StatCard label="Verified" value={data.facilities.verified} icon={<IconShieldCheck size={18} />} tone="primary" />
+          <StatCard
             label="Awaiting verification"
             value={data.facilities.awaiting_verification}
           />
-          <Stat
+          <StatCard
             label="Reporting queue"
             value={data.facilities.reporting_queue}
             hint="Facilities publishing live wait times."
@@ -132,11 +139,11 @@ function Body({ data }: { data: AdminOverview }) {
       </section>
 
       <section className="mt-8">
-        <h2 className="ml-label mb-3">Doctors</h2>
+        <h2 className="text-h3 mb-3">Doctors</h2>
         <div className="grid gap-3 sm:grid-cols-3">
-          <Stat label="Listed" value={data.providers.total} />
-          <Stat label="Verified" value={data.providers.verified} />
-          <Stat
+          <StatCard label="Listed" value={data.providers.total} icon={<IconStethoscope size={18} />} />
+          <StatCard label="Verified" value={data.providers.verified} icon={<IconShieldCheck size={18} />} tone="primary" />
+          <StatCard
             label="Awaiting verification"
             value={data.providers.awaiting_verification}
           />
@@ -144,20 +151,21 @@ function Body({ data }: { data: AdminOverview }) {
       </section>
 
       <section className="mt-8">
-        <h2 className="ml-label mb-3">Last {data.days} days</h2>
+        <h2 className="text-h3 mb-3">Last {data.days} days</h2>
         <div className="grid gap-3 sm:grid-cols-3">
-          <Stat label="Check-ins" value={data.activity.check_ins} />
-          <Stat label="Appointments" value={data.activity.appointments} />
-          <Stat
+          <StatCard label="Check-ins" value={data.activity.check_ins} icon={<IconUsers size={18} />} tone="primary" />
+          <StatCard label="Appointments" value={data.activity.appointments} />
+          <StatCard
             label="Registered patients"
             value={data.patients.registered}
+            icon={<IconGlobe size={18} />}
             hint="A count. Patient records are not reachable from this portal."
           />
         </div>
       </section>
 
       <section className="mt-8">
-        <h2 className="ml-label mb-3">How people booked</h2>
+        <h2 className="text-h3 mb-3">How people booked</h2>
         {data.activity.by_channel.length === 0 ? (
           <p className="text-body text-ink-muted">
             No appointments booked in this period.
@@ -185,46 +193,16 @@ function Channels({ rows }: { rows: AdminOverview["activity"]["by_channel"] }) {
   const highest = Math.max(...rows.map((r) => r.count), 1)
 
   return (
-    <ul className="space-y-2">
+    <ul className="max-w-2xl space-y-3">
       {rows.map((row) => (
-        <li key={row.channel}>
-          <div className="flex items-baseline justify-between gap-3">
-            <span className="text-body">
-              {CHANNEL_LABEL[row.channel] ?? row.channel}
-            </span>
-            <span className="tabular-nums text-body text-ink-muted">
-              {row.count}
-            </span>
-          </div>
-          <div
-            className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-sunken"
-            role="presentation"
-          >
-            <span
-              className="block h-full rounded-full bg-primary"
-              style={{ width: `${Math.round((row.count / highest) * 100)}%` }}
-            />
-          </div>
-        </li>
+        <BarRow
+          key={row.channel}
+          label={CHANNEL_LABEL[row.channel] ?? row.channel}
+          count={row.count}
+          max={highest}
+        />
       ))}
     </ul>
   )
 }
 
-function Stat({
-  label,
-  value,
-  hint,
-}: {
-  label: string
-  value: string | number
-  hint?: string
-}) {
-  return (
-    <div className="rounded-lg border border-line bg-surface p-4">
-      <p className="ml-label">{label}</p>
-      <p className="mt-1 text-h2 tabular-nums">{value}</p>
-      {hint && <p className="mt-1 text-caption text-ink-subtle">{hint}</p>}
-    </div>
-  )
-}
