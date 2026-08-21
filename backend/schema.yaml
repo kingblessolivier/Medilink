@@ -63,6 +63,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/Appointment'
           description: ''
+  /api/v1/appointments/{id}:
+    get:
+      operationId: appointment_detail
+      description: |-
+        Scoped to the caller: an enumerated id must not reveal somebody else's
+        appointment.
+      summary: One appointment
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - appointments
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+          description: ''
   /api/v1/appointments/{id}/cancel:
     post:
       operationId: appointments_cancel_create
@@ -288,6 +314,12 @@ paths:
         name: date_to
         schema:
           type: string
+      - in: query
+        name: provider
+        schema:
+          type: string
+        description: Provider slug. Omit for the facility general clinic - 'any available',
+          which is the default and the common case.
       - in: query
         name: service
         schema:
@@ -922,6 +954,10 @@ components:
         service:
           type: string
           readOnly: true
+        provider:
+          type: string
+          nullable: true
+          readOnly: true
         slot_start:
           type: string
           format: date-time
@@ -933,6 +969,7 @@ components:
       required:
       - facility
       - id
+      - provider
       - reference
       - service
       - slot_end
@@ -998,6 +1035,10 @@ components:
           pattern: ^[-a-zA-Z0-9_]+$
         service:
           type: string
+          pattern: ^[-a-zA-Z0-9_]+$
+        provider:
+          type: string
+          nullable: true
           pattern: ^[-a-zA-Z0-9_]+$
         slot_start:
           type: string
@@ -1981,6 +2022,9 @@ components:
           type: string
         service:
           type: string
+        provider:
+          type: string
+          nullable: true
         as_of:
           type: string
         days:
@@ -1991,6 +2035,7 @@ components:
       - as_of
       - days
       - facility
+      - provider
       - service
     Specialty:
       type: object

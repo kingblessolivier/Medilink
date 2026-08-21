@@ -30,6 +30,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/appointments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One appointment
+         * @description Scoped to the caller: an enumerated id must not reveal somebody else's
+         *     appointment.
+         */
+        get: operations["appointment_detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/appointments/{id}/cancel": {
         parameters: {
             query?: never;
@@ -590,6 +611,7 @@ export interface components {
             readonly status: components["schemas"]["AppointmentStatusEnum"];
             readonly facility: components["schemas"]["AppointmentFacility"];
             readonly service: string;
+            readonly provider: string | null;
             /** Format: date-time */
             readonly slot_start: string;
             /** Format: date-time */
@@ -621,6 +643,7 @@ export interface components {
         Booking: {
             facility: string;
             service: string;
+            provider?: string | null;
             /** Format: date-time */
             slot_start: string;
         };
@@ -993,6 +1016,7 @@ export interface components {
         SlotDays: {
             facility: string;
             service: string;
+            provider: string | null;
             as_of: string;
             days: components["schemas"]["SlotDay"][];
         };
@@ -1178,6 +1202,27 @@ export interface operations {
                 "multipart/form-data": components["schemas"]["Booking"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Appointment"];
+                };
+            };
+        };
+    };
+    appointment_detail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -1378,6 +1423,8 @@ export interface operations {
             query: {
                 date_from?: string;
                 date_to?: string;
+                /** @description Provider slug. Omit for the facility general clinic - 'any available', which is the default and the common case. */
+                provider?: string;
                 service: string;
             };
             header?: never;

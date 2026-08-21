@@ -364,15 +364,39 @@ prefetch. The fix is neither - `facility_service_waits` now takes the services
 as a parameter, so the caller that already has them passes them, and the caller
 that does not gets `select_related`.
 
-### R4 - Booking and queue
+### R4 - Booking and queue `IN PROGRESS`
 
-Mostly a redesign - the backend is complete.
+Not purely a redesign after all - R1 added `ScheduleTemplate.provider` but the
+booking logic still ignored it, so slots and capacity had to be made
+provider-aware first.
 
-- [ ] Booking: service → doctor → date → time → insurance → review → confirm
-- [ ] Confirmation screen with reference and calendar handoff
-- [ ] Queue tracking, full-screen, with `leave_by` as the hero
+- [x] Slots and booking are provider-aware
+- [x] `GET /appointments/{id}`, scoped to the caller
+- [x] Booking: service -> doctor -> time -> review -> confirm, four steps
+- [x] Confirmation screen (same screen as the appointment, `?new=1`)
+- [x] Queue tracking, full-screen, `leave_by` as the hero
 - [ ] Notification centre and preferences
-- [ ] Patient dashboard: greeting, next appointment, active queue, actions
+- [ ] Patient dashboard consolidation
+
+**Decisions worth keeping:**
+
+- **The general clinic and a named clinician are separate capacity pools.**
+  `provider=None` is the facility's general session - staff assign whoever is
+  free, which is how booking at a health centre actually works. Booking on one
+  must not consume the other, or a busy waiting room would silently close
+  every clinician's list.
+- **"Any available" is the default and the first option**, because naming a
+  doctor narrows availability and most patients neither need to nor know whom
+  to pick. When a named clinician has no slots, the empty state offers "any
+  available" rather than a dead end.
+- **The confirmation is the appointment screen with `?new=1`**, not a separate
+  page. A one-time confirmation screen is one a patient can never get back to,
+  and the reference code is exactly what they need to find again.
+- **Cancelling has no confirmation dialog.** A booking nobody honours is worse
+  than no booking, so cancelling is one tap with an explanation underneath.
+- **`leave_by` is hidden when null**, never filled with a placeholder, and the
+  UI explains which of the two reasons applies - no home location, or not
+  enough queue history. A patient will act on a time they are shown.
 
 ### R5 - Care Guide (UI only; gate untouched)
 
@@ -461,3 +485,4 @@ them for visual convenience.
 | 2026-08-20 | R2 done: homepage discovery sections, search-as-you-type combobox with keyboard navigation, DoctorCard, compare, old list route retired. Care Guide entry points correctly hidden while the clinical gate is shut. 6 of 51 screens done. Patient bundle 88 KB gz. |
 | 2026-08-20 | R3 part 1: per-service wait status, FacilityServiceInsurer (gap 3 closed), facility profile with five tabs. 13 new tests. 457 backend tests, 92% coverage. Insurance verified live: green only where confirmed, grey (?) everywhere else. |
 | 2026-08-21 | R3 done: doctors directory with language filter, doctor profile, service detail, doctors in the nav. 13 of 51 screens. Patient bundle 92 KB gz. |
+| 2026-08-21 | R4 part 1: provider-aware slots and booking (separate capacity pools), appointment detail endpoint, four-step booking flow, confirmation, full-screen queue tracking. Booking driven end to end in a browser. 469 backend tests, 93% coverage. |

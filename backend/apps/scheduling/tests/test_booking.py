@@ -381,3 +381,211 @@ def test_a_patient_cannot_cancel_someone_elses_appointment(
     assert response.status_code == 404
     theirs.refresh_from_db()
     assert theirs.status == Appointment.Status.BOOKED
+
+
+# --------------------------------------------------------------------------
+# Booking a named clinician
+# --------------------------------------------------------------------------
+
+
+@pytest.fixture
+def doctor(db, facility, general):
+    from apps.providers.models import Provider, ProviderFacility
+
+    provider = Provider.objects.create(slug="dr-uwase", full_name="Uwase Alice")
+    placement = ProviderFacility.objects.create(provider=provider, facility=facility)
+    placement.service_types.set([general])
+    return provider
+
+
+@pytest.fixture
+def doctor_clinic(facility, general, doctor):
+    """That clinician's own session - a separate list from the general clinic."""
+    for weekday in range(7):
+        ScheduleTemplate.objects.create(
+            facility=facility,
+            service_type=general,
+            provider=doctor,
+            weekday=weekday,
+            start_time=time(14, 0),
+            end_time=time(16, 0),
+            slot_minutes=20,
+            capacity_per_slot=1,
+        )
+
+
+@pytest.mark.django_db
+def test_general_clinic_slots_exclude_a_clinicians_own_session(
+    facility, general, templates, doctor_clinic
+):
+    """"Any available" means the facility's general clinic, not every list in
+    the building."""
+    days = available_slots(facility=facility, service_type=general)
+    starts = {s["start"].hour for day in days for s in day["slots"]}
+
+    assert 8 in starts  # the general clinic runs 08:00-12:00
+    assert 14 not in starts  # the doctor's own 14:00 session is not offered
+
+
+@pytest.mark.django_db
+def test_naming_a_clinician_returns_their_own_list(
+    facility, general, templates, doctor, doctor_clinic
+):
+    days = available_slots(facility=facility, service_type=general, provider=doctor)
+    starts = {s["start"].hour for day in days for s in day["slots"]}
+
+    assert starts <= {14, 15}
+
+
+@pytest.mark.django_db
+def test_the_two_lists_are_separate_capacity_pools(
+    facility, general, templates, doctor, doctor_clinic, patient, other_patient
+):
+    """A booking on the general clinic must not consume the doctor's slot, or
+    a full waiting room would silently close every clinician's list."""
+    slot = tomorrow_at(14)
+
+    book(
+        facility=facility,
+        service_type=general,
+        patient=patient,
+        slot_start=slot,
+        provider=doctor,
+    )
+
+    # The doctor's only seat at 14:00 is gone...
+    days = available_slots(facility=facility, service_type=general, provider=doctor)
+    taken = next(
+        s for day in days for s in day["slots"] if s["start"] == slot
+    )
+    assert taken["remaining"] == 0
+
+    # ...but the general clinic is untouched.
+    general_days = available_slots(facility=facility, service_type=general)
+    assert all(
+        s["remaining"] == 2 for day in general_days for s in day["slots"]
+    )
+
+
+@pytest.mark.django_db
+def test_a_slot_from_the_wrong_list_is_rejected(
+    facility, general, templates, doctor, doctor_clinic, patient
+):
+    """08:00 belongs to the general clinic; it is not on the doctor's grid."""
+    with pytest.raises(BookingError, match="does not offer that time"):
+        book(
+            facility=facility,
+            service_type=general,
+            patient=patient,
+            slot_start=tomorrow_at(8),
+            provider=doctor,
+        )
+
+
+@pytest.mark.django_db
+def test_the_appointment_records_who(
+    facility, general, templates, doctor, doctor_clinic, patient
+):
+    appointment = book(
+        facility=facility,
+        service_type=general,
+        patient=patient,
+        slot_start=tomorrow_at(14),
+        provider=doctor,
+    )
+
+    assert appointment.provider_id == doctor.pk
+
+
+@pytest.mark.django_db
+def test_any_available_records_no_clinician(
+    facility, general, templates, patient
+):
+    """The default. Naming a doctor narrows availability and most patients do
+    not need to."""
+    appointment = book(
+        facility=facility,
+        service_type=general,
+        patient=patient,
+        slot_start=tomorrow_at(8),
+    )
+
+    assert appointment.provider_id is None
+
+
+@pytest.mark.django_db
+def test_booking_endpoint_accepts_a_provider(
+    api_client, facility, general, templates, doctor, doctor_clinic, patient
+):
+    authed(api_client, patient)
+
+    response = api_client.post(
+        "/api/v1/appointments",
+        {
+            "facility": facility.slug,
+            "service": general.code,
+            "provider": doctor.slug,
+            "slot_start": tomorrow_at(14).isoformat(),
+        },
+        format="json",
+    )
+
+    assert response.status_code == 201
+    assert response.json()["provider"] == "Dr Uwase Alice"
+
+
+@pytest.mark.django_db
+def test_slots_endpoint_echoes_the_provider(
+    api_client, facility, general, templates, doctor, doctor_clinic
+):
+    body = api_client.get(
+        f"/api/v1/facilities/{facility.slug}/slots",
+        {"service": general.code, "provider": doctor.slug},
+    ).json()
+
+    assert body["provider"] == doctor.slug
+    hours = {int(s["start"][11:13]) for day in body["days"] for s in day["slots"]}
+    assert hours <= {14, 15}
+
+
+@pytest.mark.django_db
+def test_appointment_detail_is_scoped_to_the_caller(
+    api_client, facility, general, templates, patient, other_patient
+):
+    """An enumerated id must not reveal somebody else's appointment."""
+    theirs = book(
+        facility=facility,
+        service_type=general,
+        patient=other_patient,
+        slot_start=tomorrow_at(8),
+    )
+    mine = book(
+        facility=facility,
+        service_type=general,
+        patient=patient,
+        slot_start=tomorrow_at(9),
+    )
+
+    authed(api_client, patient)
+
+    assert api_client.get(f"/api/v1/appointments/{mine.id}").status_code == 200
+    assert api_client.get(f"/api/v1/appointments/{theirs.id}").status_code == 404
+
+
+@pytest.mark.django_db
+def test_appointment_detail_carries_the_reference(
+    api_client, facility, general, templates, patient
+):
+    """The code a patient reads aloud at a reception desk."""
+    appointment = book(
+        facility=facility,
+        service_type=general,
+        patient=patient,
+        slot_start=tomorrow_at(8),
+    )
+    authed(api_client, patient)
+
+    body = api_client.get(f"/api/v1/appointments/{appointment.id}").json()
+
+    assert body["reference"] == appointment.reference
+    assert body["provider"] is None  # "any available"

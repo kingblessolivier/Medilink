@@ -47,10 +47,17 @@ def available_slots(
     *,
     facility: Facility,
     service_type: ServiceType,
+    provider=None,
     date_from: date | None = None,
     date_to: date | None = None,
 ):
     """Bookable slots per day.
+
+    `provider=None` means the facility's general clinic - the session where
+    staff assign whoever is free, which is how most booking at a health centre
+    actually works. Naming a provider returns that clinician's own list
+    instead. The two are separate capacity pools: Dr A's 09:00 and the general
+    clinic's 09:00 are different appointments.
 
     Slots with remaining == 0 are returned rather than omitted, so the UI can
     grey them out: a patient needs to see that a day is busy, not that it is
@@ -63,7 +70,10 @@ def available_slots(
 
     templates = list(
         ScheduleTemplate.objects.filter(
-            facility=facility, service_type=service_type, active=True
+            facility=facility,
+            service_type=service_type,
+            provider=provider,
+            active=True,
         )
     )
     if not templates:
@@ -80,6 +90,8 @@ def available_slots(
         for row in Appointment.objects.filter(
             facility=facility,
             service_type=service_type,
+            # Counted against the same pool the slots came from.
+            provider=provider,
             slot_start__gte=window_start,
             slot_start__lt=window_end,
             status__in=Appointment.OPEN_STATUSES,
@@ -126,6 +138,7 @@ def book(
     service_type: ServiceType,
     patient: Patient,
     slot_start,
+    provider=None,
     booked_via: str = Appointment.BookedVia.APP,
 ) -> Appointment:
     """Reserve one slot.
@@ -137,7 +150,7 @@ def book(
     if slot_start <= timezone.now():
         raise BookingError("That appointment time has already passed.")
 
-    template = _template_for(facility, service_type, slot_start)
+    template = _template_for(facility, service_type, slot_start, provider)
     if template is None:
         raise BookingError("That facility does not offer that time.")
 
@@ -156,6 +169,8 @@ def book(
         .filter(
             facility=facility,
             service_type=service_type,
+            # Same pool: a named clinician's list is not the general clinic's.
+            provider=provider,
             slot_start=slot_start,
             status__in=Appointment.OPEN_STATUSES,
         )
@@ -169,6 +184,7 @@ def book(
             facility=facility,
             service_type=service_type,
             patient=patient,
+            provider=provider,
             slot_start=slot_start,
             slot_end=slot_start + timedelta(minutes=template.slot_minutes),
             booked_via=booked_via,
@@ -178,13 +194,16 @@ def book(
         raise SlotUnavailable("You already have a booking at that time.") from exc
 
 
-def _template_for(facility, service_type, slot_start) -> ScheduleTemplate | None:
+def _template_for(
+    facility, service_type, slot_start, provider=None
+) -> ScheduleTemplate | None:
     """The template a given slot start belongs to, or None if it is not on a
-    slot boundary."""
+    slot boundary for that provider's list."""
     local = timezone.localtime(slot_start)
     for template in ScheduleTemplate.objects.filter(
         facility=facility,
         service_type=service_type,
+        provider=provider,
         weekday=local.weekday(),
         active=True,
     ):
