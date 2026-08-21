@@ -334,6 +334,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Platform-wide counts */
+        get: operations["platform_overview_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/triage-monitoring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Triage outcome aggregates - never answers */
+        get: operations["platform_triage_monitoring_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Facilities and providers awaiting verification */
+        get: operations["platform_verification_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/verification/facilities/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify a facility, making it visible to patients */
+        post: operations["platform_verification_facilities_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/verification/providers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify a provider's listing */
+        post: operations["platform_verification_providers_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/providers": {
         parameters: {
             query?: never;
@@ -557,6 +642,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/staff/appointments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Appointments booked at the caller's facility
+         * @description Today's list, so reception knows who is expected.
+         *
+         *     Scoped to the caller's facility through active_staff(), never through a
+         *     facility id in the query string - see permissions.py for why.
+         */
+        get: operations["staff_appointments_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/appointments/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark an appointment arrived, served or a no-show
+         * @description The three transitions reception actually performs.
+         *
+         *     Cancellation is deliberately NOT here: a facility cancelling on a patient
+         *     has to notify them, which is what the scheduling endpoint does.
+         */
+        post: operations["staff_appointments_status_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/staff/me": {
         parameters: {
             query?: never;
@@ -570,6 +701,23 @@ export interface paths {
          *     operating, and which services that facility offers.
          */
         get: operations["staff_me_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Operational report for the caller's facility */
+        get: operations["staff_reports_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -636,6 +784,20 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        Activity: {
+            check_ins: number;
+            appointments: number;
+            by_channel: components["schemas"]["ChannelCount"][];
+        };
+        AdminOverview: {
+            days: number;
+            /** Format: date-time */
+            as_of: string;
+            facilities: components["schemas"]["FacilityCounts"];
+            providers: components["schemas"]["ProviderCounts"];
+            patients: components["schemas"]["PatientCounts"];
+            activity: components["schemas"]["Activity"];
+        };
         Answer: {
             question: string;
             option: string;
@@ -658,6 +820,15 @@ export interface components {
             phone: string;
         };
         /**
+         * @description The three transitions reception performs from the appointment list.
+         *
+         *     Cancellation is absent on purpose: a facility cancelling on a patient owes
+         *     them a message, so it goes through the scheduling endpoint that sends one.
+         */
+        AppointmentStatus: {
+            status: components["schemas"]["AppointmentStatusStatusEnum"];
+        };
+        /**
          * @description * `booked` - Booked
          *     * `arrived` - Arrived
          *     * `served` - Served
@@ -666,6 +837,13 @@ export interface components {
          * @enum {string}
          */
         AppointmentStatusEnum: "booked" | "arrived" | "served" | "no_show" | "cancelled";
+        /**
+         * @description * `arrived` - arrived
+         *     * `served` - served
+         *     * `no_show` - no_show
+         * @enum {string}
+         */
+        AppointmentStatusStatusEnum: "arrived" | "served" | "no_show";
         Board: {
             facility: components["schemas"]["BoardFacility"];
             as_of: string;
@@ -681,6 +859,10 @@ export interface components {
             provider?: string | null;
             /** Format: date-time */
             slot_start: string;
+        };
+        ChannelCount: {
+            channel: string;
+            count: number;
         };
         /**
          * @description Minimal on purpose.
@@ -730,6 +912,12 @@ export interface components {
         DistrictList: {
             results: string[];
         };
+        FacilityCounts: {
+            total: number;
+            verified: number;
+            awaiting_verification: number;
+            reporting_queue: number;
+        };
         FacilityDetail: {
             readonly id: number;
             slug: string;
@@ -774,6 +962,17 @@ export interface components {
             readonly services: string[];
             readonly wait: components["schemas"]["Wait"];
             readonly bookable: boolean;
+        };
+        FacilityReport: {
+            facility: string;
+            days: number;
+            /** Format: date-time */
+            as_of: string;
+            today: components["schemas"]["ReportToday"];
+            period: components["schemas"]["ReportPeriod"];
+            wait: components["schemas"]["ReportWait"];
+            appointments: components["schemas"]["ReportAppointments"];
+            demand: components["schemas"]["ReportDemand"][];
         };
         Insurer: {
             code: string;
@@ -901,6 +1100,24 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
+        PatientCounts: {
+            registered: number;
+        };
+        PendingFacility: {
+            id: number;
+            name: string;
+            slug: string;
+            district: string;
+            level: string;
+            ownership: string;
+            phone: string;
+        };
+        PendingProvider: {
+            id: number;
+            slug: string;
+            full_name: string;
+            specialties: string[];
+        };
         Placement: {
             facility_slug: string;
             facility_name: string;
@@ -924,9 +1141,14 @@ export interface components {
             readonly initials: string;
             readonly photo_url: string;
             readonly languages: string[];
-            readonly specialties: string[];
+            readonly specialties: components["schemas"]["SpecialtyBrief"][];
             readonly placements: components["schemas"]["Placement"][];
             readonly verified: boolean;
+        };
+        ProviderCounts: {
+            total: number;
+            verified: number;
+            awaiting_verification: number;
         };
         ProviderDetail: {
             readonly slug: string;
@@ -935,7 +1157,7 @@ export interface components {
             readonly initials: string;
             readonly photo_url: string;
             readonly languages: string[];
-            readonly specialties: string[];
+            readonly specialties: components["schemas"]["SpecialtyBrief"][];
             readonly placements: components["schemas"]["Placement"][];
             readonly verified: boolean;
             /** @description Short professional summary. Never enter qualifications or claims that have not been verified - see docs/11 section 7. */
@@ -1019,6 +1241,36 @@ export interface components {
             /** Format: double */
             lng: number;
         };
+        ReportAppointments: {
+            total: number;
+            no_shows: number;
+            /** Format: double */
+            no_show_rate: number | null;
+        };
+        ReportDemand: {
+            service: string;
+            count: number;
+        };
+        ReportPeriod: {
+            checked_in: number;
+            served: number;
+            left_without_being_seen: number;
+        };
+        ReportToday: {
+            checked_in: number;
+            waiting: number;
+            served: number;
+        };
+        ReportWait: {
+            /** Format: double */
+            median_minutes: number | null;
+            sample_size: number;
+            /** Format: double */
+            this_week_minutes: number | null;
+            /** Format: double */
+            last_week_minutes: number | null;
+            enough_data: boolean;
+        };
         SearchGroup: {
             kind: components["schemas"]["KindEnum"];
             results: components["schemas"]["SearchResult"][];
@@ -1096,8 +1348,47 @@ export interface components {
             readonly service_types: string[];
             is_triage_target?: boolean;
         };
+        /**
+         * @description A specialty as a client renders it: the code to filter on, and the
+         *     name in all three languages so the client picks without a round trip.
+         */
+        SpecialtyBrief: {
+            code: string;
+            name_rw: string;
+            name_en: string;
+            name_fr: string;
+        };
         SpecialtyList: {
             results: components["schemas"]["Specialty"][];
+        };
+        /**
+         * @description One row on the facility's appointment list.
+         *
+         *     Staff at the facility a patient booked with see the patient's name and
+         *     phone: they have to call somebody who has not arrived, and reception has
+         *     always had this. It is scoped to their own facility and written to the
+         *     audit log - see apps/patients/models.PatientAccessLog.
+         */
+        StaffAppointment: {
+            id: number;
+            reference: string;
+            /** Format: date-time */
+            slot_start: string;
+            /** Format: date-time */
+            slot_end: string;
+            status: string;
+            booked_via: string;
+            service: string;
+            service_code: string;
+            provider: string | null;
+            patient_name: string;
+            patient_phone: string | null;
+        };
+        StaffAppointmentList: {
+            /** Format: date */
+            date: string;
+            count: number;
+            results: components["schemas"]["StaffAppointment"][];
         };
         StaffFacility: {
             id: number;
@@ -1163,6 +1454,17 @@ export interface components {
             en: string;
             fr: string;
         };
+        TriageMonitoring: {
+            days: number;
+            sessions: number;
+            escalations: number;
+            /** Format: double */
+            escalation_rate: number | null;
+            enough_data: boolean;
+            minimum_sessions: number;
+            by_service: components["schemas"]["TriageServiceCount"][];
+            by_version: components["schemas"]["TriageVersion"][];
+        };
         TriageOption: {
             code: string;
             text: components["schemas"]["Translation"];
@@ -1172,6 +1474,10 @@ export interface components {
             red_flag: boolean;
             text: components["schemas"]["Translation"];
             options: components["schemas"]["TriageOption"][];
+        };
+        TriageServiceCount: {
+            service: string;
+            count: number;
         };
         TriageSession: {
             session_id: string;
@@ -1191,6 +1497,11 @@ export interface components {
             approved_on: string;
             reason: string;
         };
+        TriageVersion: {
+            protocol_version: string;
+            sessions: number;
+            escalations: number;
+        };
         /**
          * @description * `check_in` - check_in
          *     * `call` - call
@@ -1200,6 +1511,27 @@ export interface components {
          * @enum {string}
          */
         TypeEnum: "check_in" | "call" | "serve" | "skip" | "cancel";
+        VerificationQueue: {
+            facilities: components["schemas"]["PendingFacility"][];
+            providers: components["schemas"]["PendingProvider"][];
+        };
+        Verified: {
+            id: number;
+            name: string;
+            /** Format: date-time */
+            verified_at: string;
+            verified_by: string | null;
+        };
+        /**
+         * @description Verifying is an assertion that somebody checked documents.
+         *
+         *     The note is required for exactly that reason: an approval with no record
+         *     of what was checked is indistinguishable from a mis-click, and this one
+         *     puts a facility in front of patients.
+         */
+        Verify: {
+            note: string;
+        };
         /**
          * @description The wait contract, enforced in the OpenAPI schema itself.
          *
@@ -1707,6 +2039,123 @@ export interface operations {
             };
         };
     };
+    platform_overview_retrieve: {
+        parameters: {
+            query?: {
+                /** @description 1-365. Defaults to 30. */
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOverview"];
+                };
+            };
+        };
+    };
+    platform_triage_monitoring_retrieve: {
+        parameters: {
+            query?: {
+                /** @description 1-365. Defaults to 30. */
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TriageMonitoring"];
+                };
+            };
+        };
+    };
+    platform_verification_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerificationQueue"];
+                };
+            };
+        };
+    };
+    platform_verification_facilities_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Verify"];
+                "application/x-www-form-urlencoded": components["schemas"]["Verify"];
+                "multipart/form-data": components["schemas"]["Verify"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Verified"];
+                };
+            };
+        };
+    };
+    platform_verification_providers_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Verify"];
+                "application/x-www-form-urlencoded": components["schemas"]["Verify"];
+                "multipart/form-data": components["schemas"]["Verify"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Verified"];
+                };
+            };
+        };
+    };
     provider_list: {
         parameters: {
             query?: {
@@ -1952,6 +2401,57 @@ export interface operations {
             };
         };
     };
+    staff_appointments_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Defaults to today, in the facility's local time. */
+                date?: string;
+                /** @description Filter by status. Defaults to everything not cancelled. */
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffAppointmentList"];
+                };
+            };
+        };
+    };
+    staff_appointments_status_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppointmentStatus"];
+                "application/x-www-form-urlencoded": components["schemas"]["AppointmentStatus"];
+                "multipart/form-data": components["schemas"]["AppointmentStatus"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffAppointment"];
+                };
+            };
+        };
+    };
     staff_me_retrieve: {
         parameters: {
             query?: never;
@@ -1967,6 +2467,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StaffMe"];
+                };
+            };
+        };
+    };
+    staff_reports_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Window length, 1-90. Defaults to 30. */
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacilityReport"];
                 };
             };
         };

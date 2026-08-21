@@ -247,5 +247,13 @@
   "care_guide_nearest_hospital": "Nearest hospital",
   "care_guide_unavailable": "The Care Guide is not available yet. It is awaiting sign-off by a clinician.",
   "care_guide_unavailable_body": "You can still search for facilities and doctors in the meantime.",
-  "emergency_number": "912"
+  "emergency_number": "912",
+  "visits_none_body": "When you book an appointment, it will appear here.",
+  "visits_none_past": "No past visits yet.",
+  "visits_load_failed": "Could not load your appointments.",
+  "visits_cancel_failed": "Could not cancel that appointment. Please try again.",
+  "profile_save_failed": "That change was not saved. Please try again.",
+  "compare_partial": "{n} facilities could not be loaded. The rest are shown.",
+  "queue_load_failed": "Could not check your place in the queue.",
+  "queue_load_failed_body": "This does not mean you have lost your place. Please try again."
 }

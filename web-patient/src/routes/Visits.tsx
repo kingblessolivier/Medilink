@@ -4,7 +4,15 @@ import { api } from "../api/client"
 import { useI18n } from "../i18n"
 import { useAuth } from "../hooks/useAuth"
 import { AppointmentCard } from "../components/AppointmentCard"
+import { Card, EmptyState, ErrorState, ListSkeleton } from "../ui"
 
+/**
+ * Appointments, upcoming and past.
+ *
+ * The two lists load independently, so they get their own loading and error
+ * states: a failure fetching history must not hide the appointment somebody
+ * has this afternoon.
+ */
 export function Visits() {
   const { t } = useI18n()
   const { session } = useAuth()
@@ -32,8 +40,8 @@ export function Visits() {
   if (!signedIn) {
     return (
       <div className="mx-auto max-w-md px-4 pt-8 text-center">
-        <p className="mb-4 text-sm text-neutral-600">{t("auth_prompt")}</p>
-        <Link to="/sign-in" className="btn-primary w-full">
+        <p className="mb-4 text-small text-ink-muted">{t("auth_prompt")}</p>
+        <Link to="/sign-in" className="ml-btn-primary w-full">
           {t("auth_sign_in")}
         </Link>
       </div>
@@ -42,14 +50,45 @@ export function Visits() {
 
   return (
     <div className="mx-auto max-w-md px-4 pb-24 pt-4">
-      <h1 className="mb-4 text-xl font-semibold">{t("visits_title")}</h1>
+      <h1 className="mb-4 text-h1">{t("visits_title")}</h1>
 
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-neutral-500">
-        {t("visits_upcoming")}
-      </h2>
-      {upcoming.data?.length === 0 && (
-        <p className="mb-6 text-sm text-neutral-500">{t("visits_none")}</p>
+      {cancel.isError && (
+        <div className="mb-4">
+          <ErrorState title={t("visits_cancel_failed")} />
+        </div>
       )}
+
+      {/* ------------------------------------------------------ upcoming */}
+      <h2 className="ml-label mb-2">{t("visits_upcoming")}</h2>
+
+      {upcoming.isLoading && <ListSkeleton rows={1} />}
+
+      {upcoming.isError && (
+        <ErrorState
+          title={t("visits_load_failed")}
+          action={
+            <button
+              className="ml-btn-secondary ml-btn-sm"
+              onClick={() => upcoming.refetch()}
+            >
+              {t("retry")}
+            </button>
+          }
+        />
+      )}
+
+      {upcoming.data?.length === 0 && (
+        <EmptyState
+          title={t("visits_none")}
+          body={t("visits_none_body")}
+          action={
+            <Link to="/search" className="ml-btn-primary ml-btn-sm">
+              {t("find_care")}
+            </Link>
+          }
+        />
+      )}
+
       {upcoming.data?.map((appointment) => (
         <AppointmentCard
           key={appointment.id}
@@ -58,24 +97,39 @@ export function Visits() {
         />
       ))}
 
-      <h2 className="mb-2 mt-6 text-sm font-semibold uppercase tracking-wide text-neutral-500">
-        {t("visits_past")}
-      </h2>
-      {past.data?.length === 0 && (
-        <p className="text-sm text-neutral-500">{t("visits_none")}</p>
+      {/* ---------------------------------------------------------- past */}
+      <h2 className="ml-label mb-2 mt-6">{t("visits_past")}</h2>
+
+      {past.isLoading && <ListSkeleton rows={2} />}
+
+      {past.isError && (
+        <ErrorState
+          title={t("visits_load_failed")}
+          action={
+            <button
+              className="ml-btn-secondary ml-btn-sm"
+              onClick={() => past.refetch()}
+            >
+              {t("retry")}
+            </button>
+          }
+        />
       )}
+
+      {past.data?.length === 0 && <EmptyState title={t("visits_none_past")} />}
+
       {past.data?.map((appointment) => (
-        <div key={appointment.id} className="card mb-2 flex justify-between">
+        <Card key={appointment.id} className="mb-2 flex justify-between p-4">
           <div>
             <p className="font-medium">{appointment.facility.name}</p>
-            <p className="text-sm text-neutral-500">
+            <p className="text-small tabular-nums text-ink-muted">
               {new Date(appointment.slot_start).toLocaleDateString()}
             </p>
           </div>
-          <span className="self-center text-sm text-neutral-500">
+          <span className="self-center text-small text-ink-muted">
             {t(`appt_status_${appointment.status}`)}
           </span>
-        </div>
+        </Card>
       ))}
     </div>
   )

@@ -26,8 +26,8 @@ export function QueueCard({
     `${entry.facility.location.lat},${entry.facility.location.lng}`
 
   return (
-    <section className="card mb-4 text-center">
-      <p className="text-sm text-neutral-500">{entry.facility.name}</p>
+    <section className="ml-card mb-4 p-4 text-center">
+      <p className="text-small text-ink-muted">{entry.facility.name}</p>
 
       {called ? (
         <p className="my-6 text-2xl font-semibold text-success">
@@ -35,12 +35,12 @@ export function QueueCard({
         </p>
       ) : (
         <>
-          <p className="mt-4 text-sm text-neutral-600">{t("queue_you_are")}</p>
+          <p className="mt-4 text-small text-ink-muted">{t("queue_you_are")}</p>
           {/* Readable at arm's length, across a room, by an elderly patient. */}
           <p className="text-[4rem] font-bold leading-none">{entry.position}</p>
 
           <div
-            className="mx-auto mt-4 h-2 w-full max-w-xs overflow-hidden rounded-full bg-neutral-200"
+            className="mx-auto mt-4 h-2 w-full max-w-xs overflow-hidden rounded-full bg-surface-sunken"
             role="progressbar"
             aria-valuenow={Math.round(progress * 100)}
             aria-valuemin={0}
@@ -57,13 +57,13 @@ export function QueueCard({
         </>
       )}
 
-      <p className="mt-4 text-xs text-neutral-400">
+      <p className="mt-4 text-caption text-ink-subtle">
         {t("updated_ago", { ago: timeAgo(entry.as_of, lang) })}
       </p>
 
       <div className="mt-4 flex gap-2">
         <a
-          className="btn-secondary flex-1"
+          className="ml-btn-secondary flex-1"
           href={directions}
           target="_blank"
           rel="noreferrer"
@@ -71,7 +71,7 @@ export function QueueCard({
           {t("directions")}
         </a>
         {onCancel && (
-          <button className="btn-secondary flex-1" onClick={onCancel}>
+          <button className="ml-btn-secondary flex-1" onClick={onCancel}>
             {t("cancel")}
           </button>
         )}
@@ -89,7 +89,7 @@ function EtaLine({ entry }: { entry: QueueEntryPublic }) {
 
   if (entry.eta_minutes === null || entry.eta_minutes === undefined) {
     return (
-      <p className="mt-4 text-sm text-neutral-500">{t("queue_eta_unknown")}</p>
+      <p className="mt-4 text-small text-ink-muted">{t("queue_eta_unknown")}</p>
     )
   }
 
@@ -118,7 +118,7 @@ function LeaveByLine({ entry }: { entry: QueueEntryPublic }) {
 
   if (!entry.leave_by) {
     return (
-      <p className="mt-2 text-xs text-neutral-400">{t("queue_set_home")}</p>
+      <p className="mt-2 text-caption text-ink-subtle">{t("queue_set_home")}</p>
     )
   }
 
@@ -134,7 +134,7 @@ function LeaveByLine({ entry }: { entry: QueueEntryPublic }) {
   }
 
   return (
-    <p className="mt-3 text-lg font-semibold">
+    <p className="mt-3 text-h2">
       {t("queue_leave_by", {
         time: depart.toLocaleTimeString([], {
           hour: "2-digit",

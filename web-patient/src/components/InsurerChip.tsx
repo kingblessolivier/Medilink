@@ -13,15 +13,15 @@ export function InsurerChip({ insurer, onChange }: Props) {
   const current = options.find((i) => i.code === insurer)
 
   return (
-    <label className="card flex items-center justify-between gap-3">
-      <span className="text-sm">
-        <span className="text-neutral-500">{t("your_cover")}: </span>
+    <label className="ml-card flex items-center justify-between gap-3 p-4">
+      <span className="text-small">
+        <span className="text-ink-muted">{t("your_cover")}: </span>
         <span className="font-medium">
           {current ? current.name : t("no_cover_set")}
         </span>
       </span>
       <select
-        className="min-h-touch rounded-lg border border-neutral-300 bg-white px-2 text-sm"
+        className="min-h-touch rounded-lg border border-line bg-surface px-2 text-small"
         value={insurer ?? ""}
         onChange={(e) => onChange(e.target.value || undefined)}
         aria-label={t("your_cover")}

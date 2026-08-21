@@ -86,8 +86,13 @@ export function Doctors({ me }: { me: Me }) {
                 </span>
 
                 <span className="mt-1 block text-small text-ink-muted">
+                  {/* .join() on the old string[] compiled fine after the API
+                      started sending objects, and would have rendered
+                      "[object Object]" at a facility manager. */}
                   {provider.specialties.length > 0
-                    ? provider.specialties.join(" · ")
+                    ? provider.specialties
+                        .map((s) => s.name_en)
+                        .join(" · ")
                     : "No specialty recorded"}
                 </span>
 

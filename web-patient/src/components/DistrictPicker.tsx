@@ -16,17 +16,17 @@ export function DistrictPicker({
   const { data } = useDistricts()
 
   return (
-    <div className="card">
-      <p className="text-sm text-neutral-700">{message}</p>
-      <p className="mt-3 text-sm font-medium">{t("choose_district")}</p>
+    <div className="ml-card p-4">
+      <p className="text-small text-ink">{message}</p>
+      <p className="mt-3 text-small font-medium">{t("choose_district")}</p>
       <div className="mt-2 flex flex-wrap gap-2">
         {(data?.results ?? []).map((district) => (
-          <button key={district} className="btn-secondary text-sm">
+          <button key={district} className="ml-btn-secondary text-small">
             {district}
           </button>
         ))}
       </div>
-      <button className="btn-primary mt-4 w-full" onClick={onRetry}>
+      <button className="ml-btn-primary mt-4 w-full" onClick={onRetry}>
         {t("retry")}
       </button>
     </div>

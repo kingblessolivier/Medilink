@@ -5,7 +5,7 @@ import { api } from "../api/client"
 import { useI18n } from "../i18n"
 import { useInsurerPreference } from "../hooks/useInsurerPreference"
 import { useInsurers } from "../hooks/useNearbyFacilities"
-import { Button, Chip, EmptyState, Skeleton } from "../ui"
+import { Button, Chip, EmptyState, ErrorState, Skeleton } from "../ui"
 import { WaitLine } from "../components/WaitLine"
 import type { FacilityDetail } from "../api/types"
 
@@ -67,6 +67,9 @@ export function Compare() {
   const facilities = queries
     .map((q) => q.data)
     .filter((f): f is FacilityDetail => Boolean(f))
+  // One failure out of three still leaves a usable comparison, so the table
+  // renders what arrived and says a column is missing rather than blanking.
+  const failed = queries.filter((q) => q.isError).length
 
   const label = (s: { name_rw: string; name_en: string; name_fr: string }) =>
     lang === "rw" ? s.name_rw : lang === "fr" ? s.name_fr : s.name_en
@@ -76,6 +79,22 @@ export function Compare() {
       <h1 className="mb-4 text-h1">{t("compare")}</h1>
 
       {loading && <Skeleton className="h-64 w-full rounded-xl" />}
+
+      {!loading && failed > 0 && (
+        <div className="mb-4">
+          <ErrorState
+            title={t("compare_partial", { n: failed })}
+            action={
+              <button
+                className="ml-btn-secondary ml-btn-sm"
+                onClick={() => queries.forEach((q) => q.refetch())}
+              >
+                {t("retry")}
+              </button>
+            }
+          />
+        </div>
+      )}
 
       {!loading && (
         <div className="overflow-x-auto">

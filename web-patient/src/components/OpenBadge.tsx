@@ -6,7 +6,7 @@ export function OpenBadge({ facility }: { facility: Facility }) {
 
   if (!facility.is_open) {
     return (
-      <span className="text-sm text-neutral-500">
+      <span className="text-small text-ink-muted">
         {facility.opens_at
           ? t("closed_opens_at", { time: facility.opens_at })
           : t("closed")}
@@ -17,14 +17,14 @@ export function OpenBadge({ facility }: { facility: Facility }) {
   // A patient must not travel to a door that shuts on arrival.
   if (facility.closing_soon && facility.closes_at) {
     return (
-      <span className="text-sm font-medium text-warning">
+      <span className="text-small font-medium text-warning">
         {t("closing_soon", { time: facility.closes_at })}
       </span>
     )
   }
 
   return (
-    <span className="text-sm text-neutral-600">
+    <span className="text-small text-ink-muted">
       {facility.closes_at
         ? t("open_until", { time: facility.closes_at })
         : ""}

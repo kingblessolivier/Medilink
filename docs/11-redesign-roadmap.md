@@ -528,13 +528,55 @@ would overwrite the record of who approved it. Both stay in Django admin.
 
 ### R8 - Cross-cutting
 
-- [ ] Every screen: loading skeletons, empty states, error states
-- [ ] AI processing shows real stages, never "Loading..."
-- [ ] Responsive: desktop, tablet, mobile - re-laid out, not shrunk
-- [ ] Mobile bottom nav: Home / Find Care / Care Guide / Appointments / Profile
-- [ ] Accessibility pass: contrast, focus, keyboard, screen-reader, touch
-- [ ] rw/en/fr for every new string, key parity enforced in CI
-- [ ] Bundle budget: patient app stays under 150 KB gzipped
+- [x] Every screen: loading skeletons, empty states, error states
+- [x] Care Guide shows the question it is on, never "Loading..." (R5)
+- [x] Responsive: mobile, tablet, desktop - measured, no overflow at any size
+- [x] Accessibility pass: focus, keyboard, labels, touch targets
+- [x] rw/en/fr for every new string, key parity enforced in CI
+- [x] Bundle budget: patient app 101 KB gzipped against 150 KB
+
+**Three live regressions found by auditing rather than assuming.** All three
+came from the same cause: when `index.css` became the design-system import in
+R0, the old `.card`, `.field` and `.btn-primary` classes stopped existing, and
+every file not touched since kept using them.
+
+1. The provider app's check-in button rendered as plain text (fixed in R6).
+2. **SignIn, Profile and Visits in the patient app, plus six components.** The
+   sign-in button - the entrance to everything behind authentication - was
+   unstyled text. Now measured: green, 44 px, 8 px radius.
+3. `.ml-card` carries no padding where the old `.card` did, so six migrated
+   cards had content flush against the border.
+
+**Two behavioural bugs found in the same pass:**
+
+- **Profile saved on blur with no failure surfaced.** A patient edited their
+  name, the request failed, and the new value stayed on screen - identical to
+  success. Now surfaced with a retry.
+- **`general-medicine` was being shown to patients.** The provider API
+  returned specialty CODES; one screen worked around it with a lookup against
+  `/specialties`, three did not. The API now returns the code and all three
+  names, the same shape `ServiceBrief` uses. Changing the type caught two of
+  the three stale call sites at compile time; the third used `.join()`, which
+  compiles happily on an array of objects and would have rendered
+  `[object Object]` at a facility manager.
+
+**Measured, not asserted:**
+
+- Focus ring visible on **12/12** tab stops on the primary path
+- No horizontal overflow at 390 / 820 / 1440 px on eight routes
+- No unlabelled controls, no image without `alt`, every page starts at `h1`
+- Language toggle was **36x26 px** - below any usable target, on a control
+  present on every screen and the first thing a Kinyarwanda speaker looking at
+  an English page reaches for. Now 44x44.
+- Doctor cards: the name was a **20 px-tall** link and the card was not
+  tappable. A stretched link makes the whole **374x133** card the target
+  without adding a second link for a screen reader to announce.
+
+**Honest limit:** `.ml-btn-sm` is 36 px. That meets WCAG 2.5.8 (AA, 24 px) but
+not 2.5.5 (AAA, 44 px). It is used for secondary and inline actions; primary
+actions use the full-size button at 44 px. Inline text links sit at 20 px and
+are exempt under 2.5.8. Contrast was NOT machine-verified - the tokens were
+chosen for it, but nothing in this pass measured contrast ratios.
 
 ## 6. Screen inventory
 
@@ -594,3 +636,4 @@ them for visual convenience.
 | 2026-08-21 | R6 done: facility workspace. Sidebar shell, appointments, doctors, services, reports; Reception rebuilt on the design tokens. Found and fixed a live regression - the provider app's `card` / `field` / `btn-primary` classes had been dropped when `index.css` became the design-system import, leaving the check-in button unstyled. Management screens shipped read-only on purpose (see R6). 497 backend tests, 39 API operations, provider bundle 74.7 KB gzipped. 22 of 51 screens. |
 | 2026-08-21 | R5 done: Care Guide UI. Gate untouched and still shut - verified against the real 503 (no entry points, honest explanation) and with intercepted responses to drive the flow. Result routes service -> filtered search -> booking. Disclaimer on every step in rw/en/fr. 248 i18n keys per language, parity enforced by test. Patient bundle 100.5 KB gzipped (150 KB budget). 26 of 51 screens. |
 | 2026-08-21 | R7 done: admin portal. Third Vite app (`web-admin`, :5175), superuser-only, backed by a new `platform_admin` Django app. Overview, verification queue, Care Guide monitoring. No patient records reachable - the backend serves a count and a test pins the payload shape. Verification requires a note. Found and fixed: the sidebar username was blank because SimpleJWT issues `user_id`, not `username`. 521 backend tests, 44 API operations, admin bundle 71.4 KB gzipped. 29 of 51 screens. |
+| 2026-08-21 | R8 done: cross-cutting pass. Found three live styling regressions (patient SignIn/Profile/Visits + six components still on the dead pre-R0 classes; `.ml-card` padding) and two behavioural bugs (Profile saved on blur with failures invisible; specialty CODES shown to patients as `general-medicine`). Specialty API now returns code + three names. Measured: focus visible 12/12 tab stops, no overflow at 390/820/1440 px across eight routes, no unlabelled controls. 521 backend tests, 21 frontend tests, 257 i18n keys per language. Bundles: patient 101.2 KB, provider 74.6 KB, admin 71.4 KB gzipped. |

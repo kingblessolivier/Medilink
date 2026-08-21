@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query"
 import { api } from "../api/client"
 import { useI18n, LANGUAGES, LANGUAGE_LABELS, type Language } from "../i18n"
 import { useAuth } from "../hooks/useAuth"
+import { ErrorState } from "../ui"
 import { useGeolocation } from "../hooks/useGeolocation"
 import { useInsurers } from "../hooks/useNearbyFacilities"
 
@@ -26,8 +27,8 @@ export function Profile() {
   if (session.state !== "signed_in") {
     return (
       <div className="mx-auto max-w-md px-4 pt-8 text-center">
-        <p className="mb-4 text-sm text-neutral-600">{t("auth_prompt")}</p>
-        <Link to="/sign-in" className="btn-primary w-full">
+        <p className="mb-4 text-small text-ink-muted">{t("auth_prompt")}</p>
+        <Link to="/sign-in" className="ml-btn-primary w-full">
           {t("auth_sign_in")}
         </Link>
       </div>
@@ -38,30 +39,30 @@ export function Profile() {
 
   return (
     <div className="mx-auto max-w-md px-4 pb-24 pt-4">
-      <h1 className="mb-4 text-xl font-semibold">{t("profile_title")}</h1>
+      <h1 className="mb-4 text-h1">{t("profile_title")}</h1>
 
-      <div className="card space-y-4">
-        <p className="text-sm text-neutral-500">
+      <div className="ml-card space-y-4 p-4">
+        <p className="text-small text-ink-muted">
           {t("auth_phone")}: <span className="font-medium">{patient.phone}</span>
         </p>
 
         <label className="block">
-          <span className="mb-1 block text-sm text-neutral-600">
+          <span className="mb-1 block text-small text-ink-muted">
             {t("profile_name")}
           </span>
           <input
-            className="min-h-touch w-full rounded-lg border border-neutral-300 px-3"
+            className="ml-field"
             defaultValue={patient.full_name ?? ""}
             onBlur={(e) => save.mutate({ full_name: e.target.value })}
           />
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-sm text-neutral-600">
+          <span className="mb-1 block text-small text-ink-muted">
             {t("your_cover")}
           </span>
           <select
-            className="min-h-touch w-full rounded-lg border border-neutral-300 px-2"
+            className="ml-field"
             value={patient.insurer ?? ""}
             onChange={(e) => save.mutate({ insurer: e.target.value || null })}
           >
@@ -75,11 +76,11 @@ export function Profile() {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-sm text-neutral-600">
+          <span className="mb-1 block text-small text-ink-muted">
             {t("profile_language")}
           </span>
           <select
-            className="min-h-touch w-full rounded-lg border border-neutral-300 px-2"
+            className="ml-field"
             value={patient.language}
             onChange={(e) => {
               const next = e.target.value as Language
@@ -97,14 +98,14 @@ export function Profile() {
       </div>
 
       {/* Opt-in, and the only thing that makes "leave home by" possible. */}
-      <div className="card mt-4">
-        <p className="text-sm font-medium">{t("profile_home_title")}</p>
-        <p className="mt-1 text-sm text-neutral-500">{t("profile_home_why")}</p>
-        <p className="mt-2 text-sm">
+      <div className="ml-card mt-4 p-4">
+        <p className="text-small font-medium">{t("profile_home_title")}</p>
+        <p className="mt-1 text-small text-ink-muted">{t("profile_home_why")}</p>
+        <p className="mt-2 text-small">
           {patient.home_location ? t("profile_home_set") : t("profile_home_unset")}
         </p>
         <button
-          className="btn-secondary mt-3 w-full"
+          className="ml-btn-secondary mt-3 w-full"
           onClick={() => {
             locate()
             if (geo.status === "ready") {
@@ -118,7 +119,7 @@ export function Profile() {
         </button>
         {patient.home_location && (
           <button
-            className="mt-2 w-full py-2 text-sm text-neutral-500"
+            className="mt-2 w-full py-2 text-small text-ink-muted"
             onClick={() => save.mutate({ home_location: null })}
           >
             {t("profile_home_clear")}
@@ -127,12 +128,31 @@ export function Profile() {
       </div>
 
       {saved && (
-        <p role="status" className="mt-3 text-center text-sm text-success">
+        <p role="status" className="mt-3 text-center text-small text-success">
           {t("profile_saved")}
         </p>
       )}
 
-      <button className="btn-secondary mt-6 w-full" onClick={signOut}>
+      {/* Fields save on blur, so a silent failure is indistinguishable from a
+          success: the patient looks at their new name on screen and believes
+          it was kept. Surfaced, and it names the field that did not save. */}
+      {save.isError && (
+        <div className="mt-3">
+          <ErrorState
+            title={t("profile_save_failed")}
+            action={
+              <button
+                className="ml-btn-secondary ml-btn-sm"
+                onClick={() => save.mutate(save.variables!)}
+              >
+                {t("retry")}
+              </button>
+            }
+          />
+        </div>
+      )}
+
+      <button className="ml-btn-secondary mt-6 w-full" onClick={signOut}>
         {t("auth_sign_out")}
       </button>
     </div>

@@ -18,8 +18,8 @@ export function AppointmentCard({
     encodeURIComponent(appointment.facility.name)
 
   return (
-    <section className="card mb-4">
-      <p className="text-sm text-neutral-500">
+    <section className="ml-card mb-4 p-4">
+      <p className="text-small text-ink-muted">
         {isToday
           ? t("appt_today_at", {
               time: start.toLocaleTimeString([], {
@@ -36,18 +36,18 @@ export function AppointmentCard({
             })}
       </p>
 
-      <h3 className="mt-1 text-lg font-semibold">{appointment.facility.name}</h3>
+      <h3 className="mt-1 text-h2">{appointment.facility.name}</h3>
 
-      <p className="mt-1 text-sm text-neutral-500">
+      <p className="mt-1 text-small text-ink-muted">
         {t("appt_reference")}:{" "}
-        <span className="font-mono font-medium text-neutral-700">
+        <span className="font-mono font-medium text-ink">
           {appointment.reference}
         </span>
       </p>
 
       <div className="mt-3 flex gap-2">
         <a
-          className="btn-secondary flex-1"
+          className="ml-btn-secondary flex-1"
           href={directions}
           target="_blank"
           rel="noreferrer"
@@ -56,14 +56,14 @@ export function AppointmentCard({
         </a>
         {appointment.facility.phone && (
           <a
-            className="btn-secondary flex-1"
+            className="ml-btn-secondary flex-1"
             href={`tel:${appointment.facility.phone}`}
           >
             {t("call")}
           </a>
         )}
         {onCancel && (
-          <button className="btn-secondary flex-1" onClick={onCancel}>
+          <button className="ml-btn-secondary flex-1" onClick={onCancel}>
             {t("cancel")}
           </button>
         )}
