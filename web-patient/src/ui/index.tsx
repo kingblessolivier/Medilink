@@ -79,7 +79,11 @@ export function Spinner({ className }: { className?: string }) {
     <span
       aria-hidden="true"
       className={cx(
-        "h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent opacity-70",
+        // inline-block matters: a bare <span> is display:inline, where h-4/w-4
+        // do nothing and this collapses to a 2px sliver. It only ever looked
+        // right because every call site so far put it inside an inline-flex
+        // button, which blockifies its children.
+        "inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent opacity-70",
         className,
       )}
     />
