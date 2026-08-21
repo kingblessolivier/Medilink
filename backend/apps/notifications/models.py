@@ -64,3 +64,59 @@ class Notification(models.Model):
 
     def __str__(self) -> str:
         return f"{self.get_kind_display()} to {self.phone}"
+
+
+# Messages a patient may switch off. Everything NOT listed here is
+# transactional and is always sent:
+#
+#   OTP             is how somebody signs in - they asked for it
+#   APPT_CANCELLED  the facility cancelled on them; not telling them would be
+#                   worse than any amount of unwanted messaging
+#
+# CALLED is opt-out-able but it is the one that costs a patient their turn, so
+# the UI warns before switching it off.
+OPTIONAL_KINDS = (
+    Notification.Kind.LEAVE_NOW,
+    Notification.Kind.CALLED,
+    Notification.Kind.APPT_REMINDER_24H,
+    Notification.Kind.APPT_REMINDER_2H,
+)
+
+
+class NotificationPreference(models.Model):
+    """Per-patient, per-kind opt-out.
+
+    docs/08 section 7 lists the right to object as needing an implementation
+    rather than a policy page. This is it - and it is honoured by the SENDER,
+    in `dispatch()`, so no call site can forget to check.
+
+    Rows are created only when somebody opts OUT. Absence means enabled, which
+    keeps the table small and makes the default obvious.
+    """
+
+    patient = models.ForeignKey(
+        "patients.Patient",
+        related_name="notification_preferences",
+        on_delete=models.CASCADE,
+    )
+    kind = models.CharField(max_length=24, choices=Notification.Kind.choices)
+    enabled = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("patient", "kind")
+        ordering = ["kind"]
+
+    def __str__(self) -> str:
+        state = "on" if self.enabled else "off"
+        return f"{self.patient}: {self.get_kind_display()} {state}"
+
+    @classmethod
+    def is_enabled(cls, patient, kind: str) -> bool:
+        """Transactional kinds are always on, whatever a row says."""
+        if kind not in OPTIONAL_KINDS:
+            return True
+        if patient is None:
+            return True
+        row = cls.objects.filter(patient=patient, kind=kind).first()
+        return True if row is None else row.enabled

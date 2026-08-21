@@ -211,5 +211,16 @@
   "called_now": "Barahamagaye",
   "go_in_now": "Injira ubu",
   "no_active_queue_body": "Uzagaragara hano nyuma yo kwiyandikisha ku ivuriro.",
-  "sign_in_to_track": "Banza winjire kugira ngo urebe umurongo"
+  "sign_in_to_track": "Banza winjire kugira ngo urebe umurongo",
+  "notifications_title": "Ubutumwa",
+  "which_messages": "Ubutumwa wakira",
+  "always_sent": "Buhora bwoherezwa",
+  "always_on": "Buri gihe",
+  "called_off_warning": "Nubuzimya ushobora kubura umwanya wawe.",
+  "preferences_note": "Kode zo kwinjira n'ubutumwa bwo guhagarika gahunda buhora bwoherezwa.",
+  "messages_sent": "Ubutumwa bwoherejwe",
+  "no_messages": "Nta butumwa uraboneka.",
+  "no_messages_body": "Uzabona ubutumwa igihe utegereje cyangwa ufite gahunda.",
+  "sms_note": "Ubu butumwa bwoherezwa kuri SMS, ntibusaba interineti.",
+  "nav_messages": "Ubutumwa"
 }

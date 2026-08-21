@@ -211,5 +211,16 @@
   "called_now": "On vous appelle",
   "go_in_now": "Entrez maintenant",
   "no_active_queue_body": "Vous apparaitrez ici une fois enregistre a l'accueil.",
-  "sign_in_to_track": "Connectez-vous pour suivre votre file"
+  "sign_in_to_track": "Connectez-vous pour suivre votre file",
+  "notifications_title": "Messages",
+  "which_messages": "Messages recus",
+  "always_sent": "Toujours envoye",
+  "always_on": "Toujours",
+  "called_off_warning": "Le desactiver peut vous faire manquer votre tour.",
+  "preferences_note": "Les codes de connexion et les annulations sont toujours envoyes.",
+  "messages_sent": "Messages envoyes",
+  "no_messages": "Aucun message.",
+  "no_messages_body": "Vous recevrez des messages en file ou avec un rendez-vous.",
+  "sms_note": "Envoyes par SMS, ils vous parviennent sans internet.",
+  "nav_messages": "Messages"
 }

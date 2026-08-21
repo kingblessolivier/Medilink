@@ -508,6 +508,67 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/me/notification-preferences:
+    get:
+      operationId: notification_preferences
+      summary: Which messages you receive
+      tags:
+      - me
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferenceList'
+          description: ''
+    patch:
+      operationId: notification_preferences_update
+      summary: Turn one kind of message on or off
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPreferenceUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPreferenceUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPreferenceUpdate'
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferenceList'
+          description: ''
+  /api/v1/me/notifications:
+    get:
+      operationId: notification_list
+      summary: Messages MediLink has sent you
+      tags:
+      - me
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationList'
+          description: ''
   /api/v1/providers:
     get:
       operationId: provider_list
@@ -1454,6 +1515,56 @@ components:
       - count
       - query
       - results
+    Notification:
+      type: object
+      description: |-
+        What was sent to this patient. Read-only: a notification is a record of
+        something that happened, never something a client authors.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        kind:
+          type: string
+          readOnly: true
+        kind_label:
+          type: string
+          readOnly: true
+        channel:
+          type: string
+          readOnly: true
+        body:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        sent_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - body
+      - channel
+      - created_at
+      - id
+      - kind
+      - kind_label
+      - sent_at
+    NotificationList:
+      type: object
+      properties:
+        count:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+      required:
+      - count
+      - results
     OTPRequest:
       type: object
       properties:
@@ -1522,6 +1633,14 @@ components:
           additionalProperties: {}
           nullable: true
           readOnly: true
+    PatchedPreferenceUpdate:
+      type: object
+      properties:
+        kind:
+          type: string
+          maxLength: 24
+        enabled:
+          type: boolean
     Patient:
       type: object
       properties:
@@ -1569,6 +1688,31 @@ components:
       - facility_slug
       - role_title
       - services
+    Preference:
+      type: object
+      properties:
+        kind:
+          type: string
+        label:
+          type: string
+        enabled:
+          type: boolean
+        can_disable:
+          type: boolean
+      required:
+      - can_disable
+      - enabled
+      - kind
+      - label
+    PreferenceList:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Preference'
+      required:
+      - results
     Provider:
       type: object
       properties:

@@ -211,5 +211,16 @@
   "called_now": "You are being called",
   "go_in_now": "Go in now",
   "no_active_queue_body": "You will appear here once reception checks you in at a facility.",
-  "sign_in_to_track": "Sign in to track your queue"
+  "sign_in_to_track": "Sign in to track your queue",
+  "notifications_title": "Messages",
+  "which_messages": "Which messages you receive",
+  "always_sent": "Always sent",
+  "always_on": "Always",
+  "called_off_warning": "Switching this off means you may miss your turn.",
+  "preferences_note": "Sign-in codes, and a facility cancelling on you, are always sent.",
+  "messages_sent": "Messages sent to you",
+  "no_messages": "No messages yet.",
+  "no_messages_body": "You will get messages when you are in a queue or have an appointment.",
+  "sms_note": "These are sent by SMS, so they reach you without internet.",
+  "nav_messages": "Messages"
 }

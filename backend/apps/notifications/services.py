@@ -10,7 +10,7 @@ import logging
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
-from .models import Notification
+from .models import Notification, NotificationPreference
 from .sms import get_backend, render
 
 logger = logging.getLogger(__name__)
@@ -73,6 +73,12 @@ def dispatch(
     queue entry or appointment - that is the normal, expected outcome of two
     overlapping schedulers, not an error.
     """
+    # Honoured HERE rather than at each call site, so nothing can forget.
+    # Transactional kinds ignore preferences entirely - see OPTIONAL_KINDS.
+    if patient is not None and not NotificationPreference.is_enabled(patient, kind):
+        logger.debug("notification_opted_out", extra={"kind": kind})
+        return None
+
     body = compose(kind, language, **context)
 
     try:

@@ -299,6 +299,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/notification-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Which messages you receive */
+        get: operations["notification_preferences"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Turn one kind of message on or off */
+        patch: operations["notification_preferences_update"];
+        trace?: never;
+    };
+    "/api/v1/me/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Messages MediLink has sent you */
+        get: operations["notification_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/providers": {
         parameters: {
             query?: never;
@@ -802,6 +837,25 @@ export interface components {
             count: number;
             results: components["schemas"]["FacilityNearby"][];
         };
+        /**
+         * @description What was sent to this patient. Read-only: a notification is a record of
+         *     something that happened, never something a client authors.
+         */
+        Notification: {
+            readonly id: number;
+            readonly kind: string;
+            readonly kind_label: string;
+            readonly channel: string;
+            readonly body: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly sent_at: string | null;
+        };
+        NotificationList: {
+            count: number;
+            results: components["schemas"]["Notification"][];
+        };
         OTPRequest: {
             phone: string;
         };
@@ -833,6 +887,10 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
+        PatchedPreferenceUpdate: {
+            kind?: string;
+            enabled?: boolean;
+        };
         Patient: {
             readonly id: number;
             readonly phone: string;
@@ -849,6 +907,15 @@ export interface components {
             district: string;
             role_title: string;
             services: string[];
+        };
+        Preference: {
+            kind: string;
+            label: string;
+            enabled: boolean;
+            can_disable: boolean;
+        };
+        PreferenceList: {
+            results: components["schemas"]["Preference"][];
         };
         Provider: {
             readonly slug: string;
@@ -1574,6 +1641,69 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    notification_preferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferenceList"];
+                };
+            };
+        };
+    };
+    notification_preferences_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPreferenceUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPreferenceUpdate"];
+                "multipart/form-data": components["schemas"]["PatchedPreferenceUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferenceList"];
+                };
+            };
+        };
+    };
+    notification_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationList"];
+                };
             };
         };
     };

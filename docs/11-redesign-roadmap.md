@@ -364,7 +364,7 @@ prefetch. The fix is neither - `facility_service_waits` now takes the services
 as a parameter, so the caller that already has them passes them, and the caller
 that does not gets `select_related`.
 
-### R4 - Booking and queue `IN PROGRESS`
+### R4 - Booking and queue `DONE`
 
 Not purely a redesign after all - R1 added `ScheduleTemplate.provider` but the
 booking logic still ignored it, so slots and capacity had to be made
@@ -375,8 +375,29 @@ provider-aware first.
 - [x] Booking: service -> doctor -> time -> review -> confirm, four steps
 - [x] Confirmation screen (same screen as the appointment, `?new=1`)
 - [x] Queue tracking, full-screen, `leave_by` as the hero
-- [ ] Notification centre and preferences
-- [ ] Patient dashboard consolidation
+- [x] Notification centre and per-kind preferences
+- [x] Patient dashboard - the Home state ordering already does this job; a
+      separate dashboard would be a second home screen
+
+**Notification decisions:**
+
+- **Opt-out is honoured inside `dispatch()`**, not at each call site, so no
+  sender can forget to check. This closes the "right to object" item from
+  docs/08 section 7.
+- **Some messages cannot be switched off.** A sign-in code is something a
+  patient asked for by trying to sign in; a facility cancelling on them is
+  something not telling them would be worse than any amount of unwanted
+  messaging. `OPTIONAL_KINDS` names the rest.
+- **An attempt to disable a transactional kind is refused, not ignored.** A
+  toggle that appears to work and does nothing is worse than one that says no,
+  and the UI renders those as fixed rather than as a dead switch.
+- **Turning off "you are being called" carries a warning** - it is the one
+  that costs a patient their turn.
+- **Preference rows exist only for opt-outs.** Absence means enabled, which
+  keeps the table small and makes the default obvious.
+- **History shows only what was actually sent**, and never sign-in codes - a
+  code is not a message somebody received, and listing it would leave it
+  readable long after it expired.
 
 **Decisions worth keeping:**
 
@@ -486,3 +507,4 @@ them for visual convenience.
 | 2026-08-20 | R3 part 1: per-service wait status, FacilityServiceInsurer (gap 3 closed), facility profile with five tabs. 13 new tests. 457 backend tests, 92% coverage. Insurance verified live: green only where confirmed, grey (?) everywhere else. |
 | 2026-08-21 | R3 done: doctors directory with language filter, doctor profile, service detail, doctors in the nav. 13 of 51 screens. Patient bundle 92 KB gz. |
 | 2026-08-21 | R4 part 1: provider-aware slots and booking (separate capacity pools), appointment detail endpoint, four-step booking flow, confirmation, full-screen queue tracking. Booking driven end to end in a browser. 469 backend tests, 93% coverage. |
+| 2026-08-21 | R4 done: notification centre and preferences, honoured by the sender. Right to object from docs/08 s7 now implemented. 493 backend tests, 93% coverage. 18 of 51 screens. |
