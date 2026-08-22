@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
+import { IconHospital } from "../ui/icons"
 import { api, type ServiceBrief } from "../api/client"
 import { useSession } from "../hooks/useAuth"
 import { Chip, EmptyState, ErrorState, Notice, TableSkeleton } from "../ui"
@@ -123,7 +124,7 @@ export function WorkspaceServices() {
             <h2 className="text-h3 mb-3">Services offered</h2>
 
             {services.length === 0 ? (
-              <EmptyState
+              <EmptyState icon={<IconHospital size={20} />}
                 title="No services listed."
                 body="Patients cannot find or book with you until at least one service is recorded."
               />

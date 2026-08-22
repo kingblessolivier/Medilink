@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
+import { IconStethoscope } from "../ui/icons"
 import { api } from "../api/client"
 import { useSession } from "../hooks/useAuth"
 import { Chip, EmptyState, ErrorState, Notice, TableSkeleton } from "../ui"
@@ -57,7 +58,7 @@ export function WorkspaceDoctors() {
 
       {query.isSuccess && rows.length === 0 && (
         <div className="mt-6">
-          <EmptyState
+          <EmptyState icon={<IconStethoscope size={20} />}
             title="No doctors listed for this facility yet."
             body="Patients still see your services and can still book. Contact MediLink to add clinicians."
           />

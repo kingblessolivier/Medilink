@@ -1,4 +1,5 @@
 import { Link, useParams } from "react-router-dom"
+import { IconHospital } from "../ui/icons"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "../api/client"
 import { useI18n } from "../i18n"
@@ -131,7 +132,7 @@ export function FacilityDetail() {
           {/* -------------------------------------------------- services */}
           <TabPanel value="services">
             {data.services.length === 0 ? (
-              <EmptyState title={t("no_services_listed")} />
+              <EmptyState icon={<IconHospital size={20} />} title={t("no_services_listed")} />
             ) : (
               <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
                 {data.services.map((service) => (
@@ -158,7 +159,7 @@ export function FacilityDetail() {
           <TabPanel value="doctors">
             {doctors.isLoading && <ListSkeleton rows={3} />}
             {doctors.data?.count === 0 && (
-              <EmptyState
+              <EmptyState icon={<IconHospital size={20} />}
                 title={t("no_doctors_listed")}
                 body={t("no_doctors_listed_body")}
               />
@@ -176,7 +177,7 @@ export function FacilityDetail() {
 
             {data.insurers.length === 0 ? (
               <div className="mt-3">
-                <EmptyState title={t("no_insurers_listed")} />
+                <EmptyState icon={<IconHospital size={20} />} title={t("no_insurers_listed")} />
               </div>
             ) : (
               <div className="mt-3 overflow-x-auto">

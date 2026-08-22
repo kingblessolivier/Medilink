@@ -1,4 +1,5 @@
 import { Link, useParams } from "react-router-dom"
+import { IconHospital } from "../ui/icons"
 import { useEffect } from "react"
 import { useI18n } from "../i18n"
 import { useGeolocation } from "../hooks/useGeolocation"
@@ -131,7 +132,7 @@ export function ServiceDetail() {
         )}
 
         {facilities.data && results.length === 0 && (
-          <EmptyState
+          <EmptyState icon={<IconHospital size={20} />}
             title={t("no_facilities_for_service", { service: name })}
             body={t("no_results_body")}
             action={

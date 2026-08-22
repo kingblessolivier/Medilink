@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom"
+import { IconClock } from "../ui/icons"
 import { useI18n } from "../i18n"
 import { useCurrentQueueEntry } from "../hooks/useQueue"
 import { usePatient } from "../hooks/useAuth"
@@ -29,7 +30,7 @@ export function QueueTracking() {
     return (
       <div className="ml-page py-6">
         <h1 className="mb-4 text-h1">{t("queue_title")}</h1>
-        <EmptyState
+        <EmptyState icon={<IconClock size={20} />}
           title={t("sign_in_to_track")}
           action={
             <Link to="/sign-in" className="ml-btn-primary ml-btn-sm">
@@ -74,7 +75,7 @@ export function QueueTracking() {
   if (!entry) {
     return (
       <div className="ml-page py-6">
-        <EmptyState
+        <EmptyState icon={<IconClock size={20} />}
           title={t("no_active_queue")}
           body={t("no_active_queue_body")}
           action={

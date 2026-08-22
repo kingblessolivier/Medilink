@@ -155,9 +155,12 @@ export function FindCare() {
           </div>
 
           <div className="mb-3 flex items-center justify-between">
-            <p className="ml-label">
+            {/* An h2, not a styled paragraph. This heads the results list,
+                and without it the page jumped H1 -> H3 - the only screen in
+                the product that skipped a level. */}
+            <h2 className="text-h3">
               {query.data ? t("n_results", { n: query.data.count }) : " "}
-            </p>
+            </h2>
             {/* Mobile only: the map is opt-in, never the default. */}
             <Button
               size="sm"

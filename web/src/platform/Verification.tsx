@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { IconShieldCheck } from "../ui/icons"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { api, type PendingFacility, type PendingProvider } from "../api/client"
 import { Chip, EmptyState, ErrorState, Notice, Skeleton } from "../ui"
@@ -71,7 +72,7 @@ export function Verification() {
 
       {query.isSuccess && empty && (
         <div className="mt-6">
-          <EmptyState
+          <EmptyState icon={<IconShieldCheck size={20} />}
             title="Nothing waiting."
             body="Every listed facility and doctor has been verified."
           />
