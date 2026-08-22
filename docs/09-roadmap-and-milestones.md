@@ -52,11 +52,12 @@ Also start in week 1, because they take months: **USSD shortcode application**,
 ### Definition of done
 
 - [ ] 50+ facilities loaded, each with a coordinate verified on-site
-- [ ] Nearby search returns correct distances (asserted against known pairs)
-- [ ] `EXPLAIN ANALYZE` shows an Index Scan, not a Seq Scan
+- [x] Nearby search returns correct distances (asserted against known pairs)
+- [x] `EXPLAIN ANALYZE` shows an Index Scan, not a Seq Scan - fixed
+      2026-08-23; it was a Seq Scan until then. See docs/04.
 - [ ] Insurance filter works for Mutuelle, RSSB and MMI
 - [ ] Opening hours correct, including lunch breaks
-- [ ] All four `wait.status` values render (all will be `not_reported` here)
+- [x] All four `wait.status` values render (all will be `not_reported` here)
 - [ ] Works offline with cached results
 - [ ] Loads in under 3 s on a real 3G connection on a real low-end Android phone
 - [ ] Ten real patients have used it and been interviewed
