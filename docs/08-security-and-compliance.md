@@ -202,19 +202,20 @@ liability.
 
 **Requirements before this feature may ship:**
 
-- [ ] Rule-based and deterministic. **No free-form LLM** answering "what disease
+- [x] Rule-based and deterministic. **No free-form LLM** answering "what disease
       do I have".
 - [ ] Built from a published, citable triage protocol - not written by the
       development team from intuition.
 - [ ] Reviewed and signed off by a licensed clinician, with the sign-off recorded
       against a `protocol_version`.
-- [ ] Framed as *routing guidance*, never diagnosis, in all three languages.
-- [ ] Red-flag escalation always present: chest pain, difficulty breathing,
+- [x] Framed as *routing guidance*, never diagnosis, in all three languages.
+- [x] Red-flag escalation always present (the ENGINE enforces one-way
+      escalation; the QUESTIONS are the clinician's to write): chest pain, difficulty breathing,
       heavy bleeding, unresponsiveness, convulsions in a child -> immediate
       "go to emergency now", flow abandoned.
-- [ ] Disclaimer shown on every screen, not once at onboarding.
+- [x] Disclaimer shown on every screen, not once at onboarding.
 - [ ] Ministry of Health and Rwanda FDA consulted on classification.
-- [ ] Every session logged with its `protocol_version`, so a later rule change is
+- [x] Every session logged with its `protocol_version`, so a later rule change is
       traceable to what a given patient actually saw.
 
 **If any box is unticked, ship the product without the symptom checker.** The
@@ -321,6 +322,7 @@ Name a person responsible for this. On a student team, "everyone" means nobody.
 - [x] Consent captured and recorded at registration, with a timestamp AND
       the notice version agreed to. Null for USSD patients, because nobody
       collected it and a backfilled timestamp would be a manufactured record
-- [ ] Erasure endpoint implemented and tested
+- [x] Erasure endpoint implemented and tested - anonymises rather than
+      deletes, so a facility keeps its counts
 - [ ] NCSA registration completed
 - [ ] Legal review of the privacy notice and consent flow completed
