@@ -166,11 +166,22 @@ def find_nearby(
         steps = [min(radius_m, settings.MAX_SEARCH_RADIUS_M)]
 
     for step in steps:
-        # Filter FIRST, annotate distance SECOND. distance_lte compiles to
-        # ST_DWithin, which uses the GIST index; filtering on an annotated
-        # Distance() instead would sequentially scan the whole table.
+        # `dwithin`, NOT `distance_lte`. This comment used to claim they were
+        # the same thing. They are not:
+        #
+        #   distance_lte -> ST_Distance(location, point) <= 5000
+        #   dwithin      -> ST_DWithin(location, point, 5000)
+        #
+        # Only the second can use the GIST index. The first computes a real
+        # distance for every row in the table and then throws most of them
+        # away, which is a sequential scan by another name. With 25 seeded
+        # facilities the difference is invisible - which is exactly why it
+        # survived - but the target is national coverage.
+        #
+        # Filter FIRST, annotate distance SECOND, so Distance() is computed
+        # only for the rows that survived the index lookup.
         results = list(
-            qs.filter(location__distance_lte=(point, D(m=step)))
+            qs.filter(location__dwithin=(point, D(m=step)))
             .annotate(distance=Distance("location", point))
             # level and name break distance ties so ordering is stable
             # between refreshes.

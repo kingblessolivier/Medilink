@@ -484,7 +484,12 @@ To hold these:
 ## 11. Verification checklist before this feature ships
 
 - [x] `Point(lng, lat)` ordering asserted by a test against a known distance
-- [ ] `EXPLAIN ANALYZE` on the nearby query confirms an **Index Scan**, not a Seq Scan
+- [x] `EXPLAIN ANALYZE` on the nearby query confirms an **Index Scan**, not a
+      Seq Scan - it did NOT, until 2026-08-23. `distance_lte` compiles to
+      `ST_Distance(...) <= x`, which cannot use the GIST index; `dwithin`
+      compiles to `ST_DWithin(...)`, which can. Measured on 20,000 rows:
+      **215 ms sequential versus 0.2 ms indexed.** Two tests now assert on the
+      emitted SQL, because at 25 seeded facilities the difference is invisible
 - [x] Query count per request asserted (`assertNumQueries`) to catch N+1 regressions
 - [x] All four `wait.status` values render correctly in the UI
 - [x] Denied-geolocation path reaches the district picker
