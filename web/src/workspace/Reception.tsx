@@ -4,6 +4,7 @@ import type { useQueueActions } from "./useQueueActions"
 import { CheckInForm } from "./CheckInForm"
 import { QueueTable } from "./QueueTable"
 import { EmptyState, Notice } from "../ui"
+import { IconUsers } from "../ui/icons"
 
 /**
  * The reception desk.
@@ -45,7 +46,26 @@ export function Reception({
   const totalWaiting = groups.reduce((n, g) => n + g.waiting.length, 0)
 
   return (
-    <div className="mx-auto w-full max-w-5xl">
+    <div className="mx-auto w-full max-w-6xl">
+      {/* The screen had no h1 at all - the only page in the product without
+          one. A screen-reader user landed here with nothing to orient on, and
+          it broke the heading order every other screen follows. */}
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-h2">Reception</h1>
+          <p className="mt-1 text-small text-ink-muted">
+            {me?.facility?.name ?? ""}
+          </p>
+        </div>
+        <p className="text-small tabular-nums text-ink-muted">
+          {new Date().toLocaleDateString(undefined, {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+          })}
+        </p>
+      </div>
+
       {(me?.can_manage_queue ?? false) ? (
         <CheckInForm services={me?.services ?? []} onCheckIn={actions.checkIn} />
       ) : (
@@ -66,9 +86,12 @@ export function Reception({
         </div>
       )}
 
-      <div className="mb-3 mt-6 flex items-baseline justify-between">
-        <h2 className="ml-label">
-          Queue - {totalWaiting} waiting
+      <div className="mb-3 mt-8 flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-h3">
+          Queue
+          <span className="ml-2 font-normal text-ink-muted">
+            <span className="tabular-nums">{totalWaiting}</span> waiting
+          </span>
         </h2>
         {board.data && (
           <span className="text-caption tabular-nums text-ink-subtle">
@@ -93,7 +116,7 @@ export function Reception({
       )}
 
       {groups.length === 0 && board.isSuccess && (
-        <EmptyState
+        <EmptyState icon={<IconUsers size={20} />}
           title="Nobody is waiting."
           body="Check in the first patient above."
         />

@@ -1,4 +1,26 @@
 import type { QueueRow, ServiceGroup } from "../api/client"
+import { Chip } from "../ui"
+import { IconChevronRight, IconClock, IconUser } from "../ui/icons"
+
+/**
+ * One service's queue.
+ *
+ * The action hierarchy is the point, and it used to be wrong. Every row
+ * carried a filled primary "Serve" button, so an eighteen-person queue put
+ * eighteen of the loudest control on the screen and the receptionist's actual
+ * next action - calling whoever is next - was the quiet one beside it.
+ *
+ * It works the other way round now:
+ *
+ *   waiting  ->  Call is primary. It is the only thing you do to somebody who
+ *                is waiting, and usually only to the person at the top.
+ *   called   ->  Serve is primary, because that patient is with a clinician
+ *                and finishing them is what comes next.
+ *
+ * The called row is also visually lifted out of the list. Somebody has been
+ * called and is walking to a door; a receptionist glancing at the screen needs
+ * to see who that is without reading a status column.
+ */
 
 type Props = {
   group: ServiceGroup
@@ -17,30 +39,104 @@ function Row({
 }) {
   const called = row.status === "called"
 
+  // Anything past a working day is a queue nobody closed - almost always
+  // yesterday's list still open this morning. Flagged rather than hidden: it
+  // is the receptionist's to clear, and silently dropping people would be
+  // worse than showing a number that looks wrong.
+  const stale = row.waited_minutes > 8 * 60
+
   return (
-    <tr className="border-t border-line">
-      <td className="py-2 pr-3 font-mono text-small">{row.ticket_code}</td>
-      <td className="py-2 pr-3">{row.display_name}</td>
-      <td className="py-2 pr-3 text-small text-ink-muted">{row.phone || "-"}</td>
-      <td className="py-2 pr-3 text-small text-ink-muted">
+    <tr
+      className={
+        "border-t border-line " +
+        (called ? "bg-primary-subtle/50" : "hover:bg-surface-sunken/50")
+      }
+    >
+      <td className="py-2.5 pr-3">
+        <span className="flex items-center gap-2">
+          {/* A marker on the row, not a word in a column. The called patient
+              is the one fact this table has to convey at a glance. */}
+          <span
+            aria-hidden="true"
+            className={
+              "h-1.5 w-1.5 shrink-0 rounded-full " +
+              (called ? "bg-primary" : "bg-transparent")
+            }
+          />
+          <span className="font-mono text-small tabular-nums">
+            {row.ticket_code}
+          </span>
+        </span>
+      </td>
+
+      <td className="py-2.5 pr-3">
+        <span className="block truncate">{row.display_name}</span>
+        {called && (
+          <span className="mt-0.5 block text-caption font-medium text-primary">
+            With a clinician
+          </span>
+        )}
+      </td>
+
+      <td className="py-2.5 pr-3 text-small tabular-nums text-ink-muted">
+        {row.phone || "—"}
+      </td>
+
+      <td className="py-2.5 pr-3 text-small tabular-nums text-ink-muted">
         {new Date(row.joined_at).toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         })}
       </td>
-      <td className="py-2 pr-3 text-small text-ink-muted">{row.waited_minutes} min</td>
-      <td className="py-2">
+
+      <td className="py-2.5 pr-3 text-small tabular-nums">
+        {stale ? (
+          <Chip tone="warning">
+            <IconClock size={13} />
+            {formatWaited(row.waited_minutes)}
+          </Chip>
+        ) : (
+          <span className="text-ink-muted">
+            {formatWaited(row.waited_minutes)}
+          </span>
+        )}
+      </td>
+
+      <td className="py-2.5">
         {canManage && (
-          <div className="flex justify-end gap-2">
-            {!called && (
-              <button className="ml-btn-secondary ml-btn-sm" onClick={() => onAction(row.id, "call")}>
+          <div className="flex justify-end gap-1.5">
+            {called ? (
+              <button
+                className="ml-btn-primary ml-btn-sm"
+                onClick={() => onAction(row.id, "serve")}
+              >
+                Served
+              </button>
+            ) : (
+              <button
+                className="ml-btn-primary ml-btn-sm"
+                onClick={() => onAction(row.id, "call")}
+              >
                 Call
+                <IconChevronRight size={14} />
               </button>
             )}
-            <button className="ml-btn-primary ml-btn-sm" onClick={() => onAction(row.id, "serve")}>
-              Serve
-            </button>
-            <button className="ml-btn-destructive ml-btn-sm" onClick={() => onAction(row.id, "skip")}>
+
+            {/* Secondary, and only where it makes sense: serving somebody who
+                was never called is a correction, not the normal path. */}
+            {!called && (
+              <button
+                className="ml-btn-secondary ml-btn-sm"
+                onClick={() => onAction(row.id, "serve")}
+              >
+                Served
+              </button>
+            )}
+
+            <button
+              className="ml-btn-tertiary ml-btn-sm text-ink-muted hover:text-danger"
+              onClick={() => onAction(row.id, "skip")}
+            >
               {called ? "No show" : "Left"}
             </button>
           </div>
@@ -56,16 +152,21 @@ export function QueueTable({ group, canManage, onAction }: Props) {
 
   return (
     <section className="ml-card mb-4 overflow-hidden">
-      <h2 className="border-b border-line px-4 py-3 font-semibold">
-        {group.service_name_en}
-        <span className="ml-2 font-normal text-ink-muted">
-          {group.waiting.length} waiting
-          {group.called.length > 0 && `, ${group.called.length} called`}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line px-4 py-3">
+        <h3 className="text-h3">{group.service_name_en}</h3>
+        <span className="flex items-center gap-1.5 text-small text-ink-muted">
+          <IconUser size={14} className="text-ink-subtle" />
+          <span className="tabular-nums">{group.waiting.length}</span> waiting
         </span>
-      </h2>
+        {group.called.length > 0 && (
+          <Chip tone="success">
+            {group.called.length} with a clinician
+          </Chip>
+        )}
+      </div>
 
       <div className="overflow-x-auto px-4 pb-3">
-        <table className="w-full min-w-[36rem] text-left">
+        <table className="w-full min-w-[38rem] text-left">
           <thead>
             <tr className="text-caption uppercase tracking-wide text-ink-subtle">
               <th className="py-2 pr-3 font-medium">Ticket</th>
@@ -73,10 +174,14 @@ export function QueueTable({ group, canManage, onAction }: Props) {
               <th className="py-2 pr-3 font-medium">Phone</th>
               <th className="py-2 pr-3 font-medium">Arrived</th>
               <th className="py-2 pr-3 font-medium">Waited</th>
-              <th />
+              <th>
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody>
+            {/* Called first, always. They are the ones something is happening
+                to, and they should not be hunted for in a list of eighteen. */}
             {group.called.map((row) => (
               <Row key={row.id} row={row} canManage={canManage} onAction={onAction} />
             ))}
@@ -88,4 +193,17 @@ export function QueueTable({ group, canManage, onAction }: Props) {
       </div>
     </section>
   )
+}
+
+/**
+ * "3405 min" is a number nobody can read at a glance. Past an hour this reads
+ * as hours and minutes, which is how a receptionist actually thinks about a
+ * wait.
+ */
+function formatWaited(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  if (hours < 24) return rest ? `${hours}h ${rest}m` : `${hours}h`
+  return `${Math.floor(hours / 24)}d ${hours % 24}h`
 }

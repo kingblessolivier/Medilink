@@ -180,3 +180,41 @@
 
   .ml-skeleton { @apply animate-pulse rounded bg-surface-sunken; }
 }
+
+/* ------------------------------------------------------------------- map */
+
+.maplibregl-ctrl-group {
+  border: 1px solid theme("colors.line") !important;
+  border-radius: theme("borderRadius.lg") !important;
+  box-shadow: theme("boxShadow.raised") !important;
+  overflow: hidden;
+}
+
+.maplibregl-ctrl-group button {
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  background-color: theme("colors.surface");
+  color: theme("colors.ink-muted");
+  border: 0;
+  transition: background-color 140ms, color 140ms;
+}
+
+.maplibregl-ctrl-group button + button {
+  border-top: 1px solid theme("colors.line") !important;
+}
+
+.maplibregl-ctrl-group button:hover {
+  background-color: theme("colors.surface-sunken");
+  color: theme("colors.ink");
+}
+
+.maplibregl-ctrl-group button:focus-visible {
+  box-shadow: theme("boxShadow.focus");
+  outline: none;
+}
+
+/* Required attribution, kept legible without competing with the pins. */
+.maplibregl-ctrl-attrib {
+  border-radius: theme("borderRadius.md");
+  font-size: theme("fontSize.caption[0]");
+}

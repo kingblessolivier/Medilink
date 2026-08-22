@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import { IconCalendar } from "../ui/icons"
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { api, ApiRequestError } from "../api/client"
@@ -96,7 +97,7 @@ export function Book() {
   if (!patient) {
     return (
       <div className="ml-page py-6">
-        <EmptyState
+        <EmptyState icon={<IconCalendar size={20} />}
           title={t("sign_in_to_book")}
           body={t("sign_in_to_book_body")}
           action={
@@ -223,7 +224,7 @@ export function Book() {
           {slots.isLoading && <Skeleton className="h-40 w-full rounded-xl" />}
 
           {slots.data && openDays.length === 0 && (
-            <EmptyState
+            <EmptyState icon={<IconCalendar size={20} />}
               title={t("no_slots")}
               body={
                 provider ? t("no_slots_provider_body") : t("no_slots_body")

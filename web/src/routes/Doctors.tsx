@@ -1,4 +1,5 @@
 import { useSearchParams } from "react-router-dom"
+import { IconStethoscope } from "../ui/icons"
 import { useI18n } from "../i18n"
 import { useProviders } from "../hooks/useProviders"
 import { useSpecialties } from "../hooks/useSpecialties"
@@ -116,9 +117,9 @@ export function Doctors() {
       </div>
 
       <div className="mb-3 mt-5 flex items-baseline justify-between">
-        <p className="ml-label">
+        <h2 className="text-h3">
           {query.data ? t("n_results", { n: query.data.count }) : " "}
-        </p>
+        </h2>
         {(specialty || language || search) && (
           <Button
             size="sm"
@@ -144,7 +145,7 @@ export function Doctors() {
       )}
 
       {query.data && results.length === 0 && (
-        <EmptyState
+        <EmptyState icon={<IconStethoscope size={20} />}
           title={t("no_doctors_found")}
           body={t("no_doctors_found_body")}
           action={

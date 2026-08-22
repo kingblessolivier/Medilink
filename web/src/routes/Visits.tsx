@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { IconCalendar } from "../ui/icons"
 import { Link } from "react-router-dom"
 import { api } from "../api/client"
 import { useI18n } from "../i18n"
@@ -81,7 +82,7 @@ export function Visits() {
       )}
 
       {upcoming.data?.length === 0 && (
-        <EmptyState
+        <EmptyState icon={<IconCalendar size={20} />}
           title={t("visits_none")}
           body={t("visits_none_body")}
           action={
@@ -119,7 +120,7 @@ export function Visits() {
         />
       )}
 
-      {past.data?.length === 0 && <EmptyState title={t("visits_none_past")} />}
+      {past.data?.length === 0 && <EmptyState icon={<IconCalendar size={20} />} title={t("visits_none_past")} />}
 
       {past.data?.map((appointment) => (
         <Card key={appointment.id} className="mb-2 flex justify-between p-4">

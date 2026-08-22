@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { IconCalendar } from "../ui/icons"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { api, type AppointmentAction, type StaffAppointment } from "../api/client"
 import { Chip, EmptyState, ErrorState, TableSkeleton } from "../ui"
@@ -137,7 +138,7 @@ export function WorkspaceAppointments({ canManage }: { canManage: boolean }) {
         )}
 
         {query.isSuccess && rows.length === 0 && (
-          <EmptyState
+          <EmptyState icon={<IconCalendar size={20} />}
             title={
               showCancelled
                 ? "Nothing cancelled on this date."

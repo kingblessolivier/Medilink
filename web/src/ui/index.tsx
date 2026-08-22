@@ -10,6 +10,7 @@
  * patient app has a 150 KB budget on a 3G connection.
  */
 
+import { IconAlert, IconInfo, IconSearch } from "./icons"
 import {
   createContext,
   useContext,
@@ -381,6 +382,19 @@ export function BarRow({
  * An empty state always offers a way out. "No results" with no action is a
  * dead end, and a patient looking for care cannot afford one.
  */
+/**
+ * Nothing to show, said properly.
+ *
+ * Every empty state carries an icon now, and the caller does not have to
+ * remember to pass one. A bare sentence centred in a 1160px white box is what
+ * an empty state looks like when nobody designed it - and empty is a state
+ * patients hit often, because a search with no results near them is a normal
+ * Tuesday, not an error.
+ *
+ * The content is constrained even though the card is not. A card that shrinks
+ * to its text breaks the grid it sits in; text that runs to 1160px is
+ * unreadable. Constraining the inner column fixes both.
+ */
 export function EmptyState({
   title,
   body,
@@ -394,10 +408,16 @@ export function EmptyState({
 }) {
   return (
     <div className="ml-card px-6 py-10 text-center">
-      {icon && <div className="mb-3 flex justify-center text-ink-subtle">{icon}</div>}
-      <p className="text-h3 font-semibold text-ink">{title}</p>
-      {body && <p className="mx-auto mt-1.5 max-w-prose text-body text-ink-muted">{body}</p>}
-      {action && <div className="mt-5 flex justify-center gap-2">{action}</div>}
+      <div className="mx-auto flex max-w-sm flex-col items-center">
+        <span className="ml-icon-plate h-11 w-11 bg-surface-sunken text-ink-subtle">
+          {icon ?? <IconSearch size={20} />}
+        </span>
+        <p className="mt-4 text-h3 font-semibold text-ink">{title}</p>
+        {body && <p className="mt-1.5 text-body text-ink-muted">{body}</p>}
+        {action && (
+          <div className="mt-5 flex flex-wrap justify-center gap-2">{action}</div>
+        )}
+      </div>
     </div>
   )
 }
@@ -405,6 +425,10 @@ export function EmptyState({
 /**
  * Errors are written for a patient, not a developer. The technical detail goes
  * to the console; the screen gets a sentence and a next step.
+ *
+ * The icon is not decoration. This box is tinted red, and colour alone must
+ * never be what tells somebody a thing went wrong - a rule the status chips
+ * have followed from the start, and this did not.
  */
 export function ErrorState({
   title,
@@ -418,15 +442,25 @@ export function ErrorState({
   return (
     <div
       role="alert"
-      className="rounded-xl border border-danger-border bg-danger-subtle p-4"
+      className="flex gap-3 rounded-xl border border-danger-border bg-danger-subtle p-4"
     >
-      <p className="text-body font-medium text-danger">{title}</p>
-      {body && <p className="mt-1 text-small text-ink-muted">{body}</p>}
-      {action && <div className="mt-3 flex gap-2">{action}</div>}
+      <IconAlert size={18} className="mt-0.5 shrink-0 text-danger" />
+      <div className="min-w-0 flex-1">
+        <p className="text-body font-medium text-danger">{title}</p>
+        {body && <p className="mt-1 text-small text-ink-muted">{body}</p>}
+        {action && <div className="mt-3 flex flex-wrap gap-2">{action}</div>}
+      </div>
     </div>
   )
 }
 
+/**
+ * A standing remark about the screen - not an error, and not dismissible.
+ *
+ * Was a bare tinted paragraph. Same reasoning as ErrorState: the tint is the
+ * only thing distinguishing an info notice from a warning, which fails
+ * anybody who cannot separate the two hues.
+ */
 export function Notice({
   tone = "info",
   children,
@@ -434,17 +468,19 @@ export function Notice({
   tone?: "info" | "warning"
   children: ReactNode
 }) {
+  const Glyph = tone === "info" ? IconInfo : IconAlert
   return (
-    <p
+    <div
       className={cx(
-        "rounded-lg border px-3 py-2 text-small",
+        "flex gap-2.5 rounded-lg border px-3 py-2.5 text-small",
         tone === "info"
           ? "border-info-border bg-info-subtle text-info"
           : "border-warning-border bg-warning-subtle text-warning",
       )}
     >
-      {children}
-    </p>
+      <Glyph size={16} className="mt-0.5 shrink-0" />
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
   )
 }
 

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom"
+import { IconBell } from "../ui/icons"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { api } from "../api/client"
 import { useI18n } from "../i18n"
@@ -41,7 +42,7 @@ export function Notifications() {
     return (
       <div className="ml-page py-6">
         <h1 className="mb-4 text-h1">{t("notifications_title")}</h1>
-        <EmptyState
+        <EmptyState icon={<IconBell size={20} />}
           title={t("sign_in_to_track")}
           action={
             <Link to="/sign-in" className="ml-btn-primary ml-btn-sm">
@@ -125,7 +126,7 @@ export function Notifications() {
         {history.isLoading && <ListSkeleton rows={3} />}
 
         {history.data?.count === 0 && (
-          <EmptyState title={t("no_messages")} body={t("no_messages_body")} />
+          <EmptyState icon={<IconBell size={20} />} title={t("no_messages")} body={t("no_messages_body")} />
         )}
 
         <ul className="space-y-2">
