@@ -60,7 +60,7 @@ export function Notifications() {
 
       {/* --------------------------------------------------- preferences */}
       <section className="mt-6">
-        <h2 className="ml-label mb-3">{t("which_messages")}</h2>
+        <h2 className="text-h3 mb-3">{t("which_messages")}</h2>
 
         {preferences.isLoading && <ListSkeleton rows={1} />}
 
@@ -121,7 +121,7 @@ export function Notifications() {
 
       {/* ------------------------------------------------------- history */}
       <section className="ml-section">
-        <h2 className="ml-label mb-3">{t("messages_sent")}</h2>
+        <h2 className="text-h3 mb-3">{t("messages_sent")}</h2>
 
         {history.isLoading && <ListSkeleton rows={3} />}
 

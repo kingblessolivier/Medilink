@@ -86,7 +86,7 @@ export function FacilityDetail() {
           <TabPanel value="overview">
             <div className="grid gap-6 lg:grid-cols-2">
               <section>
-                <h2 className="ml-label mb-2">{t("current_status")}</h2>
+                <h2 className="text-h3 mb-2">{t("current_status")}</h2>
                 {/* Per-service status is the answer to "how busy is the thing
                     I need", which is what a patient actually asks. */}
                 <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
@@ -105,11 +105,10 @@ export function FacilityDetail() {
               </section>
 
               <section>
-                <h2 className="ml-label mb-2">{t("facility_information")}</h2>
+                <h2 className="text-h3 mb-2">{t("facility_information")}</h2>
                 <dl className="divide-y divide-line rounded-xl border border-line bg-surface">
                   <Row label={t("compare_district")}>
-                    {data.sector ? `${data.sector}, ` : ""}
-                    {data.district}
+                    {placeLabel(data.sector, data.district)}
                   </Row>
                   {data.address && <Row label={t("address")}>{data.address}</Row>}
                   {data.phone && (
@@ -255,8 +254,7 @@ function Header({ facility }: { facility: Detail }) {
         <div className="min-w-0">
           <h1 className="text-h1">{facility.name}</h1>
           <p className="mt-1 text-body text-ink-muted">
-            {facility.sector ? `${facility.sector}, ` : ""}
-            {facility.district}
+            {placeLabel(facility.sector, facility.district)}
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             <Chip tone={facility.is_open ? "success" : "neutral"}>
@@ -367,4 +365,16 @@ function ServiceCoverageChip({
     value === "full" ? "" : value === "partial" ? " (partial)" : value === "not_covered" ? " (no)" : " (?)"
 
   return <Chip tone={tone}>{name}{suffix}</Chip>
+}
+
+/**
+ * "Nyarugenge, Nyarugenge" is what you get when a sector and its district
+ * share a name, which several do in Kigali. A place named twice reads as a
+ * data error even when the data is correct.
+ */
+function placeLabel(sector: string | undefined, district: string): string {
+  if (!sector || sector.trim().toLowerCase() === district.trim().toLowerCase()) {
+    return district
+  }
+  return `${sector}, ${district}`
 }

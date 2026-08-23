@@ -94,13 +94,13 @@ export function DoctorProfile() {
 
       {data.bio_en && (
         <section className="ml-section">
-          <h2 className="ml-label mb-2">{t("about")}</h2>
+          <h2 className="text-h3 mb-2">{t("about")}</h2>
           <p className="max-w-prose text-body text-ink-muted">{data.bio_en}</p>
         </section>
       )}
 
       <section className="ml-section">
-        <h2 className="ml-label mb-3">{t("practises_at")}</h2>
+        <h2 className="text-h3 mb-3">{t("practises_at")}</h2>
 
         {data.placements.length === 0 ? (
           <p className="text-body text-ink-muted">{t("no_placements")}</p>

@@ -91,7 +91,7 @@ export function ServiceDetail() {
       {/* ------------------------------------------------------ facilities */}
       <section className="ml-section">
         <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="ml-label">{t("where_to_get_it")}</h2>
+          <h2 className="text-h3">{t("where_to_get_it")}</h2>
           {results.length > 3 && (
             <Link
               to={`/search?service=${code}`}
@@ -157,7 +157,7 @@ export function ServiceDetail() {
       {/* --------------------------------------------------------- doctors */}
       {(doctors.data?.count ?? 0) > 0 && (
         <section className="ml-section">
-          <h2 className="ml-label mb-3">{t("who_provides_it")}</h2>
+          <h2 className="text-h3 mb-3">{t("who_provides_it")}</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {doctors.data?.results.map((doctor) => (
               <DoctorCard key={doctor.slug} doctor={doctor} />
@@ -168,7 +168,7 @@ export function ServiceDetail() {
 
       {/* ------------------------------------------------------- insurance */}
       <section className="ml-section">
-        <h2 className="ml-label mb-2">{t("tab_insurance")}</h2>
+        <h2 className="text-h3 mb-2">{t("tab_insurance")}</h2>
         <Notice tone="info">{t("service_insurance_note")}</Notice>
       </section>
     </div>

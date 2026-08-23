@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
+import { IconUser } from "../ui/icons"
 import { useMutation } from "@tanstack/react-query"
 import { api } from "../api/client"
 import { useI18n, LANGUAGES, LANGUAGE_LABELS, type Language } from "../i18n"
@@ -48,10 +49,25 @@ export function Profile() {
     <div className="mx-auto max-w-md px-4 pb-24 pt-4">
       <h1 className="mb-4 text-h1">{t("profile_title")}</h1>
 
+      {/* Who you are, before what you can change. The phone is the identity
+          in this product - it is what USSD, WhatsApp and every SMS key on -
+          so it gets stated rather than tucked into a line of body text. */}
+      <div className="ml-card mb-4 flex items-center gap-3 p-4">
+        <span className="ml-icon-plate h-11 w-11 bg-primary-subtle text-primary">
+          <IconUser size={20} />
+        </span>
+        <div className="min-w-0">
+          <p className="truncate text-body font-medium">
+            {patient.full_name || t("profile_no_name")}
+          </p>
+          <p className="truncate text-small tabular-nums text-ink-muted">
+            {patient.phone}
+          </p>
+        </div>
+      </div>
+
+      <h2 className="text-h3 mb-2">{t("profile_details")}</h2>
       <div className="ml-card space-y-4 p-4">
-        <p className="text-small text-ink-muted">
-          {t("auth_phone")}: <span className="font-medium">{patient.phone}</span>
-        </p>
 
         <label className="block">
           <span className="mb-1 block text-small text-ink-muted">
@@ -105,7 +121,8 @@ export function Profile() {
       </div>
 
       {/* Opt-in, and the only thing that makes "leave home by" possible. */}
-      <div className="ml-card mt-4 p-4">
+      <h2 className="text-h3 mb-2 mt-6">{t("profile_home_title")}</h2>
+      <div className="ml-card p-4">
         <p className="text-small font-medium">{t("profile_home_title")}</p>
         <p className="mt-1 text-small text-ink-muted">{t("profile_home_why")}</p>
         <p className="mt-2 text-small">
@@ -159,7 +176,13 @@ export function Profile() {
         </div>
       )}
 
-      <button className="ml-btn-secondary mt-6 w-full" onClick={signOut}>
+      {/* Not full-width secondary: that is the same weight as "use my current
+          location" directly above it, and leaving is not a neighbouring
+          choice to setting a preference. */}
+      <button
+        className="ml-btn-tertiary mt-8 text-ink-muted hover:text-danger"
+        onClick={signOut}
+      >
         {t("auth_sign_out")}
       </button>
     </div>
