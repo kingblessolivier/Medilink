@@ -12,7 +12,7 @@ The controls under test, in order of how much damage they prevent:
    was checked.
 """
 
-from datetime import date, time, timedelta
+from datetime import time, timedelta
 
 import pytest
 from django.contrib.auth.models import User

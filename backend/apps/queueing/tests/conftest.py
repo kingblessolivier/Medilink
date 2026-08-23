@@ -7,7 +7,8 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from apps.facilities.models import Facility, FacilityService, OpeningHours, ServiceType
-from apps.queueing.models import QueueEntry, ServiceTimeStat
+from apps.queueing.models import QueueEntry
+from apps.queueing.testing import make_service_time_stat
 from apps.staff.models import StaffMember
 
 KCC_LAT = -1.9536
@@ -130,13 +131,16 @@ def make_entry(db):
 
 @pytest.fixture
 def make_stat(db):
+    """A service-time stat the code under test will actually find.
+
+    Thin wrapper over `apps.queueing.testing.make_service_time_stat` so queue
+    tests can ask for one without importing it. The hour-boundary reasoning
+    lives there, next to the helper the other four apps use.
+    """
+
     def _make(facility, service_type, *, median=6.0, samples=100, hour=None):
-        return ServiceTimeStat.objects.create(
-            facility=facility,
-            service_type=service_type,
-            hour_of_day=hour if hour is not None else timezone.localtime().hour,
-            median_minutes=median,
-            sample_size=samples,
+        return make_service_time_stat(
+            facility, service_type, median=median, samples=samples, hour=hour
         )
 
     return _make

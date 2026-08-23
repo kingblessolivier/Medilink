@@ -103,7 +103,7 @@ def appointments(request):
     try:
         day = date.fromisoformat(raw) if raw else timezone.localdate()
     except ValueError:
-        raise ValidationError({"date": "Expected YYYY-MM-DD."})
+        raise ValidationError({"date": "Expected YYYY-MM-DD."}) from None
 
     start = timezone.make_aware(datetime.combine(day, time.min))
     queryset = (
@@ -187,7 +187,7 @@ def set_appointment_status(request, pk: int):
     except Appointment.DoesNotExist:
         # 404, not 403: a facility should not be able to probe for the
         # existence of another facility's appointment ids.
-        raise NotFound("No such appointment at this facility.")
+        raise NotFound("No such appointment at this facility.") from None
 
     if appointment.status == Appointment.Status.CANCELLED:
         raise ValidationError(
@@ -205,7 +205,7 @@ def set_appointment_status(request, pk: int):
         # whose patient has since rebooked the identical slot: two active rows
         # for the same person at the same time is exactly what that constraint
         # exists to prevent, so say so rather than 500.
-        raise SlotConflict()
+        raise SlotConflict() from None
 
     return Response(
         {
@@ -253,7 +253,7 @@ def reports(request):
     try:
         days = int(request.query_params.get("days", 30))
     except ValueError:
-        raise ValidationError({"days": "Expected a number."})
+        raise ValidationError({"days": "Expected a number."}) from None
     if not 1 <= days <= 90:
         raise ValidationError({"days": "Expected 1 to 90."})
 

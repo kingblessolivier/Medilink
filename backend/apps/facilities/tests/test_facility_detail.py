@@ -16,8 +16,9 @@ from rest_framework.test import APIClient
 
 from apps.facilities.models import Facility, FacilityService, OpeningHours, ServiceType
 from apps.insurance.models import FacilityServiceInsurer, Insurer
-from apps.queueing.models import QueueEntry, ServiceTimeStat
+from apps.queueing.models import QueueEntry
 from apps.queueing.services import facility_service_waits
+from apps.queueing.testing import make_service_time_stat
 
 KCC_LAT, KCC_LNG = -1.9536, 30.0606
 
@@ -83,15 +84,8 @@ def services(body):
 def test_each_service_carries_its_own_wait(facility, general, dental):
     """A patient asks "how busy is the thing I need", not "how busy is this
     hospital"."""
-    hour = timezone.localtime().hour
-    ServiceTimeStat.objects.create(
-        facility=facility, service_type=general, hour_of_day=hour,
-        median_minutes=8.0, sample_size=120,
-    )
-    ServiceTimeStat.objects.create(
-        facility=facility, service_type=dental, hour_of_day=hour,
-        median_minutes=20.0, sample_size=120,
-    )
+    make_service_time_stat(facility, general, median=8.0)
+    make_service_time_stat(facility, dental, median=20.0)
     for index in range(3):
         QueueEntry.objects.create(
             facility=facility, service_type=general,
@@ -119,10 +113,8 @@ def test_a_service_with_no_statistics_is_listed_not_dropped(facility, general):
 
 @pytest.mark.django_db
 def test_the_sample_gate_applies_per_service(facility, general):
-    ServiceTimeStat.objects.create(
-        facility=facility, service_type=general,
-        hour_of_day=timezone.localtime().hour,
-        median_minutes=8.0, sample_size=19,  # one below the gate
+    make_service_time_stat(
+        facility, general, median=8.0, samples=19  # one below the gate
     )
     QueueEntry.objects.create(
         facility=facility, service_type=general, walk_in_name="G", ticket_code="G-1"

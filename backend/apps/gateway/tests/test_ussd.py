@@ -17,7 +17,8 @@ from django.utils import timezone
 from apps.facilities.models import Facility, FacilityService, OpeningHours, ServiceType
 from apps.gateway.ussd import MAX_USSD_CHARS, UssdRouter
 from apps.patients.models import Patient
-from apps.queueing.models import QueueEntry, ServiceTimeStat
+from apps.queueing.models import QueueEntry
+from apps.queueing.testing import make_service_time_stat
 from apps.scheduling.models import ScheduleTemplate
 
 USSD = "/api/v1/gateway/ussd"
@@ -243,12 +244,11 @@ def test_my_queue_never_invents_a_wait(client, facility, general, patient):
 def test_my_queue_shows_minutes_once_statistics_exist(
     client, facility, general, patient
 ):
-    ServiceTimeStat.objects.create(
-        facility=facility,
-        service_type=general,
-        hour_of_day=timezone.localtime().hour,
-        median_minutes=9.0,
-        sample_size=120,
+    make_service_time_stat(
+        facility,
+        general,
+        median=9.0,
+        samples=120,
     )
     QueueEntry.objects.create(
         facility=facility,

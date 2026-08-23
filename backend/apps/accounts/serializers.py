@@ -42,7 +42,7 @@ class RegisterSerializer(serializers.Serializer):
         try:
             return normalise_phone(value)
         except Exception:  # noqa: BLE001
-            raise serializers.ValidationError("Enter a valid Rwandan phone number.")
+            raise serializers.ValidationError("Enter a valid Rwandan phone number.") from None
 
     def validate_password(self, value):
         # A deliberately light rule. Long-and-memorable beats short-and-clever,

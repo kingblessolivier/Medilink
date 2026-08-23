@@ -17,7 +17,8 @@ from django.utils import timezone
 from apps.facilities.models import Facility, FacilityService, OpeningHours, ServiceType
 from apps.gateway import whatsapp as wa
 from apps.patients.models import Patient
-from apps.queueing.models import QueueEntry, ServiceTimeStat
+from apps.queueing.models import QueueEntry
+from apps.queueing.testing import make_service_time_stat
 
 HOOK = "/api/v1/gateway/whatsapp"
 PHONE = "+250788111222"
@@ -318,12 +319,11 @@ def test_facility_list_omits_unknown_wait_times(facility):
 
 @pytest.mark.django_db
 def test_facility_list_shows_a_known_wait(facility, general):
-    ServiceTimeStat.objects.create(
-        facility=facility,
-        service_type=general,
-        hour_of_day=timezone.localtime().hour,
-        median_minutes=7.0,
-        sample_size=120,
+    make_service_time_stat(
+        facility,
+        general,
+        median=7.0,
+        samples=120,
     )
     QueueEntry.objects.create(
         facility=facility, service_type=general, walk_in_name="A", ticket_code="G-1"
