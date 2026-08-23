@@ -55,10 +55,15 @@ Also start in week 1, because they take months: **USSD shortcode application**,
 - [x] Nearby search returns correct distances (asserted against known pairs)
 - [x] `EXPLAIN ANALYZE` shows an Index Scan, not a Seq Scan - fixed
       2026-08-23; it was a Seq Scan until then. See docs/04.
-- [ ] Insurance filter works for Mutuelle, RSSB and MMI
+- [x] Insurance filter works for Mutuelle, RSSB and MMI - verified against
+      the live API. Note the filter TIERS rather than hides: a facility that
+      does not accept your cover still appears, ranked below those that do,
+      because "no results" helps nobody who is unwell.
 - [ ] Opening hours correct, including lunch breaks
 - [x] All four `wait.status` values render (all will be `not_reported` here)
-- [ ] Works offline with cached results
+- [x] Works offline with cached results - verified by dropping the
+      connection with results on screen: all ten cards survive, the banner
+      says the connection is gone, and the results carry their own age.
 - [ ] Loads in under 3 s on a real 3G connection on a real low-end Android phone
 - [ ] Ten real patients have used it and been interviewed
 
