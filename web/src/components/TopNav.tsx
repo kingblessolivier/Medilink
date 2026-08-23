@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Link, NavLink } from "react-router-dom"
 import { useI18n } from "../i18n"
 import { LanguageToggle } from "./LanguageToggle"
@@ -56,11 +56,34 @@ export function TopNav({
 }) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
+  const barRef = useRef<HTMLElement>(null)
+
+  // The dashboard sidebar sticks directly beneath this bar, and the bar is
+  // not a fixed height: the controls inside it are 44px on a phone and 36px
+  // from `sm` up, so it is 69px on one and 61px on the other. A hard-coded
+  // offset is wrong at one breakpoint - it was overlapping by a pixel, which
+  // slid a hairline of content under the border.
+  //
+  // Published as a CSS variable so the sidebar can just use it, and remeasured
+  // on resize because crossing the breakpoint changes it.
+  useEffect(() => {
+    const bar = barRef.current
+    if (!bar || typeof ResizeObserver === "undefined") return
+    const publish = () =>
+      document.documentElement.style.setProperty(
+        "--topnav-h",
+        `${bar.getBoundingClientRect().height}px`,
+      )
+    publish()
+    const observer = new ResizeObserver(publish)
+    observer.observe(bar)
+    return () => observer.disconnect()
+  }, [])
   const items = itemsFor(session, t)
   const isPatientSurface = !session || session.kind === "patient"
 
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80">
+    <header ref={barRef} className="sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80">
       <div className="ml-shell flex items-center gap-4 py-3">
         {/* The home link was 68x16 - the wordmark's own text box. It is on
             every screen and it is how you get back, so it gets a real target
