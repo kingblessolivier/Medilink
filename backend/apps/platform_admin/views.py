@@ -18,7 +18,6 @@ from rest_framework.response import Response
 from apps.facilities.models import Facility
 from apps.providers.models import Provider
 
-from .permissions import IsPlatformAdmin
 from .oversight import (
     access_log,
     account_summary,
@@ -28,6 +27,7 @@ from .oversight import (
     provider_directory,
     staff_directory,
 )
+from .permissions import IsPlatformAdmin
 from .serializers import (
     AccessLogSerializer,
     AdminFacilityListSerializer,
@@ -51,7 +51,7 @@ def _window(request, default: int = 30, maximum: int = 365) -> int:
     try:
         days = int(request.query_params.get("days", default))
     except ValueError:
-        raise ValidationError({"days": "Expected a number."})
+        raise ValidationError({"days": "Expected a number."}) from None
     if not 1 <= days <= maximum:
         raise ValidationError({"days": f"Expected 1 to {maximum}."})
     return days
@@ -92,7 +92,7 @@ def verify_facility(request, pk: int):
     try:
         facility = Facility.objects.get(pk=pk)
     except Facility.DoesNotExist:
-        raise NotFound("No such facility.")
+        raise NotFound("No such facility.") from None
 
     if facility.verified_at is not None:
         # Re-verifying would overwrite who checked it and when, losing the
@@ -125,7 +125,7 @@ def verify_provider(request, pk: int):
     try:
         provider = Provider.objects.get(pk=pk)
     except Provider.DoesNotExist:
-        raise NotFound("No such provider.")
+        raise NotFound("No such provider.") from None
 
     if provider.verified_at is not None:
         raise ValidationError({"detail": "This provider is already verified."})

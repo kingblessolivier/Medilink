@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pytest
 from django.utils import timezone
 
@@ -330,3 +332,39 @@ def test_wait_snapshot_is_not_n_plus_one(
 
     with django_assert_max_num_queries(4):
         wait_snapshot(facilities, service_code="general_consultation")
+
+
+# --------------------------------------------------------------------------
+# The hour boundary
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_a_wait_survives_the_clock_rolling_into_the_next_hour(
+    facility, general, make_entry, make_stat
+):
+    """Fourteen tests failed at exactly midnight and passed four minutes later.
+
+    ServiceTimeStat is keyed per hour of day. A test that wrote its stat at
+    23:59:59 and asserted at 00:00:00 wrote hour 23, looked up hour 0, found
+    nothing, and reported the wait as unavailable - so the suite was a coin
+    flip for one second in every hour, and a guaranteed failure for anybody
+    running it across midnight.
+
+    This pins the fix rather than the symptom: the snapshot is taken an hour
+    after the stat was written, and still finds one. `wait_snapshot` already
+    accepts `now` for exactly this kind of question, so no clock is patched.
+    """
+    facility.reports_queue = True
+    facility.save()
+    make_stat(facility, general, median=8.0, samples=120)
+    for offset in (30, 20, 10):
+        make_entry(facility, general, minutes_ago=offset)
+
+    an_hour_later = timezone.localtime() + timedelta(hours=1)
+    snapshot = wait_snapshot(
+        [facility], service_code="general_consultation", now=an_hour_later
+    )
+
+    assert snapshot[facility.id]["status"] == STATUS_AVAILABLE
+    assert snapshot[facility.id]["minutes"] == 24

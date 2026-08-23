@@ -21,7 +21,8 @@ from apps.notifications.tasks import (
     short_name,
 )
 from apps.patients.models import Patient
-from apps.queueing.models import QueueEntry, ServiceTimeStat
+from apps.queueing.models import QueueEntry
+from apps.queueing.testing import make_service_time_stat
 from apps.queueing.travel import leave_by, travel_minutes
 from apps.scheduling.models import Appointment
 
@@ -166,12 +167,11 @@ def test_the_same_notification_is_never_sent_twice(facility, general, patient):
 def test_running_the_scheduler_twice_sends_one_message(
     facility, general, patient
 ):
-    ServiceTimeStat.objects.create(
-        facility=facility,
-        service_type=general,
-        hour_of_day=timezone.localtime().hour,
-        median_minutes=6.0,
-        sample_size=120,
+    make_service_time_stat(
+        facility,
+        general,
+        median=6.0,
+        samples=120,
     )
     QueueEntry.objects.create(
         facility=facility, service_type=general, patient=patient, ticket_code="G-001"
@@ -194,12 +194,8 @@ def test_no_leave_now_message_without_reliable_statistics(
 ):
     """Below the sample gate we say nothing rather than guess a departure
     time somebody would act on."""
-    ServiceTimeStat.objects.create(
-        facility=facility,
-        service_type=general,
-        hour_of_day=timezone.localtime().hour,
-        median_minutes=6.0,
-        sample_size=19,  # one below the gate
+    make_service_time_stat(
+        facility, general, samples=19  # one below the gate
     )
     QueueEntry.objects.create(
         facility=facility, service_type=general, patient=patient, ticket_code="G-001"
@@ -212,12 +208,11 @@ def test_no_leave_now_message_without_reliable_statistics(
 @pytest.mark.django_db
 def test_no_leave_now_message_without_a_home_location(facility, general, db):
     patient = Patient.objects.create(phone="+250788999000")  # no home_location
-    ServiceTimeStat.objects.create(
-        facility=facility,
-        service_type=general,
-        hour_of_day=timezone.localtime().hour,
-        median_minutes=6.0,
-        sample_size=120,
+    make_service_time_stat(
+        facility,
+        general,
+        median=6.0,
+        samples=120,
     )
     QueueEntry.objects.create(
         facility=facility, service_type=general, patient=patient, ticket_code="G-001"
