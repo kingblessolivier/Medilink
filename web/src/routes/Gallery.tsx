@@ -127,7 +127,7 @@ export function Gallery() {
           )}
         </Field>
         <label className="flex min-h-touch items-center gap-2">
-          <input type="checkbox" className="h-6 w-6 accent-primary" />
+          <input type="checkbox" className="ml-checkbox" />
           <span className="text-body">Checkbox in a 44px label row</span>
         </label>
       </Section>

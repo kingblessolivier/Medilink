@@ -134,7 +134,7 @@ export function Register() {
           <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-line bg-surface-sunken/50 p-3">
             <input
               type="checkbox"
-              className="mt-0.5 h-5 w-5 shrink-0 accent-primary"
+              className="ml-checkbox mt-0.5"
               checked={consent}
               onChange={(e) => setConsent(e.target.checked)}
             />

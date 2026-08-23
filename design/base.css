@@ -127,6 +127,16 @@
            px-3 text-body text-ink transition-colors
            hover:border-ink-subtle focus:border-primary;
   }
+  /* One checkbox. There were four sizes across the app - h-4, h-5, h-6 and
+     one with none at all - which is the kind of drift nobody notices on a
+     single screen and everybody feels across a product.
+
+     20px is the box; the 44px target comes from the label row it sits in,
+     which is why these are always wrapped in a `min-h-touch` label. */
+  .ml-checkbox {
+    @apply h-5 w-5 shrink-0 accent-primary;
+  }
+
   .ml-field-invalid { @apply border-danger hover:border-danger; }
 
   /* ----------------------------------------------------------------- status */

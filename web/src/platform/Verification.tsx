@@ -1,5 +1,9 @@
-import { useState } from "react"
-import { IconShieldCheck } from "../ui/icons"
+import { useState, type ReactNode } from "react"
+import {
+  IconHospital,
+  IconShieldCheck,
+  IconStethoscope,
+} from "../ui/icons"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { api, type PendingFacility, type PendingProvider } from "../api/client"
 import { Chip, EmptyState, ErrorState, Notice, Skeleton } from "../ui"
@@ -37,7 +41,7 @@ export function Verification() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
+    <div className="mx-auto w-full max-w-5xl">
       <h1 className="text-h2">Verification</h1>
       <p className="mt-1 text-small text-ink-muted">
         Until a facility is verified, patients cannot find it. Oldest first.
@@ -139,6 +143,7 @@ function FacilityRow({
       title={facility.name}
       subtitle={`${facility.district} · ${humanise(facility.level)} · ${humanise(facility.ownership)}`}
       detail={facility.phone || undefined}
+      icon={<IconHospital size={18} />}
       placeholder="What did you check? e.g. Licence 2026/114 sighted; coordinates captured on site."
       pending={verify.isPending}
       error={verify.isError ? (verify.error as Error).message : null}
@@ -167,6 +172,7 @@ function ProviderRow({
           ? provider.specialties.join(" · ")
           : "No specialty recorded"
       }
+      icon={<IconStethoscope size={18} />}
       placeholder="What did you check? e.g. RMDC registration 4471 confirmed against the register."
       pending={verify.isPending}
       error={verify.isError ? (verify.error as Error).message : null}
@@ -175,6 +181,18 @@ function ProviderRow({
   )
 }
 
+/**
+ * One item awaiting verification.
+ *
+ * Collapsed until you open it. Twelve doctors used to mean twelve textareas
+ * open at once - a 3600px page of mostly empty input boxes, when the actual
+ * workflow is: scan the list, pick one, check the register, write what you
+ * checked, approve. Only one is ever being worked on.
+ *
+ * Opening is what commits you to reading it, which is the point: this is the
+ * step that puts a facility in front of patients, and a form that is already
+ * open invites a rubber stamp.
+ */
 function Row({
   title,
   subtitle,
@@ -182,6 +200,7 @@ function Row({
   placeholder,
   pending,
   error,
+  icon,
   onVerify,
 }: {
   title: string
@@ -190,54 +209,79 @@ function Row({
   placeholder: string
   pending: boolean
   error: string | null
+  icon: ReactNode
   onVerify: (note: string) => void
 }) {
+  const [open, setOpen] = useState(false)
   const [note, setNote] = useState("")
   const ready = note.trim().length > 0
 
   return (
-    <li className="rounded-lg border border-line bg-surface p-4">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <span className="text-body font-medium">{title}</span>
-        <Chip tone="neutral">Not yet verified</Chip>
+    <li className="ml-card overflow-hidden">
+      <div className="flex items-start gap-3 p-4">
+        <span className="ml-icon-plate shrink-0 bg-surface-sunken text-ink-muted">
+          {icon}
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-body font-medium">{title}</p>
+          <p className="mt-0.5 truncate text-small text-ink-muted">{subtitle}</p>
+          {detail && (
+            <p className="mt-0.5 truncate text-small tabular-nums text-ink-muted">
+              {detail}
+            </p>
+          )}
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <Chip tone="unknown">Not yet verified</Chip>
+          <button
+            className="ml-btn-secondary ml-btn-sm"
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? "Cancel" : "Review"}
+          </button>
+        </div>
       </div>
-      <p className="mt-0.5 text-small text-ink-muted">{subtitle}</p>
-      {detail && (
-        <p className="mt-0.5 text-small tabular-nums text-ink-muted">{detail}</p>
+
+      {open && (
+        <div className="border-t border-line bg-surface-sunken/40 p-4">
+          <label className="block">
+            <span className="ml-label block">Verification note</span>
+            <textarea
+              className="ml-field mt-1.5 min-h-[5rem]"
+              placeholder={placeholder}
+              value={note}
+              autoFocus
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </label>
+
+          {error && (
+            <p className="mt-2 text-small text-danger" role="alert">
+              {error}
+            </p>
+          )}
+
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <button
+              className="ml-btn-primary ml-btn-sm"
+              // Disabled until a note exists: the note IS the verification,
+              // and a one-click approve would make this a rubber stamp.
+              disabled={!ready || pending}
+              onClick={() => onVerify(note.trim())}
+            >
+              {pending ? "Verifying..." : "Verify"}
+            </button>
+            {!ready && (
+              <span className="text-caption text-ink-subtle">
+                Write what you checked to enable this.
+              </span>
+            )}
+          </div>
+        </div>
       )}
-
-      <label className="mt-3 block">
-        <span className="ml-label block">Verification note</span>
-        <textarea
-          className="ml-field mt-1 min-h-[4.5rem]"
-          placeholder={placeholder}
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-        />
-      </label>
-
-      {error && (
-        <p className="mt-2 text-small text-danger" role="alert">
-          {error}
-        </p>
-      )}
-
-      <div className="mt-3 flex items-center gap-3">
-        <button
-          className="ml-btn-primary ml-btn-sm"
-          // Disabled until a note exists: the note IS the verification, and a
-          // one-click approve would make this a rubber stamp.
-          disabled={!ready || pending}
-          onClick={() => onVerify(note.trim())}
-        >
-          {pending ? "Verifying..." : "Verify"}
-        </button>
-        {!ready && (
-          <span className="text-caption text-ink-subtle">
-            Write what you checked to enable this.
-          </span>
-        )}
-      </div>
     </li>
   )
 }

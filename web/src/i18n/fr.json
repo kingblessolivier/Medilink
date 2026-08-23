@@ -326,5 +326,7 @@
   "tab_facilities": "Soins",
   "tab_visits": "Visites",
   "tab_profile": "Profil",
-  "cover_none": "Aucun assureur - tout afficher"
+  "cover_none": "Aucun assureur - tout afficher",
+  "people_ahead": "{n} personnes avant vous",
+  "you_are_next": "Vous etes le prochain"
 }

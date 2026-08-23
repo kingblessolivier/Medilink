@@ -92,7 +92,7 @@ export function CheckInForm({ services, onCheckIn }: Props) {
       <label className="mt-3 flex items-center gap-2 text-small">
         <input
           type="checkbox"
-          className="h-5 w-5"
+          className="ml-checkbox"
           checked={walkIn}
           onChange={(e) => {
             setWalkIn(e.target.checked)
