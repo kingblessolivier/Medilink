@@ -332,5 +332,6 @@
   "profile_details": "Amakuru yawe",
   "profile_no_name": "Ntacyo wanditse",
   "book_title": "Gutegura igihe",
-  "nav_sections": "Ibice"
+  "nav_sections": "Ibice",
+  "cached_results": "Ibi byabitswe {ago}. Bishobora kuba byarahindutse."
 }

@@ -14,27 +14,63 @@ import type { SessionKind } from "./api/types"
 // -------------------------------------------------------------- patient
 import { Home } from "./routes/Home"
 import { FindCare } from "./routes/FindCare"
-import { CareGuide } from "./routes/CareGuide"
-import { Compare } from "./routes/Compare"
 import { Doctors } from "./routes/Doctors"
-import { DoctorProfile } from "./routes/DoctorProfile"
-import { ServiceDetail } from "./routes/ServiceDetail"
-import { AppointmentDetail } from "./routes/AppointmentDetail"
-import { QueueTracking } from "./routes/QueueTracking"
-import { Notifications } from "./routes/Notifications"
-import { FacilityDetail } from "./routes/FacilityDetail"
-import { Book } from "./routes/Book"
-import { Visits } from "./routes/Visits"
-import { Profile } from "./routes/Profile"
-import { SignIn } from "./routes/SignIn"
-import { Register } from "./routes/Register"
-import { Privacy } from "./routes/Privacy"
 
 
 import { OfflineBanner } from "./components/OfflineBanner"
 import { BottomNav } from "./components/BottomNav"
 import { TopNav, homeFor } from "./components/TopNav"
 import { Notice } from "./ui"
+
+
+// Split from the cold load.
+//
+// Home, FindCare and Doctors are where a first-time visitor lands; everything
+// below is a tap away. A tap can afford a chunk fetch - it cannot afford
+// being parsed on a cheap phone before the first screen paints. Measured on
+// 3G with a 4x CPU throttle, which is roughly a low-end Android.
+const CareGuide = lazy(() =>
+  import("./routes/CareGuide").then((m) => ({ default: m.CareGuide })),
+)
+const Compare = lazy(() =>
+  import("./routes/Compare").then((m) => ({ default: m.Compare })),
+)
+const DoctorProfile = lazy(() =>
+  import("./routes/DoctorProfile").then((m) => ({ default: m.DoctorProfile })),
+)
+const ServiceDetail = lazy(() =>
+  import("./routes/ServiceDetail").then((m) => ({ default: m.ServiceDetail })),
+)
+const AppointmentDetail = lazy(() =>
+  import("./routes/AppointmentDetail").then((m) => ({ default: m.AppointmentDetail })),
+)
+const QueueTracking = lazy(() =>
+  import("./routes/QueueTracking").then((m) => ({ default: m.QueueTracking })),
+)
+const Notifications = lazy(() =>
+  import("./routes/Notifications").then((m) => ({ default: m.Notifications })),
+)
+const FacilityDetail = lazy(() =>
+  import("./routes/FacilityDetail").then((m) => ({ default: m.FacilityDetail })),
+)
+const Book = lazy(() =>
+  import("./routes/Book").then((m) => ({ default: m.Book })),
+)
+const Visits = lazy(() =>
+  import("./routes/Visits").then((m) => ({ default: m.Visits })),
+)
+const Profile = lazy(() =>
+  import("./routes/Profile").then((m) => ({ default: m.Profile })),
+)
+const SignIn = lazy(() =>
+  import("./routes/SignIn").then((m) => ({ default: m.SignIn })),
+)
+const Register = lazy(() =>
+  import("./routes/Register").then((m) => ({ default: m.Register })),
+)
+const Privacy = lazy(() =>
+  import("./routes/Privacy").then((m) => ({ default: m.Privacy })),
+)
 
 // A developer tool. 2.7 KB of it has no business in the bundle somebody
 // downloads on a 2G connection, so it is split out and left out of the
@@ -159,6 +195,7 @@ function Shell() {
       <OfflineBanner />
       <TopNav session={current} onSignOut={signOut} />
 
+      <Suspense fallback={<Loading />}>
       <Routes>
         {/* ---------------------------------------------------- patient */}
         <Route path="/" element={<Home />} />
@@ -222,6 +259,7 @@ function Shell() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
 
       <Chrome />
     </>

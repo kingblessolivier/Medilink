@@ -19,7 +19,6 @@ from django.db.models import Count, Q
 from django.utils import timezone
 
 from apps.facilities.models import Facility
-from apps.insurance.models import Insurer
 from apps.notifications.models import Notification
 from apps.patients.models import PatientAccessLog
 from apps.providers.models import Provider
@@ -292,19 +291,6 @@ def delivery_report(days: int = 7) -> dict:
             for row in by_kind
         ],
     }
-
-
-def insurer_directory() -> list[dict]:
-    return [
-        {
-            "code": i.code,
-            "name": i.name,
-            "facility_count": i.facilityinsurer_set.count()
-            if hasattr(i, "facilityinsurer_set")
-            else 0,
-        }
-        for i in Insurer.objects.order_by("name")
-    ]
 
 
 def account_summary() -> dict:

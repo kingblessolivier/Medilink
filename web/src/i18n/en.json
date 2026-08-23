@@ -332,5 +332,6 @@
   "profile_details": "Your details",
   "profile_no_name": "No name set",
   "book_title": "Book an appointment",
-  "nav_sections": "Sections"
+  "nav_sections": "Sections",
+  "cached_results": "Saved {ago}. These may have changed since."
 }

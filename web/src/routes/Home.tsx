@@ -18,6 +18,7 @@ import { DoctorCard } from "../components/DoctorCard"
 import { GlobalSearch } from "../components/GlobalSearch"
 import { InsurerChip } from "../components/InsurerChip"
 import { DistrictPicker } from "../components/DistrictPicker"
+import { CachedNotice } from "../components/CachedNotice"
 import { QueueCard } from "../components/QueueCard"
 import { AppointmentCard } from "../components/AppointmentCard"
 import { Button, EmptyState, ErrorState, ListSkeleton, Notice } from "../ui"
@@ -238,6 +239,10 @@ export function Home() {
               }
             />
           )}
+
+          <div className="mb-3 empty:mb-0">
+            <CachedNotice updatedAt={nearby.dataUpdatedAt} />
+          </div>
 
           {nearby.data?.query.radius_expanded && (
             <div className="mb-3">

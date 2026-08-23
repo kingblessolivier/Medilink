@@ -11,6 +11,7 @@ import { useSpecialties } from "../hooks/useSpecialties"
 import { useInsurerPreference } from "../hooks/useInsurerPreference"
 import { FacilityCard } from "../components/FacilityCard"
 import { DistrictPicker } from "../components/DistrictPicker"
+import { CachedNotice } from "../components/CachedNotice"
 import { Button, Chip, EmptyState, ErrorState, Field, ListSkeleton, Notice, Select, Skeleton } from "../ui"
 
 // The map is the largest dependency in the app. A patient who never opens it
@@ -186,6 +187,10 @@ export function FindCare() {
               />
             </div>
           )}
+
+          <div className="mb-3 empty:mb-0">
+            <CachedNotice updatedAt={query.dataUpdatedAt} />
+          </div>
 
           {query.data?.query.radius_expanded && (
             <div className="mb-3">

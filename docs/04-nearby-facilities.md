@@ -495,6 +495,9 @@ To hold these:
 - [x] Denied-geolocation path reaches the district picker
 - [x] Radius auto-expansion tested with a deliberately empty rural coordinate
 - [x] Out-of-bounds coordinate returns `400`, not a crash
-- [ ] Offline mode shows cached results with a visible timestamp
+- [x] Offline mode shows cached results with a visible timestamp - the banner
+      says the connection is gone, and `CachedNotice` sits with the results
+      themselves saying how old they are. A banner at the top of the page
+      cannot say how old the card three screens down is.
 - [ ] Tested on a real low-end Android phone on a real 3G connection, not on the emulator
 - [ ] At least 50 real Kigali facilities loaded and field-verified

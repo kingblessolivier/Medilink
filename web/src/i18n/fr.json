@@ -332,5 +332,6 @@
   "profile_details": "Vos informations",
   "profile_no_name": "Aucun nom",
   "book_title": "Prendre rendez-vous",
-  "nav_sections": "Sections"
+  "nav_sections": "Sections",
+  "cached_results": "Enregistre {ago}. Ces donnees peuvent avoir change."
 }
