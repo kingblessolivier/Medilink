@@ -337,11 +337,18 @@ glance without reading.
 ## 10. Frontend definition of done
 
 - [x] Every user-facing string in all three language files
-- [ ] Layout survives Kinyarwanda text at 1.4x English length
+- [x] Layout survives Kinyarwanda text at 1.4x English length - checked at
+      360/390/768/1440 px across five screens in `rw`: no page overflow and no
+      text escaping its box.
 - [x] All four `wait.status` values have a distinct, tested rendering
 - [x] Home screen renders correctly in states A, B and C
 - [x] Geolocation denied path reaches the district picker
-- [ ] Bundle within the performance budget on a 3G throttle
+- [~] Bundle within the performance budget on a 3G throttle. Splitting the
+      fourteen secondary patient routes out of the cold load took the main
+      bundle from 384 KB to 329 KB (117 -> 106 KB gzipped) and first heading
+      from **11.6 s to 2.4-3.0 s** on 3G with a 4x CPU throttle. Left
+      unticked deliberately: the figure varies to 10 s on a genuinely cold
+      start, and docs/09 asks for a REAL low-end phone, which this is not.
 - [x] Reception check-in completes in under 10 s with keyboard only
 - [x] Reception works fully with the network disabled, and syncs on reconnect
 - [ ] Tested on a real low-end Android device, not only the emulator

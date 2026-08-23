@@ -126,3 +126,32 @@ def test_a_ticket_code_survives(redactor):
     """Ticket codes are read aloud across a reception desk. They identify a
     place in a queue, not a person, and they have to stay legible."""
     assert "G-104" in scrub("called G-104")
+
+
+# --------------------------------------------------------------------------
+# Every settings module keeps the filter
+# --------------------------------------------------------------------------
+
+
+def test_every_settings_module_redacts():
+    """This bug shipped twice.
+
+    `dev.py` and then `prod.py` each defined LOGGING from scratch, which
+    silently dropped the redact_pii filter - so patient phone numbers would
+    have been written unredacted, in prod to an aggregator with a different
+    retention policy and access list from the database.
+
+    Both were found by `manage.py readiness` rather than by review, which is
+    why this asserts on every module rather than on the one that broke.
+    """
+    import importlib
+
+    for name in ("config.settings.dev", "config.settings.prod"):
+        module = importlib.import_module(name)
+        handlers = module.LOGGING["handlers"]
+        assert handlers, f"{name} defines no handlers"
+        for handler, config in handlers.items():
+            assert "redact_pii" in config.get("filters", []), (
+                f"{name}: handler {handler!r} is missing the redact_pii "
+                f"filter, so patient identifiers would reach the logs"
+            )
