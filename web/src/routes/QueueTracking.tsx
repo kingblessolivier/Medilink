@@ -142,9 +142,6 @@ export function QueueTracking() {
 function Waiting({ entry }: { entry: QueueEntryPublic }) {
   const { t } = useI18n()
   const ahead = entry.people_ahead ?? 0
-  // Progress is illustrative only; the number is the fact.
-  const total = Math.max(ahead + 1, 1)
-  const done = Math.max(0, total - (entry.position ?? total))
 
   return (
     <>
@@ -153,18 +150,41 @@ function Waiting({ entry }: { entry: QueueEntryPublic }) {
         {entry.position}
       </p>
 
-      <div
-        className="mx-auto mt-4 h-2 w-full max-w-xs overflow-hidden rounded-full bg-surface-sunken"
-        role="progressbar"
-        aria-valuenow={done}
-        aria-valuemin={0}
-        aria-valuemax={total}
-      >
-        <span
-          className="block h-full rounded-full bg-primary transition-all"
-          style={{ width: `${Math.round((done / total) * 100)}%` }}
-        />
-      </div>
+      {/* People, not a bar.
+          A progress bar shows how far along you are, and somebody who has
+          just joined is 0% along - so it rendered as an empty grey line that
+          read as broken rather than as "nobody has been seen yet". Dots
+          answer the question a patient actually has, which is "how many
+          people are in front of me", and they are countable at a glance up
+          to about a dozen. */}
+      {ahead > 0 && (
+        <div className="mt-5">
+          <div
+            className="mx-auto flex max-w-xs flex-wrap justify-center gap-1.5"
+            role="img"
+            aria-label={t("people_ahead", { n: ahead })}
+          >
+            {Array.from({ length: Math.min(ahead, 12) }, (_, i) => (
+              <span
+                key={i}
+                aria-hidden="true"
+                className="h-2 w-2 rounded-full bg-primary/25"
+              />
+            ))}
+            <span aria-hidden="true" className="h-2 w-2 rounded-full bg-primary" />
+          </div>
+          <p className="mt-2.5 text-small text-ink-muted">
+            {t("people_ahead", { n: ahead })}
+          </p>
+        </div>
+      )}
+
+      {/* Next in line is worth saying out loud rather than showing zero dots. */}
+      {ahead === 0 && (
+        <p className="mt-5 text-body-lg font-medium text-primary">
+          {t("you_are_next")}
+        </p>
+      )}
 
       <p className="mt-4 text-body-lg text-ink-muted">
         {entry.eta_minutes === null

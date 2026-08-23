@@ -74,8 +74,8 @@ export function WorkspaceAppointments({ canManage }: { canManage: boolean }) {
   const expected = rows.filter((r) => r.status === "booked").length
 
   return (
-    <div className="mx-auto w-full max-w-5xl">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="mx-auto w-full max-w-6xl">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-h2">Appointments</h1>
           <p className="mt-1 text-small text-ink-muted">
@@ -85,18 +85,18 @@ export function WorkspaceAppointments({ canManage }: { canManage: boolean }) {
           </p>
         </div>
 
-        <div className="flex items-end gap-3">
+        <div className="flex items-end gap-2">
           <label className="block">
-            <span className="ml-label block">Date</span>
+            <span className="ml-label mb-1 block">Date</span>
             <input
               type="date"
-              className="ml-field mt-1"
+              className="ml-field"
               value={date}
               onChange={(e) => setDate(e.target.value || today())}
             />
           </label>
           <button
-            className="ml-btn-secondary ml-btn-sm mb-0.5"
+            className="ml-btn-secondary ml-btn-sm"
             onClick={() => setDate(today())}
           >
             Today
@@ -107,7 +107,7 @@ export function WorkspaceAppointments({ canManage }: { canManage: boolean }) {
       <label className="mt-3 flex items-center gap-2 text-small text-ink-muted">
         <input
           type="checkbox"
-          className="h-4 w-4 accent-primary"
+          className="ml-checkbox"
           checked={showCancelled}
           onChange={(e) => setShowCancelled(e.target.checked)}
         />

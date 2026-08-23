@@ -146,7 +146,7 @@ export function FindCare() {
             <label className="flex min-h-touch items-center gap-2 sm:col-span-2">
               <input
                 type="checkbox"
-                className="h-6 w-6 accent-primary"
+                className="ml-checkbox"
                 checked={openNow}
                 onChange={(e) => setParam("open", e.target.checked ? "1" : undefined)}
               />

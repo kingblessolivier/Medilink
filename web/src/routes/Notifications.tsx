@@ -89,7 +89,7 @@ export function Notifications() {
                   <span className="sr-only">{preference.label}</span>
                   <input
                     type="checkbox"
-                    className="h-6 w-6 accent-primary"
+                    className="ml-checkbox"
                     checked={preference.enabled}
                     disabled={update.isPending}
                     onChange={(e) =>

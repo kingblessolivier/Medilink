@@ -326,5 +326,7 @@
   "tab_facilities": "Amavuriro",
   "tab_visits": "Ingendo",
   "tab_profile": "Konti",
-  "cover_none": "Ntabwo nshyizeho ubwishingizi - erekana byose"
+  "cover_none": "Ntabwo nshyizeho ubwishingizi - erekana byose",
+  "people_ahead": "Abantu {n} bakubanjirije",
+  "you_are_next": "Uri uwa mbere"
 }

@@ -326,5 +326,7 @@
   "tab_facilities": "Care",
   "tab_visits": "Visits",
   "tab_profile": "Profile",
-  "cover_none": "No insurer set - show everything"
+  "cover_none": "No insurer set - show everything",
+  "people_ahead": "{n} people ahead of you",
+  "you_are_next": "You are next"
 }
