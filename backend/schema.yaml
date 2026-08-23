@@ -653,6 +653,98 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotificationList'
           description: ''
+  /api/v1/platform/access-log:
+    get:
+      operationId: platform_access_log_retrieve
+      description: The audit trail from docs/08 section 6. The PATIENT is never named
+        - who did the touching, how much and when is what an access review needs,
+        and naming the patient would make the oversight tool its own disclosure risk.
+      summary: Who looked at whose record
+      parameters:
+      - in: query
+        name: days
+        schema:
+          type: integer
+        description: 1-90. Defaults to 7.
+      tags:
+      - platform
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessLog'
+          description: ''
+  /api/v1/platform/activity:
+    get:
+      operationId: platform_activity_retrieve
+      summary: Operational state across every facility
+      parameters:
+      - in: query
+        name: days
+        schema:
+          type: integer
+        description: 1-90. Defaults to 7.
+      tags:
+      - platform
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformActivity'
+          description: ''
+  /api/v1/platform/delivery:
+    get:
+      operationId: platform_delivery_retrieve
+      description: A 'leave now' SMS that never sent is a patient still sitting at
+        home. Message bodies are never returned - several carry a queue position and
+        one carries a sign-in code.
+      summary: Did the messages arrive?
+      parameters:
+      - in: query
+        name: days
+        schema:
+          type: integer
+        description: 1-90. Defaults to 7.
+      tags:
+      - platform
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryReport'
+          description: ''
+  /api/v1/platform/facilities:
+    get:
+      operationId: platform_facilities_retrieve
+      summary: Every facility, with what an admin can act on
+      tags:
+      - platform
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminFacilityList'
+          description: ''
   /api/v1/platform/overview:
     get:
       operationId: platform_overview_retrieve
@@ -675,6 +767,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminOverview'
+          description: ''
+  /api/v1/platform/providers:
+    get:
+      operationId: platform_providers_retrieve
+      summary: Every listed doctor
+      tags:
+      - platform
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminProviderList'
+          description: ''
+  /api/v1/platform/staff:
+    get:
+      operationId: platform_staff_retrieve
+      description: An access-control list. A dormant account left active is a standing
+        door into one facility's patient data.
+      summary: Who can read patient records, and where
+      tags:
+      - platform
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStaffList'
           description: ''
   /api/v1/platform/triage-monitoring:
     get:
@@ -1297,6 +1425,77 @@ paths:
           description: ''
 components:
   schemas:
+    AccessActor:
+      type: object
+      properties:
+        actor:
+          type: string
+        facility:
+          type: string
+        events:
+          type: integer
+      required:
+      - actor
+      - events
+      - facility
+    AccessEvent:
+      type: object
+      description: |-
+        The patient is deliberately absent. Who did the touching, how much and
+        when is what an access review needs; naming the patient would make the
+        oversight tool its own disclosure risk.
+      properties:
+        id:
+          type: integer
+        occurred_at:
+          type: string
+          format: date-time
+        actor:
+          type: string
+        action:
+          type: string
+        action_label:
+          type: string
+        facility:
+          type: string
+        record_count:
+          type: integer
+        ip_address:
+          type: string
+          nullable: true
+      required:
+      - action
+      - action_label
+      - actor
+      - facility
+      - id
+      - ip_address
+      - occurred_at
+      - record_count
+    AccessLog:
+      type: object
+      properties:
+        days:
+          type: integer
+        as_of:
+          type: string
+          format: date-time
+        total_events:
+          type: integer
+        by_actor:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessActor'
+        recent:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessEvent'
+      required:
+      - as_of
+      - by_actor
+      - days
+      - recent
+      - total_events
     Activity:
       type: object
       properties:
@@ -1312,6 +1511,93 @@ components:
       - appointments
       - by_channel
       - check_ins
+    ActivityFacility:
+      type: object
+      properties:
+        name:
+          type: string
+        district:
+          type: string
+        waiting:
+          type: integer
+        seen:
+          type: integer
+        booked:
+          type: integer
+        reports_queue:
+          type: boolean
+      required:
+      - booked
+      - district
+      - name
+      - reports_queue
+      - seen
+      - waiting
+    ActivityTotals:
+      type: object
+      properties:
+        waiting_now:
+          type: integer
+        seen:
+          type: integer
+        booked:
+          type: integer
+        no_shows:
+          type: integer
+        facilities_active:
+          type: integer
+      required:
+      - booked
+      - facilities_active
+      - no_shows
+      - seen
+      - waiting_now
+    AdminFacility:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        district:
+          type: string
+        level:
+          type: string
+        ownership:
+          type: string
+        verified:
+          type: boolean
+        reports_queue:
+          type: boolean
+        staff_count:
+          type: integer
+        service_count:
+          type: integer
+      required:
+      - district
+      - id
+      - level
+      - name
+      - ownership
+      - reports_queue
+      - service_count
+      - slug
+      - staff_count
+      - verified
+    AdminFacilityList:
+      type: object
+      properties:
+        count:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminFacility'
+      required:
+      - count
+      - results
     AdminOverview:
       type: object
       properties:
@@ -1335,6 +1621,89 @@ components:
       - facilities
       - patients
       - providers
+    AdminProvider:
+      type: object
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        full_name:
+          type: string
+        verified:
+          type: boolean
+        specialties:
+          type: array
+          items:
+            type: string
+        facilities:
+          type: array
+          items:
+            type: string
+      required:
+      - facilities
+      - full_name
+      - id
+      - slug
+      - specialties
+      - verified
+    AdminProviderList:
+      type: object
+      properties:
+        count:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminProvider'
+      required:
+      - count
+      - results
+    AdminStaff:
+      type: object
+      description: An access-control list, not a personnel list.
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        facility:
+          type: string
+        role:
+          type: string
+        active:
+          type: boolean
+        can_manage_queue:
+          type: boolean
+        last_login:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - active
+      - can_manage_queue
+      - facility
+      - id
+      - last_login
+      - role
+      - username
+    AdminStaffList:
+      type: object
+      properties:
+        count:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminStaff'
+        accounts:
+          type: object
+          additionalProperties:
+            type: integer
+      required:
+      - accounts
+      - count
+      - results
     Answer:
       type: object
       properties:
@@ -1585,6 +1954,48 @@ components:
       - status
       - ticket_code
       - waited_minutes
+    DeliveryKind:
+      type: object
+      properties:
+        kind:
+          type: string
+        total:
+          type: integer
+        sent:
+          type: integer
+        failed:
+          type: integer
+      required:
+      - failed
+      - kind
+      - sent
+      - total
+    DeliveryReport:
+      type: object
+      properties:
+        days:
+          type: integer
+        total:
+          type: integer
+        sent:
+          type: integer
+        failed:
+          type: integer
+        failure_rate:
+          type: number
+          format: double
+          nullable: true
+        by_kind:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryKind'
+      required:
+      - by_kind
+      - days
+      - failed
+      - failure_rate
+      - sent
+      - total
     DistrictList:
       type: object
       properties:
@@ -2188,6 +2599,25 @@ components:
       - facility_slug
       - role_title
       - services
+    PlatformActivity:
+      type: object
+      properties:
+        days:
+          type: integer
+        as_of:
+          type: string
+          format: date-time
+        totals:
+          $ref: '#/components/schemas/ActivityTotals'
+        facilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivityFacility'
+      required:
+      - as_of
+      - days
+      - facilities
+      - totals
     Preference:
       type: object
       properties:

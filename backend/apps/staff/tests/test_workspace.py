@@ -6,7 +6,7 @@ a manager will act on a median wait whether or not there is enough data behind
 it - so an under-sampled median must come back null, not zero.
 """
 
-from datetime import time, timedelta
+from datetime import datetime, time, timedelta
 
 import pytest
 from django.contrib.auth.models import User
@@ -82,8 +82,20 @@ def client_as(db):
 
 
 def make_appointment(facility, service, patient=None, *, offset_hours=1, **kwargs):
-    start = timezone.localtime().replace(minute=0, second=0, microsecond=0)
-    start += timedelta(hours=offset_hours)
+    """Anchored to 09:00 on the local DATE, not to "now plus an hour".
+
+    Anchoring on now made these tests time-of-day dependent: they passed all
+    day and failed after 23:00, because `now + 1h` rolled into tomorrow and
+    the "today" appointment stopped being today. A suite that only fails late
+    at night is worse than one that fails always - it looks like whatever you
+    changed last.
+
+    09:00 also matches how a facility's day is actually laid out, so
+    `offset_hours=30` lands mid-afternoon tomorrow rather than at 05:00.
+    """
+    start = timezone.make_aware(
+        datetime.combine(timezone.localdate(), time(9, 0))
+    ) + timedelta(hours=offset_hours)
     return Appointment.objects.create(
         facility=facility, service_type=service, patient=patient,
         slot_start=start, slot_end=start + timedelta(minutes=15), **kwargs

@@ -394,6 +394,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/access-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Who looked at whose record
+         * @description The audit trail from docs/08 section 6. The PATIENT is never named - who did the touching, how much and when is what an access review needs, and naming the patient would make the oversight tool its own disclosure risk.
+         */
+        get: operations["platform_access_log_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Operational state across every facility */
+        get: operations["platform_activity_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/delivery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Did the messages arrive?
+         * @description A 'leave now' SMS that never sent is a patient still sitting at home. Message bodies are never returned - several carry a queue position and one carries a sign-in code.
+         */
+        get: operations["platform_delivery_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/facilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every facility, with what an admin can act on */
+        get: operations["platform_facilities_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/overview": {
         parameters: {
             query?: never;
@@ -403,6 +477,43 @@ export interface paths {
         };
         /** Platform-wide counts */
         get: operations["platform_overview_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every listed doctor */
+        get: operations["platform_providers_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Who can read patient records, and where
+         * @description An access-control list. A dormant account left active is a standing door into one facility's patient data.
+         */
+        get: operations["platform_staff_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -844,10 +955,70 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AccessActor: {
+            actor: string;
+            facility: string;
+            events: number;
+        };
+        /**
+         * @description The patient is deliberately absent. Who did the touching, how much and
+         *     when is what an access review needs; naming the patient would make the
+         *     oversight tool its own disclosure risk.
+         */
+        AccessEvent: {
+            id: number;
+            /** Format: date-time */
+            occurred_at: string;
+            actor: string;
+            action: string;
+            action_label: string;
+            facility: string;
+            record_count: number;
+            ip_address: string | null;
+        };
+        AccessLog: {
+            days: number;
+            /** Format: date-time */
+            as_of: string;
+            total_events: number;
+            by_actor: components["schemas"]["AccessActor"][];
+            recent: components["schemas"]["AccessEvent"][];
+        };
         Activity: {
             check_ins: number;
             appointments: number;
             by_channel: components["schemas"]["ChannelCount"][];
+        };
+        ActivityFacility: {
+            name: string;
+            district: string;
+            waiting: number;
+            seen: number;
+            booked: number;
+            reports_queue: boolean;
+        };
+        ActivityTotals: {
+            waiting_now: number;
+            seen: number;
+            booked: number;
+            no_shows: number;
+            facilities_active: number;
+        };
+        AdminFacility: {
+            id: number;
+            name: string;
+            slug: string;
+            district: string;
+            level: string;
+            ownership: string;
+            verified: boolean;
+            reports_queue: boolean;
+            staff_count: number;
+            service_count: number;
+        };
+        AdminFacilityList: {
+            count: number;
+            results: components["schemas"]["AdminFacility"][];
         };
         AdminOverview: {
             days: number;
@@ -857,6 +1028,36 @@ export interface components {
             providers: components["schemas"]["ProviderCounts"];
             patients: components["schemas"]["PatientCounts"];
             activity: components["schemas"]["Activity"];
+        };
+        AdminProvider: {
+            id: number;
+            slug: string;
+            full_name: string;
+            verified: boolean;
+            specialties: string[];
+            facilities: string[];
+        };
+        AdminProviderList: {
+            count: number;
+            results: components["schemas"]["AdminProvider"][];
+        };
+        /** @description An access-control list, not a personnel list. */
+        AdminStaff: {
+            id: number;
+            username: string;
+            facility: string;
+            role: string;
+            active: boolean;
+            can_manage_queue: boolean;
+            /** Format: date-time */
+            last_login: string | null;
+        };
+        AdminStaffList: {
+            count: number;
+            results: components["schemas"]["AdminStaff"][];
+            accounts: {
+                [key: string]: number;
+            };
         };
         Answer: {
             question: string;
@@ -968,6 +1169,21 @@ export interface components {
             eta_minutes: number | null;
             eta_confidence: string | null;
             people_ahead: number;
+        };
+        DeliveryKind: {
+            kind: string;
+            total: number;
+            sent: number;
+            failed: number;
+        };
+        DeliveryReport: {
+            days: number;
+            total: number;
+            sent: number;
+            failed: number;
+            /** Format: double */
+            failure_rate: number | null;
+            by_kind: components["schemas"]["DeliveryKind"][];
         };
         DistrictList: {
             results: string[];
@@ -1189,6 +1405,13 @@ export interface components {
             district: string;
             role_title: string;
             services: string[];
+        };
+        PlatformActivity: {
+            days: number;
+            /** Format: date-time */
+            as_of: string;
+            totals: components["schemas"]["ActivityTotals"];
+            facilities: components["schemas"]["ActivityFacility"][];
         };
         Preference: {
             kind: string;
@@ -2202,6 +2425,91 @@ export interface operations {
             };
         };
     };
+    platform_access_log_retrieve: {
+        parameters: {
+            query?: {
+                /** @description 1-90. Defaults to 7. */
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessLog"];
+                };
+            };
+        };
+    };
+    platform_activity_retrieve: {
+        parameters: {
+            query?: {
+                /** @description 1-90. Defaults to 7. */
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformActivity"];
+                };
+            };
+        };
+    };
+    platform_delivery_retrieve: {
+        parameters: {
+            query?: {
+                /** @description 1-90. Defaults to 7. */
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryReport"];
+                };
+            };
+        };
+    };
+    platform_facilities_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminFacilityList"];
+                };
+            };
+        };
+    };
     platform_overview_retrieve: {
         parameters: {
             query?: {
@@ -2220,6 +2528,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminOverview"];
+                };
+            };
+        };
+    };
+    platform_providers_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminProviderList"];
+                };
+            };
+        };
+    };
+    platform_staff_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminStaffList"];
                 };
             };
         };

@@ -19,8 +19,23 @@ from apps.facilities.models import Facility
 from apps.providers.models import Provider
 
 from .permissions import IsPlatformAdmin
+from .oversight import (
+    access_log,
+    account_summary,
+    delivery_report,
+    facility_directory,
+    platform_activity,
+    provider_directory,
+    staff_directory,
+)
 from .serializers import (
+    AccessLogSerializer,
+    AdminFacilityListSerializer,
     AdminOverviewSerializer,
+    AdminProviderListSerializer,
+    AdminStaffListSerializer,
+    DeliveryReportSerializer,
+    PlatformActivitySerializer,
     TriageMonitoringSerializer,
     VerificationQueueSerializer,
     VerifiedSerializer,
@@ -137,3 +152,95 @@ def verify_provider(request, pk: int):
 @permission_classes(ADMIN_ONLY)
 def admin_triage_monitoring(request):
     return Response(triage_monitoring(days=_window(request)))
+
+
+# --------------------------------------------------------------------------
+# Oversight: what is happening on the platform
+#
+# services.py answers "is the platform being used?". These answer "what is
+# happening on it, and is anything wrong?" - the question somebody actually
+# opens a dashboard to ask. All superuser-only; see permissions.py.
+# --------------------------------------------------------------------------
+
+
+@extend_schema(
+    summary="Every facility, with what an admin can act on",
+    responses=AdminFacilityListSerializer,
+)
+@api_view(["GET"])
+@permission_classes(ADMIN_ONLY)
+def admin_facilities(request):
+    rows = facility_directory()
+    return Response({"count": len(rows), "results": rows})
+
+
+@extend_schema(
+    summary="Every listed doctor",
+    responses=AdminProviderListSerializer,
+)
+@api_view(["GET"])
+@permission_classes(ADMIN_ONLY)
+def admin_providers(request):
+    rows = provider_directory()
+    return Response({"count": len(rows), "results": rows})
+
+
+@extend_schema(
+    summary="Who can read patient records, and where",
+    description=(
+        "An access-control list. A dormant account left active is a standing "
+        "door into one facility's patient data."
+    ),
+    responses=AdminStaffListSerializer,
+)
+@api_view(["GET"])
+@permission_classes(ADMIN_ONLY)
+def admin_staff(request):
+    rows = staff_directory()
+    return Response(
+        {"count": len(rows), "results": rows, "accounts": account_summary()}
+    )
+
+
+@extend_schema(
+    summary="Operational state across every facility",
+    parameters=[OpenApiParameter("days", int, description="1-90. Defaults to 7.")],
+    responses=PlatformActivitySerializer,
+)
+@api_view(["GET"])
+@permission_classes(ADMIN_ONLY)
+def admin_activity(request):
+    return Response(platform_activity(days=_window(request, default=7, maximum=90)))
+
+
+@extend_schema(
+    summary="Who looked at whose record",
+    description=(
+        "The audit trail from docs/08 section 6. The PATIENT is never named - "
+        "who did the touching, how much and when is what an access review "
+        "needs, and naming the patient would make the oversight tool its own "
+        "disclosure risk."
+    ),
+    parameters=[OpenApiParameter("days", int, description="1-90. Defaults to 7.")],
+    responses=AccessLogSerializer,
+)
+@api_view(["GET"])
+@permission_classes(ADMIN_ONLY)
+def admin_access_log(request):
+    return Response(access_log(days=_window(request, default=7, maximum=90)))
+
+
+@extend_schema(
+    summary="Did the messages arrive?",
+    description=(
+        "A 'leave now' SMS that never sent is a patient still sitting at "
+        "home. Message bodies are never returned - several carry a queue "
+        "position and one carries a sign-in code."
+    ),
+    parameters=[OpenApiParameter("days", int, description="1-90. Defaults to 7.")],
+    responses=DeliveryReportSerializer,
+)
+@api_view(["GET"])
+@permission_classes(ADMIN_ONLY)
+def admin_delivery(request):
+    return Response(delivery_report(days=_window(request, default=7, maximum=90)))
