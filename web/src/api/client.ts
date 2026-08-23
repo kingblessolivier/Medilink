@@ -34,6 +34,12 @@ import type {
   VerificationQueue,
   TriageMonitoring,
   Verified,
+  AdminFacilityList,
+  AdminProviderList,
+  AdminStaffList,
+  PlatformActivityReport,
+  AccessLog,
+  DeliveryReport,
 } from "./types"
 
 const BASE = "/api/v1"
@@ -171,6 +177,26 @@ export const api = {
 
   serviceTypes: () =>
     request<{ results: ServiceType[] }>("/service-types", { auth: false }),
+
+  // ---------------------------------------------- platform oversight
+  //
+  // All superuser-only. `services` answers "is the platform being used?";
+  // these answer "what is happening on it, and is anything wrong?".
+
+  adminFacilities: () => request<AdminFacilityList>("/platform/facilities"),
+
+  adminProviders: () => request<AdminProviderList>("/platform/providers"),
+
+  adminStaff: () => request<AdminStaffList>("/platform/staff"),
+
+  adminActivity: (days = 7) =>
+    request<PlatformActivityReport>("/platform/activity", { params: { days } }),
+
+  adminAccessLog: (days = 7) =>
+    request<AccessLog>("/platform/access-log", { params: { days } }),
+
+  adminDelivery: (days = 7) =>
+    request<DeliveryReport>("/platform/delivery", { params: { days } }),
 
   triageStatus: () => request<TriageStatus>("/triage/status"),
 
@@ -402,4 +428,13 @@ export type {
   PendingProvider,
   TriageMonitoring,
   Verified,
+  AdminFacility,
+  AdminFacilityList,
+  AdminProvider,
+  AdminProviderList,
+  AdminStaff,
+  AdminStaffList,
+  PlatformActivityReport,
+  AccessLog,
+  DeliveryReport,
 } from "./types"

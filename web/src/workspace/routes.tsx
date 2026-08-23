@@ -1,5 +1,13 @@
 import { Navigate, Route, Routes } from "react-router-dom"
 import { useAuth } from "../hooks/useAuth"
+import { DashboardShell, type NavSection } from "../components/DashboardShell"
+import {
+  IconCalendar,
+  IconChart,
+  IconHospital,
+  IconStethoscope,
+  IconUsers,
+} from "../ui/icons"
 import { useQueueActions } from "./useQueueActions"
 import { Reception } from "./Reception"
 import { WorkspaceAppointments } from "./Appointments"
@@ -18,6 +26,28 @@ import { WorkspaceReports } from "./Reports"
  * the appointment list and comes back must not find their pending actions
  * gone.
  */
+/**
+ * Two groups, because the day splits that way: what is happening at the desk
+ * right now, and the reference material behind it.
+ */
+const SECTIONS: NavSection[] = [
+  {
+    label: "Today",
+    items: [
+      { to: "/workspace", label: "Reception", icon: <IconUsers size={17} />, end: true },
+      { to: "/workspace/appointments", label: "Appointments", icon: <IconCalendar size={17} /> },
+    ],
+  },
+  {
+    label: "Facility",
+    items: [
+      { to: "/workspace/doctors", label: "Doctors", icon: <IconStethoscope size={17} /> },
+      { to: "/workspace/services", label: "Services", icon: <IconHospital size={17} /> },
+      { to: "/workspace/reports", label: "Reports", icon: <IconChart size={17} /> },
+    ],
+  },
+]
+
 export function WorkspaceRoutes() {
   const { session } = useAuth()
   const actions = useQueueActions()
@@ -25,18 +55,26 @@ export function WorkspaceRoutes() {
   if (session.state !== "signed_in") return null
 
   return (
-    <Routes>
-      <Route path="/" element={<Reception actions={actions} />} />
-      <Route
-        path="/appointments"
-        element={
-          <WorkspaceAppointments canManage={session.session.can_manage_queue} />
-        }
-      />
-      <Route path="/doctors" element={<WorkspaceDoctors />} />
-      <Route path="/services" element={<WorkspaceServices />} />
-      <Route path="/reports" element={<WorkspaceReports />} />
-      <Route path="*" element={<Navigate to="/workspace" replace />} />
-    </Routes>
+    <DashboardShell
+      title="Workspace"
+      subtitle={session.session.facility?.name ?? ""}
+      sections={SECTIONS}
+    >
+      <Routes>
+        <Route path="/" element={<Reception actions={actions} />} />
+        <Route
+          path="/appointments"
+          element={
+            <WorkspaceAppointments
+              canManage={session.session.can_manage_queue}
+            />
+          }
+        />
+        <Route path="/doctors" element={<WorkspaceDoctors />} />
+        <Route path="/services" element={<WorkspaceServices />} />
+        <Route path="/reports" element={<WorkspaceReports />} />
+        <Route path="*" element={<Navigate to="/workspace" replace />} />
+      </Routes>
+    </DashboardShell>
   )
 }

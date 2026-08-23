@@ -3,17 +3,12 @@ import { Link, NavLink } from "react-router-dom"
 import { useI18n } from "../i18n"
 import { LanguageToggle } from "./LanguageToggle"
 import {
-  IconBell,
   IconCalendar,
-  IconChart,
   IconChevronRight,
-  IconGlobe,
   IconHospital,
   IconSearch,
-  IconShieldCheck,
   IconStethoscope,
   IconUser,
-  IconUsers,
 } from "../ui/icons"
 import type { Session } from "../api/types"
 
@@ -36,20 +31,12 @@ type NavItem = { to: string; label: string; icon: Glyph; end?: boolean }
 
 function itemsFor(session: Session | null, t: (k: string) => string): NavItem[] {
   switch (session?.kind) {
+    // Staff and admin sections live in the DashboardShell sidebar, which is
+    // where they can grow. Repeating them here was duplication, and it is
+    // what forced a hamburger menu onto the dashboards.
     case "staff":
-      return [
-        { to: "/workspace", label: t("nav_reception"), icon: IconUsers, end: true },
-        { to: "/workspace/appointments", label: t("nav_appointments"), icon: IconCalendar },
-        { to: "/workspace/doctors", label: t("nav_doctors"), icon: IconStethoscope },
-        { to: "/workspace/services", label: t("nav_services"), icon: IconHospital },
-        { to: "/workspace/reports", label: t("nav_reports"), icon: IconChart },
-      ]
     case "admin":
-      return [
-        { to: "/platform", label: t("nav_overview"), icon: IconGlobe, end: true },
-        { to: "/platform/verification", label: t("nav_verification"), icon: IconShieldCheck },
-        { to: "/platform/triage", label: t("nav_care_guide_monitoring"), icon: IconBell },
-      ]
+      return []
     default:
       return [
         { to: "/", label: t("nav_home"), icon: IconHospital, end: true },

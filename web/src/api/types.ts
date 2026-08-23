@@ -107,3 +107,15 @@ export type PendingFacility = Schemas["PendingFacility"]
 export type PendingProvider = Schemas["PendingProvider"]
 export type TriageMonitoring = Schemas["TriageMonitoring"]
 export type Verified = Schemas["Verified"]
+
+// ------------------------------------------------- platform oversight
+
+export type AdminFacility = Schemas["AdminFacility"]
+export type AdminFacilityList = Schemas["AdminFacilityList"]
+export type AdminProvider = Schemas["AdminProvider"]
+export type AdminProviderList = Schemas["AdminProviderList"]
+export type AdminStaff = Schemas["AdminStaff"]
+export type AdminStaffList = Schemas["AdminStaffList"]
+export type PlatformActivityReport = Schemas["PlatformActivity"]
+export type AccessLog = Schemas["AccessLog"]
+export type DeliveryReport = Schemas["DeliveryReport"]
