@@ -137,12 +137,15 @@ export function TopNav({
                 <IconUser size={15} className="shrink-0 text-ink-subtle" />
                 <span className="truncate">{session.display_name}</span>
               </span>
-              <button className="ml-btn-secondary ml-btn-sm" onClick={onSignOut}>
+              <button
+                className="ml-btn-secondary ml-btn-sm min-h-touch sm:min-h-0 sm:h-9"
+                onClick={onSignOut}
+              >
                 {t("sign_out")}
               </button>
             </>
           ) : (
-            <Link to="/sign-in" className="ml-btn-primary ml-btn-sm">
+            <Link to="/sign-in" className="ml-btn-primary ml-btn-sm min-h-touch sm:min-h-0 sm:h-9">
               {t("sign_in")}
             </Link>
           )}
@@ -151,7 +154,7 @@ export function TopNav({
               only ones that vanish entirely below the `sm` breakpoint. */}
           {!isPatientSurface && (
             <button
-              className="ml-btn-secondary ml-btn-sm sm:hidden"
+              className="ml-btn-secondary ml-btn-sm sm:hidden min-h-touch sm:min-h-0 sm:h-9"
               aria-expanded={open}
               aria-controls="topnav-mobile"
               onClick={() => setOpen((v) => !v)}

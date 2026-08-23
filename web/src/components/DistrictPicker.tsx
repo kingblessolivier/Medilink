@@ -49,8 +49,12 @@ export function DistrictPicker({
                 aria-pressed={active}
                 className={
                   active
-                    ? "ml-btn-primary ml-btn-sm"
-                    : "ml-btn-secondary ml-btn-sm"
+                    // Full size on a phone: for anyone whose browser will
+                    // not give a location, tapping a district is the ONLY way
+                    // into the product, and it should not be the smallest
+                    // control on the screen.
+                    ? "ml-btn-primary ml-btn-sm min-h-touch sm:min-h-0 sm:h-9"
+                    : "ml-btn-secondary ml-btn-sm min-h-touch sm:min-h-0 sm:h-9"
                 }
                 onClick={() => onPick(district)}
               >

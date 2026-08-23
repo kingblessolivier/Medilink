@@ -414,8 +414,17 @@ export function EmptyState({
         </span>
         <p className="mt-4 text-h3 font-semibold text-ink">{title}</p>
         {body && <p className="mt-1.5 text-body text-ink-muted">{body}</p>}
+        {/* The action is the way OUT of a dead end, so it is full size even
+            when the caller passed `ml-btn-sm`. Callers set that for dense
+            rows; an empty state is the opposite of dense, and on a phone this
+            is often the only thing on the screen worth tapping.
+
+            Done here rather than by editing sixteen call sites, so the next
+            empty state gets it without anybody remembering. */}
         {action && (
-          <div className="mt-5 flex flex-wrap justify-center gap-2">{action}</div>
+          <div className="mt-5 flex flex-wrap justify-center gap-2 [&_.ml-btn-sm]:h-touch [&_.ml-btn-sm]:px-4 [&_.ml-btn-sm]:text-body">
+            {action}
+          </div>
         )}
       </div>
     </div>
