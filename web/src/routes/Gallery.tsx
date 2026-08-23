@@ -277,7 +277,7 @@ export function Gallery() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="ml-section">
-      <h2 className="ml-label mb-3">{title}</h2>
+      <h2 className="text-h3 mb-3">{title}</h2>
       <div className="space-y-3">{children}</div>
     </section>
   )

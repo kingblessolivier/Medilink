@@ -328,5 +328,8 @@
   "tab_profile": "Profil",
   "cover_none": "Aucun assureur - tout afficher",
   "people_ahead": "{n} personnes avant vous",
-  "you_are_next": "Vous etes le prochain"
+  "you_are_next": "Vous etes le prochain",
+  "profile_details": "Vos informations",
+  "profile_no_name": "Aucun nom",
+  "book_title": "Prendre rendez-vous"
 }

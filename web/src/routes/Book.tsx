@@ -96,7 +96,11 @@ export function Book() {
   // arrives here rather than at the front door.
   if (!patient) {
     return (
-      <div className="ml-page py-6">
+      <div className="mx-auto w-full max-w-xl px-4 py-6">
+        {/* Every screen says where it is, in EVERY state. The signed-out
+            branch had no h1 at all, so a screen-reader user hitting a booking
+            link while logged out landed on a page with no title. */}
+        <h1 className="mb-4 text-h1">{t("book_title")}</h1>
         <EmptyState icon={<IconCalendar size={20} />}
           title={t("sign_in_to_book")}
           body={t("sign_in_to_book_body")}
@@ -401,7 +405,7 @@ function Steps({ step }: { step: Step }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-6">
-      <h2 className="ml-label mb-3">{title}</h2>
+      <h2 className="text-h3 mb-3">{title}</h2>
       {children}
     </section>
   )

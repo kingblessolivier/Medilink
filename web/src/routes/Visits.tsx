@@ -63,7 +63,7 @@ export function Visits() {
       )}
 
       {/* ------------------------------------------------------ upcoming */}
-      <h2 className="ml-label mb-2">{t("visits_upcoming")}</h2>
+      <h2 className="text-h3 mb-2">{t("visits_upcoming")}</h2>
 
       {upcoming.isLoading && <ListSkeleton rows={1} />}
 
@@ -102,7 +102,7 @@ export function Visits() {
       ))}
 
       {/* ---------------------------------------------------------- past */}
-      <h2 className="ml-label mb-2 mt-6">{t("visits_past")}</h2>
+      <h2 className="text-h3 mb-2 mt-6">{t("visits_past")}</h2>
 
       {past.isLoading && <ListSkeleton rows={2} />}
 

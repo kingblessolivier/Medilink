@@ -123,7 +123,7 @@ export function CareGuide() {
         <p className="mt-2 text-body text-ink-muted">{t("care_guide_intro")}</p>
 
         <Card className="mt-6 p-4">
-          <h2 className="ml-label">{t("care_guide_what_it_does")}</h2>
+          <h2 className="text-h3">{t("care_guide_what_it_does")}</h2>
           <ul className="mt-3 space-y-2 text-body">
             <li>{t("care_guide_point_1")}</li>
             <li>{t("care_guide_point_2")}</li>
