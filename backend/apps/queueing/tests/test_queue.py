@@ -585,3 +585,100 @@ def test_parallel_services_are_not_multiplied_together(
     assert snapshot["minutes"] == 40
     # The head count is still everyone on site.
     assert snapshot["people_waiting"] == 6
+
+
+# --------------------------------------------------------------------------
+# Several desks at once
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_a_ticket_code_cannot_be_issued_twice_in_one_day(facility, general):
+    """The database decides, so the count-then-write race cannot produce two
+    G-001 slips in one morning."""
+    from django.db import IntegrityError
+
+    first, _ = check_in(
+        facility=facility, service_type=general, walk_in_name="First"
+    )
+
+    with pytest.raises(IntegrityError):
+        QueueEntry.objects.create(
+            facility=facility,
+            service_type=general,
+            walk_in_name="Impostor",
+            ticket_code=first.ticket_code,
+            ticket_day=first.ticket_day,
+        )
+
+
+@pytest.mark.django_db
+def test_a_taken_ticket_code_is_recounted_rather_than_failing(facility, general):
+    """Two desks reading the same count is the whole point: the loser must get
+    the NEXT code, not an error and not a duplicate."""
+    stolen = QueueEntry.objects.create(
+        facility=facility,
+        service_type=general,
+        walk_in_name="Booked ahead by another desk",
+        ticket_code="G-001",
+        ticket_day=timezone.localtime().date(),
+    )
+
+    entry, created = check_in(
+        facility=facility, service_type=general, walk_in_name="Second desk"
+    )
+
+    assert created is True
+    assert entry.ticket_code != stolen.ticket_code
+    assert entry.ticket_code == "G-002"
+
+
+@pytest.mark.django_db
+def test_ticket_codes_are_per_day(facility, general):
+    """G-001 comes round again every morning, so the constraint has to be
+    scoped to the day or the second day of use would fail outright."""
+    yesterday = timezone.localtime() - timedelta(days=1)
+    QueueEntry.objects.create(
+        facility=facility,
+        service_type=general,
+        walk_in_name="Yesterday",
+        joined_at=yesterday,
+        ticket_code="G-001",
+        ticket_day=yesterday.date(),
+    )
+
+    entry, _ = check_in(
+        facility=facility, service_type=general, walk_in_name="Today"
+    )
+
+    assert entry.ticket_code == "G-001"
+    assert entry.ticket_day != yesterday.date()
+
+
+@pytest.mark.django_db
+def test_a_racing_retry_returns_the_original_entry(facility, general):
+    """The idempotency read can be beaten by the insert it was guarding.
+
+    Before, the IntegrityError escaped as a 500 - and in `sync` that discarded
+    every other check-in in the batch, which is the exact failure the per-item
+    results exist to prevent.
+    """
+    original, created = check_in(
+        facility=facility,
+        service_type=general,
+        walk_in_name="Uwase",
+        idempotency_key="retry-me",
+    )
+    assert created is True
+
+    # The same key again is what a retry after a timeout looks like.
+    again, created_again = check_in(
+        facility=facility,
+        service_type=general,
+        walk_in_name="Uwase",
+        idempotency_key="retry-me",
+    )
+
+    assert created_again is False
+    assert again.id == original.id
+    assert QueueEntry.objects.count() == 1
