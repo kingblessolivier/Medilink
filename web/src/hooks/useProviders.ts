@@ -1,14 +1,11 @@
 import { useQuery } from "@tanstack/react-query"
 import { api } from "../api/client"
+import type { ProviderFilters } from "../api/types"
 
-export type ProviderFilters = {
-  specialty?: string
-  facility?: string
-  service?: string
-  language?: string
-  search?: string
-  limit?: number
-}
+// Declared once, next to the other wire types, so the API client and the hook
+// cannot drift apart. `language` was `string` here and a four-value choice on
+// the server.
+export type { ProviderFilters }
 
 export function useProviders(filters: ProviderFilters = {}, enabled = true) {
   return useQuery({

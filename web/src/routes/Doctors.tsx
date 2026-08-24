@@ -39,8 +39,12 @@ export function Doctors() {
   const [params, setParams] = useSearchParams()
 
   const specialty = params.get("specialty") ?? undefined
-  const language = params.get("language") ?? undefined
   const search = params.get("q") ?? undefined
+  // Filters live in the URL so a result can be shared, which means this value
+  // is whatever somebody typed or a stale link carries. The server takes four
+  // languages and 400s on anything else, so an edited link would break the
+  // whole page rather than drop one filter. Narrow it here instead.
+  const language = asLanguage(params.get("language"))
 
   const { data: specialtyData } = useSpecialties()
   useDistricts() // warmed for the facility links below
@@ -172,4 +176,13 @@ export function Doctors() {
       )}
     </div>
   )
+}
+
+const PROVIDER_LANGUAGES = ["rw", "en", "fr", "sw"] as const
+type ProviderLanguage = (typeof PROVIDER_LANGUAGES)[number]
+
+function asLanguage(value: string | null): ProviderLanguage | undefined {
+  return PROVIDER_LANGUAGES.includes(value as ProviderLanguage)
+    ? (value as ProviderLanguage)
+    : undefined
 }
