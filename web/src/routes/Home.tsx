@@ -229,6 +229,19 @@ export function Home() {
         >
           {busy && <ListSkeleton rows={3} />}
 
+          {/* The fourth state, and the one that was missing.
+              With no coordinates the query is DISABLED, so it is not loading,
+              not errored and has no data - every branch below is false and the
+              section rendered as a heading over nothing. That is the default
+              experience for anyone who declines the location prompt, which on
+              a health site is a lot of people. Say what is needed instead. */}
+          {!coords && !busy && (
+            <EmptyState
+              title={t("nearby_needs_a_place_title")}
+              body={t("nearby_needs_a_place_body")}
+            />
+          )}
+
           {nearby.isError && (
             <ErrorState
               title={t("error_generic")}

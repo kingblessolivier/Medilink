@@ -21,9 +21,17 @@
     font-variant-numeric: tabular-nums;
   }
 
-  h1 { @apply text-h1 font-semibold text-ink; }
-  h2 { @apply text-h2 font-semibold text-ink; }
-  h3 { @apply text-h3 font-semibold text-ink; }
+  /* Size and weight only - NOT colour.
+     `body` already sets `text-ink`, so headings inherit it on an ordinary
+     page and nothing changes there. Setting it again here was different in
+     one way that mattered: an element rule beats inheritance, so a heading
+     inside a dark surface kept near-black ink instead of picking up the
+     white its container had set. The patient home hero was the visible
+     casualty - its <h1>, the largest text in the product, sat at 2.6:1 on
+     the green, under even the 3:1 large-text minimum. */
+  h1 { @apply text-h1 font-semibold; }
+  h2 { @apply text-h2 font-semibold; }
+  h3 { @apply text-h3 font-semibold; }
 
   /* Visible focus is an accessibility requirement here, not a preference:
      a meaningful share of users navigate by keyboard, and reception staff

@@ -36,7 +36,7 @@ export function Profile() {
             has nothing to jump to and no idea which screen they landed on. */}
         <h1 className="mb-2 text-h1">{t("profile_title")}</h1>
         <p className="mb-4 text-small text-ink-muted">{t("auth_prompt")}</p>
-        <Link to="/sign-in" className="ml-btn-primary w-full">
+        <Link to={`/sign-in?next=${encodeURIComponent("/profile")}`} className="ml-btn-primary w-full">
           {t("auth_sign_in")}
         </Link>
       </div>

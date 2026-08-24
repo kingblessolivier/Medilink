@@ -336,5 +336,11 @@
   "cached_results": "Enregistre {ago}. Ces donnees peuvent avoir change.",
   "auth_code_sent_to": "Nous avons envoye un code a 6 chiffres par SMS au",
   "auth_code_hint": "Il expire dans 5 minutes.",
-  "auth_resend_code": "Renvoyer le code"
+  "auth_resend_code": "Renvoyer le code",
+  "error_screen_title": "Un probleme est survenu sur cet ecran",
+  "error_screen_body": "Vous n'y etes pour rien, et rien de ce que vous avez enregistre n'est perdu. Reessayez, ou revenez au debut.",
+  "error_screen_retry": "Reessayer cet ecran",
+  "error_screen_home": "Revenir au debut",
+  "nearby_needs_a_place_title": "Choisissez ou vous etes",
+  "nearby_needs_a_place_body": "Choisissez votre district ci-dessus et nous afficherons les etablissements ouverts pres de vous."
 }

@@ -33,7 +33,7 @@ export function QueueTracking() {
         <EmptyState icon={<IconClock size={20} />}
           title={t("sign_in_to_track")}
           action={
-            <Link to="/sign-in" className="ml-btn-primary ml-btn-sm">
+            <Link to={`/sign-in?next=${encodeURIComponent("/queue")}`} className="ml-btn-primary ml-btn-sm">
               {t("sign_in")}
             </Link>
           }

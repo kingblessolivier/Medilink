@@ -40,11 +40,15 @@ export function DoctorCard({ doctor }: { doctor: Provider }) {
           </Link>
         </h3>
 
-        {doctor.specialties.length > 0 && (
+        {/* Optional-chained like `placements` two lines up. The schema marks
+            this required, but a card is not the place to bet a whole screen
+            on that: an unguarded `.length` here is what proved the app had no
+            error boundary, by blanking every route at once. */}
+        {doctor.specialties?.length ? (
           <p className="mt-0.5 truncate text-small text-ink-muted">
             {specialtyNames(doctor.specialties, lang)}
           </p>
-        )}
+        ) : null}
 
         {placement && (
           <p className="mt-1 truncate text-small text-ink-muted">

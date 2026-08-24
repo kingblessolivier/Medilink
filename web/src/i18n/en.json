@@ -336,5 +336,11 @@
   "cached_results": "Saved {ago}. These may have changed since.",
   "auth_code_sent_to": "We sent a 6-digit code by SMS to",
   "auth_code_hint": "It expires in 5 minutes.",
-  "auth_resend_code": "Send it again"
+  "auth_resend_code": "Send it again",
+  "error_screen_title": "Something went wrong on this screen",
+  "error_screen_body": "Nothing you did caused this, and nothing you have saved is lost. Try again, or go back to the start.",
+  "error_screen_retry": "Try this screen again",
+  "error_screen_home": "Back to the start",
+  "nearby_needs_a_place_title": "Choose where you are",
+  "nearby_needs_a_place_body": "Pick your district above and we will show the facilities open near you."
 }

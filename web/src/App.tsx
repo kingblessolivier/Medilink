@@ -17,6 +17,7 @@ import { FindCare } from "./routes/FindCare"
 import { Doctors } from "./routes/Doctors"
 
 
+import { ErrorBoundary } from "./components/ErrorBoundary"
 import { OfflineBanner } from "./components/OfflineBanner"
 import { BottomNav } from "./components/BottomNav"
 import { TopNav, homeFor } from "./components/TopNav"
@@ -188,6 +189,7 @@ function Chrome() {
 
 function Shell() {
   const { session, signOut } = useAuth()
+  const { pathname } = useLocation()
   const current = session.state === "signed_in" ? session.session : null
 
   return (
@@ -195,6 +197,9 @@ function Shell() {
       <OfflineBanner />
       <TopNav session={current} onSignOut={signOut} />
 
+      {/* Keyed on the path so navigating away from a broken screen
+          recovers, instead of staying stuck until a reload. */}
+      <ErrorBoundary level="route" resetKey={pathname}>
       <Suspense fallback={<Loading />}>
       <Routes>
         {/* ---------------------------------------------------- patient */}
@@ -260,6 +265,7 @@ function Shell() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </Suspense>
+      </ErrorBoundary>
 
       <Chrome />
     </>
@@ -271,9 +277,14 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
         <BrowserRouter>
-          <AuthProvider>
-            <Shell />
-          </AuthProvider>
+          {/* Inside I18nProvider so the recovery screen can be translated,
+              outside AuthProvider so a failure in the session lookup still
+              renders something a person can act on. */}
+          <ErrorBoundary level="app">
+            <AuthProvider>
+              <Shell />
+            </AuthProvider>
+          </ErrorBoundary>
         </BrowserRouter>
       </I18nProvider>
     </QueryClientProvider>
