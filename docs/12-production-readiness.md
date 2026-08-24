@@ -15,19 +15,47 @@ a database in the wrong country.
 
 | | |
 |---|---|
-| Backend tests | 585 passing, 94% coverage |
-| Frontend tests | 27 passing |
+| Backend tests | 612 passing, 94% coverage |
+| Frontend tests | 33 passing |
 | API operations | 53, schema generated with zero warnings, no drift from the committed file |
-| Routes | 35 across three surfaces |
-| Translations | 335 keys × 3 languages, parity enforced by test |
-| Patient bundle | 106 KB gzipped (budget 150 KB) |
+| Routes | 28 screens across three surfaces |
+| Translations | 345 keys × 3 languages, parity enforced by test |
+| Patient bundle | 104 KB gzipped (budget 150 KB) |
 | `ruff check apps/` | clean |
 | `npm audit` | 0 vulnerabilities |
 | `pip-audit` | clean, excluding `pip` itself (the installer, not shipped) |
 | Django | 5.2 LTS |
 
+Every figure above was observed on 2026-08-24, in the compose stack, not
+carried over from a previous edit. Two of them had drifted: the test counts
+predated the audit remediation below, and "35 routes" did not match the 28
+`<Route>` screens the router actually declares. This table is the one thing
+in the repo people quote without re-checking, so it re-states the rule the
+correction further down already learned - a number here is a measurement or
+it does not belong.
+
 Run `python manage.py readiness` for the settings-level launch checks. It
 exits non-zero on a blocker, so it can gate a deploy.
+
+### The August 2026 audit
+
+A full audit against the proposal produced 26 findings - 13 in the system,
+13 in the patient app's design and journeys. All are fixed and merged to
+`dev` (PRs #42-#49). Two of them would have blocked a pilot:
+
+- **Registration attached credentials to any phone number without proving
+  it.** Every USSD, WhatsApp and reception-created patient has a blank
+  password, so anyone who knew a number could claim that person's visit
+  history. It now requires a verified one-time code.
+- **The wait estimate multiplied a latency by the queue.** The stored
+  statistic was `served_at - joined_at` - a patient's whole wait, queue
+  included - and the ETA multiplied it by the number of people ahead.
+  Simulated at about nine times too high, and worsening with congestion. It
+  now measures the gap between consecutive patients being served.
+
+Both survived a 585-test suite because tests asserted the buggy behaviour.
+Both of those tests were rewritten rather than deleted, and the frontend
+gained its first coverage of a component's failure path.
 
 ### What works end to end
 
