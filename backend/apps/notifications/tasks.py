@@ -145,11 +145,34 @@ def mark_no_shows() -> int:
     ).update(status=Appointment.Status.NO_SHOW)
 
 
+def close_unrecorded() -> int:
+    """Close out appointments where the patient arrived and nothing followed.
+
+    `ARRIVED` is in OPEN_STATUSES, and only BOOKED was ever swept - so an
+    appointment where reception pressed "arrived" and never pressed "served"
+    stayed open indefinitely. Two things went wrong quietly.
+
+    It counted forever against MAX_OPEN_APPOINTMENTS_PER_PATIENT, so after
+    three such visits a patient was locked out of booking, told to cancel
+    appointments that were months past. And it was neither served nor a
+    no-show, so it sat outside every number on the reports screen.
+
+    UNRECORDED rather than NO_SHOW: the patient came. Counting a facility's
+    own record-keeping as its patients' failure would corrupt the one metric
+    that facility uses to judge the product.
+    """
+    cutoff = timezone.now() - timedelta(hours=12)
+    return Appointment.objects.filter(
+        status=Appointment.Status.ARRIVED, slot_end__lt=cutoff
+    ).update(status=Appointment.Status.UNRECORDED)
+
+
 def run_all() -> dict:
     return {
         "leave_now": send_leave_now_notifications(),
         "reminders": send_appointment_reminders(),
         "no_shows": mark_no_shows(),
+        "unrecorded": close_unrecorded(),
     }
 
 

@@ -69,6 +69,15 @@ class Appointment(models.Model):
         SERVED = "served", "Served"
         NO_SHOW = "no_show", "No show"
         CANCELLED = "cancelled", "Cancelled"
+        # The patient turned up and nobody recorded what happened next.
+        #
+        # Deliberately NOT no_show: they came, and counting it against them
+        # would put a facility's own record-keeping into a number it uses to
+        # judge its patients. Not `served` either - nobody said they were.
+        # Its own status, excluded from the no-show rate and surfaced on the
+        # reports screen, turns a silent data leak into a visible prompt to
+        # close the day's records. See notifications.tasks.close_stale.
+        UNRECORDED = "unrecorded", "Arrived, outcome not recorded"
 
     OPEN_STATUSES = (Status.BOOKED, Status.ARRIVED)
 

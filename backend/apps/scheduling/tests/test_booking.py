@@ -589,3 +589,116 @@ def test_appointment_detail_carries_the_reference(
 
     assert body["reference"] == appointment.reference
     assert body["provider"] is None  # "any available"
+
+
+# --------------------------------------------------------------------------
+# Concurrency - the guarantee book() claims to make
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True)
+def test_two_patients_cannot_both_take_the_last_slot(facility, general):
+    """Real threads, real transactions, one slot.
+
+    `book()` documented this guarantee and did not provide it. It took
+    `select_for_update()` on the appointments themselves, which reads
+    correctly and locks nothing: with capacity 1 and nothing booked the
+    filter matches no rows, and PostgreSQL has no gap lock to take. Both
+    callers counted zero and both inserted.
+
+    The partial unique constraint does not cover it either - it is keyed on
+    `patient`, so it stops one person double-tapping and permits exactly this.
+
+    Needs `transaction=True`: the usual wrapped-transaction fixture would make
+    the two threads invisible to each other and the test would pass either way.
+    """
+    import threading
+
+    from django.db import connection
+
+    ScheduleTemplate.objects.create(
+        facility=facility,
+        service_type=general,
+        weekday=(timezone.localtime() + timedelta(days=1)).weekday(),
+        start_time=time(9, 0),
+        end_time=time(10, 0),
+        slot_minutes=15,
+        capacity_per_slot=1,  # the last slot, by construction
+    )
+    slot = tomorrow_at(9, 0)
+
+    first = Patient.objects.create(phone="+250788900001")
+    second = Patient.objects.create(phone="+250788900002")
+
+    ready = threading.Barrier(2, timeout=10)
+    outcomes: list[str] = []
+    lock = threading.Lock()
+
+    def attempt(who):
+        try:
+            ready.wait()
+            book(
+                facility=facility,
+                service_type=general,
+                patient=who,
+                slot_start=slot,
+            )
+            result = "booked"
+        except SlotUnavailable:
+            result = "refused"
+        except Exception as exc:  # noqa: BLE001 - reported, not swallowed
+            result = f"error:{type(exc).__name__}"
+        finally:
+            connection.close()  # each thread holds its own
+        with lock:
+            outcomes.append(result)
+
+    threads = [threading.Thread(target=attempt, args=(p,)) for p in (first, second)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=15)
+
+    assert sorted(outcomes) == ["booked", "refused"]
+    assert Appointment.objects.filter(slot_start=slot).count() == 1
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_named_clinician_and_the_general_clinic_do_not_block_each_other(
+    facility, general, patient, other_patient
+):
+    """Separate capacity pools must stay separate.
+
+    Serialising on the template is the fix for the race above, and the risk of
+    a coarse lock is that it also serialises bookings that were never in
+    competition. Dr A's 09:00 and the general clinic's 09:00 are different
+    appointments and have their own templates, so both still succeed.
+    """
+    from apps.providers.models import Provider
+
+    weekday = (timezone.localtime() + timedelta(days=1)).weekday()
+    provider = Provider.objects.create(full_name="Dr Uwase Alice", slug="dr-uwase")
+
+    for owner in (None, provider):
+        ScheduleTemplate.objects.create(
+            facility=facility,
+            service_type=general,
+            provider=owner,
+            weekday=weekday,
+            start_time=time(9, 0),
+            end_time=time(10, 0),
+            slot_minutes=15,
+            capacity_per_slot=1,
+        )
+
+    slot = tomorrow_at(9, 0)
+    book(facility=facility, service_type=general, patient=patient, slot_start=slot)
+    book(
+        facility=facility,
+        service_type=general,
+        patient=other_patient,
+        slot_start=slot,
+        provider=provider,
+    )
+
+    assert Appointment.objects.filter(slot_start=slot).count() == 2

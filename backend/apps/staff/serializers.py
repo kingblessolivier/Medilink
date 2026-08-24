@@ -86,6 +86,7 @@ class ReportAppointmentsSerializer(serializers.Serializer):
     total = serializers.IntegerField()
     no_shows = serializers.IntegerField()
     no_show_rate = serializers.FloatField(allow_null=True)
+    unrecorded = serializers.IntegerField()
 
 
 class ReportDemandSerializer(serializers.Serializer):

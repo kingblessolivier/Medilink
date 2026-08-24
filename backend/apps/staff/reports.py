@@ -75,6 +75,10 @@ def facility_report(facility, days: int = 30) -> dict:
     )
     total_appointments = appointments.count()
     no_shows = appointments.filter(status=Appointment.Status.NO_SHOW).count()
+    # The patient turned up and nobody recorded the outcome. Counted and shown
+    # separately, and deliberately kept OUT of the no-show rate: it is a gap in
+    # this facility's own record-keeping, not its patients failing to attend.
+    unrecorded = appointments.filter(status=Appointment.Status.UNRECORDED).count()
 
     by_service = (
         QueueEntry.objects.filter(facility=facility, joined_at__gte=since)
@@ -112,6 +116,7 @@ def facility_report(facility, days: int = 30) -> dict:
         "appointments": {
             "total": total_appointments,
             "no_shows": no_shows,
+            "unrecorded": unrecorded,
             "no_show_rate": (
                 round(no_shows / total_appointments, 3)
                 if total_appointments
