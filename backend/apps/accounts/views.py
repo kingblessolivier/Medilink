@@ -104,7 +104,11 @@ def login(request):
     description=(
         "Creates a patient account, or attaches web credentials to a phone "
         "number that has only ever used USSD. Staff and admin accounts are "
-        "created by MediLink, never self-served."
+        "created by MediLink, never self-served.\n\n"
+        "Requires a one-time code from POST /auth/otp/request. Registration "
+        "writes to whatever record already holds that number, so the number "
+        "must be proved first - otherwise anyone knowing it could claim that "
+        "patient's history. Returns 401 if the code is wrong or expired."
     ),
     request=RegisterSerializer,
     responses=SignInResponseSerializer,

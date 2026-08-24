@@ -203,9 +203,10 @@ paths:
   /api/v1/auth/register:
     post:
       operationId: auth_register_create
-      description: Creates a patient account, or attaches web credentials to a phone
-        number that has only ever used USSD. Staff and admin accounts are created
-        by MediLink, never self-served.
+      description: |-
+        Creates a patient account, or attaches web credentials to a phone number that has only ever used USSD. Staff and admin accounts are created by MediLink, never self-served.
+
+        Requires a one-time code from POST /auth/otp/request. Registration writes to whatever record already holds that number, so the number must be proved first - otherwise anyone knowing it could claim that patient's history. Returns 401 if the code is wrong or expired.
       summary: Register as a patient
       tags:
       - auth
@@ -2947,12 +2948,17 @@ components:
         phone:
           type: string
           maxLength: 20
+        code:
+          type: string
+          maxLength: 6
+          minLength: 6
         full_name:
           type: string
           maxLength: 150
         consent:
           type: boolean
       required:
+      - code
       - consent
       - password
       - phone

@@ -65,11 +65,11 @@
   "auth_title": "Connexion",
   "auth_subtitle": "Connectez-vous avec votre nom d'utilisateur et votre mot de passe.",
   "auth_phone": "Numero de telephone",
-  "auth_code": "Code",
-  "auth_send_code": "Envoyer le code",
+  "auth_code": "Code recu par SMS",
+  "auth_send_code": "Envoyez-moi un code",
   "auth_verify": "Verifier",
   "auth_code_sent": "Code envoye au {phone}",
-  "auth_change_number": "Changer de numero",
+  "auth_change_number": "Changer le numero",
   "auth_too_many": "Trop de tentatives. Attendez une minute.",
   "auth_prompt": "Connectez-vous pour reserver et suivre votre place",
   "auth_sign_in": "Se connecter",
@@ -333,5 +333,8 @@
   "profile_no_name": "Aucun nom",
   "book_title": "Prendre rendez-vous",
   "nav_sections": "Sections",
-  "cached_results": "Enregistre {ago}. Ces donnees peuvent avoir change."
+  "cached_results": "Enregistre {ago}. Ces donnees peuvent avoir change.",
+  "auth_code_sent_to": "Nous avons envoye un code a 6 chiffres par SMS au",
+  "auth_code_hint": "Il expire dans 5 minutes.",
+  "auth_resend_code": "Renvoyer le code"
 }

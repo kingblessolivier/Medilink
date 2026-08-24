@@ -16,18 +16,27 @@ import { Card, Field, Notice, TextInput } from "../ui"
  * recognises them if they ever ring in, and how they get back in if they
  * forget the password. An account with no phone would be an account MediLink
  * cannot contact, which for a health service is not an account at all.
+ *
+ * **Two steps, and the order matters.** Registration attaches credentials to
+ * whatever patient record already holds the number, and every USSD, WhatsApp
+ * and reception-desk patient has one with a blank password - so the number
+ * has to be proved before anything is written. The code is asked for LAST,
+ * once the rest of the form is valid, because it expires in five minutes and
+ * sending it before somebody has chosen a username wastes most of that.
  */
 export function Register() {
   const { t } = useI18n()
   const navigate = useNavigate()
   const { reload } = useAuth()
 
+  const [step, setStep] = useState<"details" | "code">("details")
   const [form, setForm] = useState({
     full_name: "",
     phone: "",
     username: "",
     password: "",
   })
+  const [code, setCode] = useState("")
   // Unticked by default and required by the server. A pre-ticked box is not
   // consent - Rwanda Law 058/2021, docs/08 section 6.
   const [consent, setConsent] = useState(false)
@@ -43,6 +52,32 @@ export function Register() {
     form.password.length >= 8 &&
     consent
 
+  function describe(err: unknown) {
+    return err instanceof ApiRequestError
+      ? // The server's own sentence is better than a generic one: "that
+        // username is taken", "sign in instead", "that code is not correct".
+        err.message
+      : t("error_generic")
+  }
+
+  /** Step 1 -> send the code. Nothing is created yet.
+   *  Also the resend handler, which has no event to cancel. */
+  async function sendCode(event?: React.FormEvent) {
+    event?.preventDefault()
+    setBusy(true)
+    setError(null)
+    try {
+      await api.requestCode(form.phone.trim())
+      setStep("code")
+      setCode("")
+    } catch (err) {
+      setError(describe(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  /** Step 2 -> prove the number, and only then create the account. */
   async function submit(event: React.FormEvent) {
     event.preventDefault()
     setBusy(true)
@@ -52,6 +87,7 @@ export function Register() {
         username: form.username.trim(),
         password: form.password,
         phone: form.phone.trim(),
+        code: code.trim(),
         full_name: form.full_name.trim() || undefined,
         consent,
       })
@@ -59,14 +95,7 @@ export function Register() {
       await reload()
       navigate("/", { replace: true })
     } catch (err) {
-      setError(
-        err instanceof ApiRequestError
-          ? // 409 already carries a usable sentence from the server - "that
-            // username is taken", or "sign in instead" - so it is shown as
-            // written rather than flattened into a generic failure.
-            err.message
-          : t("error_generic"),
-      )
+      setError(describe(err))
       setBusy(false)
     }
   }
@@ -77,7 +106,8 @@ export function Register() {
       <p className="mt-1 text-small text-ink-muted">{t("auth_register_subtitle")}</p>
 
       <Card className="mt-6 p-4">
-        <form onSubmit={submit} className="space-y-3">
+        {step === "details" ? (
+        <form onSubmit={sendCode} className="space-y-3">
           <Field label={t("auth_full_name")} hint={t("auth_full_name_hint")}>
             {(id, describedBy) => (
               <TextInput
@@ -153,9 +183,70 @@ export function Register() {
           )}
 
           <button className="ml-btn-primary w-full" disabled={busy || !ready}>
-            {busy ? t("loading") : t("auth_create_account")}
+            {busy ? t("loading") : t("auth_send_code")}
           </button>
         </form>
+        ) : (
+        <form onSubmit={submit} className="space-y-3">
+          {/* The number is repeated back, because a typo here is why the code
+              never arrives - and the fix is to go back, not to wait. */}
+          <p className="text-small text-ink-muted">
+            {t("auth_code_sent_to")}{" "}
+            <span className="font-medium text-ink">{form.phone.trim()}</span>
+          </p>
+
+          <Field label={t("auth_code")} hint={t("auth_code_hint")}>
+            {(id, describedBy) => (
+              <TextInput
+                id={id}
+                aria-describedby={describedBy}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                placeholder="123456"
+                value={code}
+                onChange={(e) =>
+                  setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                }
+              />
+            )}
+          </Field>
+
+          {error && (
+            <p role="alert" className="text-small text-danger">
+              {error}
+            </p>
+          )}
+
+          <button
+            className="ml-btn-primary w-full"
+            disabled={busy || code.length < 6}
+          >
+            {busy ? t("loading") : t("auth_create_account")}
+          </button>
+
+          <div className="flex justify-between gap-3">
+            <button
+              type="button"
+              className="text-small font-medium text-primary underline"
+              onClick={() => {
+                setStep("details")
+                setError(null)
+              }}
+            >
+              {t("auth_change_number")}
+            </button>
+            <button
+              type="button"
+              className="text-small font-medium text-primary underline disabled:opacity-50"
+              disabled={busy}
+              onClick={() => sendCode()}
+            >
+              {t("auth_resend_code")}
+            </button>
+          </div>
+        </form>
+        )}
       </Card>
 
       <p className="mt-4 text-center text-body">

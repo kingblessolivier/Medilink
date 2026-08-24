@@ -65,11 +65,11 @@
   "auth_title": "Sign in",
   "auth_subtitle": "Sign in with your username and password.",
   "auth_phone": "Phone number",
-  "auth_code": "Code",
-  "auth_send_code": "Send code",
+  "auth_code": "Code from the SMS",
+  "auth_send_code": "Send me a code",
   "auth_verify": "Verify",
   "auth_code_sent": "We sent a code to {phone}",
-  "auth_change_number": "Change number",
+  "auth_change_number": "Change the number",
   "auth_too_many": "Too many attempts. Wait a minute and try again.",
   "auth_prompt": "Sign in to book and track your place in the queue",
   "auth_sign_in": "Sign in",
@@ -333,5 +333,8 @@
   "profile_no_name": "No name set",
   "book_title": "Book an appointment",
   "nav_sections": "Sections",
-  "cached_results": "Saved {ago}. These may have changed since."
+  "cached_results": "Saved {ago}. These may have changed since.",
+  "auth_code_sent_to": "We sent a 6-digit code by SMS to",
+  "auth_code_hint": "It expires in 5 minutes.",
+  "auth_resend_code": "Send it again"
 }

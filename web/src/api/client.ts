@@ -318,6 +318,14 @@ export const api = {
     username: string
     password: string
     phone: string
+    /**
+     * One-time code from `requestCode`. Required, and required to be for
+     * THIS number: registration writes to whatever patient record already
+     * holds it, and USSD, WhatsApp and reception-desk patients all have a
+     * blank password. Without the code, knowing a number would be enough to
+     * claim that person's visit history. Server returns 401 if it is wrong.
+     */
+    code: string
     full_name?: string
     /** Required by the server, and required to be true. See docs/08 s6. */
     consent: boolean
