@@ -6,6 +6,7 @@ import {
   enqueue,
   newKey,
   pending,
+  toWire,
   type PendingAction,
   type PendingActionType,
 } from "./lib/offlineQueue"
@@ -44,7 +45,7 @@ export function useQueueActions() {
 
     setSyncing(true)
     try {
-      const result = await api.syncQueue(backlog)
+      const result = await api.syncQueue(backlog.map(toWire))
       // Clear everything the server accounted for, rejections included: a
       // duplicate check-in will never succeed on retry, and leaving it pending
       // would block the backlog forever.

@@ -15,12 +15,13 @@ a database in the wrong country.
 
 | | |
 |---|---|
-| Backend tests | 560 passing, 93% coverage |
-| Frontend tests | 25 passing |
-| API operations | 47, schema generated with zero warnings |
-| Screens | 30 across three surfaces |
-| Translations | 320 keys × 3 languages, parity enforced by test |
-| Patient bundle | 107 KB gzipped (budget 150 KB) |
+| Backend tests | 585 passing, 94% coverage |
+| Frontend tests | 27 passing |
+| API operations | 53, schema generated with zero warnings, no drift from the committed file |
+| Routes | 35 across three surfaces |
+| Translations | 335 keys × 3 languages, parity enforced by test |
+| Patient bundle | 106 KB gzipped (budget 150 KB) |
+| `ruff check apps/` | clean |
 | `npm audit` | 0 vulnerabilities |
 | `pip-audit` | clean, excluding `pip` itself (the installer, not shipped) |
 | Django | 5.2 LTS |
@@ -39,7 +40,34 @@ Verified by driving a browser, not by reading code:
   a 10 s budget, appointments, reports
 - Platform portal — verification queue, adoption figures, Care Guide
   monitoring
-- Offline reception: check-ins queue locally and sync on reconnect
+- Offline reception: check-ins queue locally and sync on reconnect — see the
+  correction below
+- One sign-in account per user type, so every surface can be opened from a
+  fresh clone (`manage.py seed_accounts`)
+
+### A claim this document previously got wrong
+
+An earlier version of this table said the offline reception flow was verified
+"by driving a browser, not by reading code". The screens were driven. The
+**round trip was not**, and it did not work.
+
+The client posted its stored record verbatim — `clientRecordedAt` — to an
+endpoint requiring `client_recorded_at`. Every replay returned 400, forever, so
+no check-in made during an outage ever reached the server. The backlog was not
+even lost; it retried and failed indefinitely, and nothing surfaced it. The
+receptionist also got no acknowledgement at all when checking somebody in
+offline, because the pending count was computed and never rendered, and the
+"you are offline" notice was gated on a board request having failed — which it
+does not, since the cached board is served.
+
+Fixed, and pinned three ways: `api.syncQueue` is typed against the generated
+schema so the compiler refuses the mismatch, a unit test asserts the wire field
+names, and the full round trip is now driven — offline check-in, reconnect,
+sync, reload, still there.
+
+The lesson is recorded rather than quietly patched: "verified in a browser" has
+to mean the whole path, including the part that only runs when the network is
+gone. Opening a screen is not exercising a feature.
 
 ---
 
@@ -143,5 +171,5 @@ them block the facility-facing product.
 
 ---
 
-*Last verified 2026-08-21. Every figure here was measured on the date shown,
+*Last verified 2026-08-24. Every figure here was measured on the date shown,
 locally, because CI has never run.*

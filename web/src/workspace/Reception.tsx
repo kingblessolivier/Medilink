@@ -4,7 +4,7 @@ import type { useQueueActions } from "./useQueueActions"
 import { CheckInForm } from "./CheckInForm"
 import { QueueTable } from "./QueueTable"
 import { EmptyState, Notice } from "../ui"
-import { IconUsers } from "../ui/icons"
+import { IconClock, IconUsers } from "../ui/icons"
 
 /**
  * The reception desk.
@@ -25,11 +25,12 @@ export function Reception({
   // The session says WHICH facility; /staff/me says what that facility
   // offers. The check-in form needs the service list, and putting it on the
   // session would load it for every admin and patient who never open this.
-  const me = useQuery({
+  const meQuery = useQuery({
     queryKey: ["staff-me"],
     queryFn: api.staffMe,
     staleTime: 10 * 60_000,
-  }).data
+  })
+  const me = meQuery.data
 
   const board = useQuery({
     queryKey: ["board"],
@@ -66,12 +67,51 @@ export function Reception({
         </p>
       </div>
 
-      {(me?.can_manage_queue ?? false) ? (
-        <CheckInForm services={me?.services ?? []} onCheckIn={actions.checkIn} />
+      {/* Three states, not two. `me?.can_manage_queue ?? false` collapsed
+          "still loading" into "not allowed", so for the first moment of every
+          visit a facility administrator was told their role could not change
+          the queue - a definite claim about someone's permissions, made
+          before we knew any of them. Say nothing until we do. */}
+      {meQuery.isLoading ? (
+        <div className="ml-card h-[7.5rem] animate-pulse bg-surface-sunken" />
+      ) : me?.can_manage_queue ? (
+        <CheckInForm services={me.services ?? []} onCheckIn={actions.checkIn} />
       ) : (
         <Notice tone="info">
           Your role can view the queue but not change it.
         </Notice>
+      )}
+
+      {/* Check-in is the one operation that may never fail, so it must also
+          never be silent. A receptionist working through an outage types a
+          name, the form clears, and the person does NOT appear on the board -
+          the board comes from the server. Without this line the only honest
+          reading is "it did not work", and they check the same patient in
+          again.
+
+          Driven by `pendingCount`, not by whether the board request failed.
+          React Query serves the cached board while offline, so `board.isError`
+          stays false and the old notice below never appeared at exactly the
+          moment it was needed. */}
+      {actions.pendingCount > 0 && (
+        <div
+          role="status"
+          className="mt-3 flex items-center gap-2.5 rounded-lg border border-warning-border bg-warning-subtle p-3 text-small text-warning"
+        >
+          <IconClock size={16} className="shrink-0" />
+          <span>
+            <span className="tabular-nums font-medium">
+              {actions.pendingCount}
+            </span>{" "}
+            {actions.pendingCount === 1 ? "check-in is" : "check-ins are"} saved
+            on this device.{" "}
+            {actions.syncing
+              ? "Sending them now."
+              : actions.online
+                ? "Sending shortly."
+                : "They will send when the connection returns."}
+          </span>
+        </div>
       )}
 
       {actions.lastError && (
@@ -108,10 +148,10 @@ export function Reception({
         <p className="text-small text-ink-muted">Loading...</p>
       )}
 
-      {board.isError && !actions.online && (
+      {!actions.online && (
         <Notice tone="warning">
-          Offline. Check-ins are being saved on this device and will sync
-          automatically when the connection returns.
+          Offline. You are looking at the last board this device received;
+          check-ins are saved here and sync when the connection returns.
         </Notice>
       )}
 
