@@ -1102,9 +1102,10 @@ export interface components {
          *     * `served` - Served
          *     * `no_show` - No show
          *     * `cancelled` - Cancelled
+         *     * `unrecorded` - Arrived, outcome not recorded
          * @enum {string}
          */
-        AppointmentStatusEnum: "booked" | "arrived" | "served" | "no_show" | "cancelled";
+        AppointmentStatusEnum: "booked" | "arrived" | "served" | "no_show" | "cancelled" | "unrecorded";
         /**
          * @description * `arrived` - arrived
          *     * `served` - served
@@ -1549,6 +1550,7 @@ export interface components {
             no_shows: number;
             /** Format: double */
             no_show_rate: number | null;
+            unrecorded: number;
         };
         ReportDemand: {
             service: string;

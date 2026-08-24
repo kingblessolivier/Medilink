@@ -25,6 +25,7 @@ class Command(BaseCommand):
             self.style.SUCCESS(
                 f"leave_now={result['leave_now']} "
                 f"reminders={result['reminders']} "
-                f"no_shows={result['no_shows']}"
+                f"no_shows={result['no_shows']} "
+                f"unrecorded={result['unrecorded']}"
             )
         )

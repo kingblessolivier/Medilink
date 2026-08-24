@@ -143,9 +143,11 @@ def book(
 ) -> Appointment:
     """Reserve one slot.
 
-    Capacity is re-checked inside the transaction with the existing rows locked,
-    so two patients tapping the last slot at the same moment cannot both
-    succeed.
+    Capacity is re-checked inside the transaction while holding a lock on the
+    slot's ScheduleTemplate, so two patients tapping the last slot at the same
+    moment cannot both succeed. The lock is on the TEMPLATE and not on the
+    appointments for the reason spelled out below - locking rows that do not
+    exist yet locks nothing.
     """
     if slot_start <= timezone.now():
         raise BookingError("That appointment time has already passed.")
@@ -163,19 +165,31 @@ def book(
             "Cancel one before booking another."
         )
 
-    # Lock the rows that decide whether capacity remains.
-    taken = (
-        Appointment.objects.select_for_update()
-        .filter(
-            facility=facility,
-            service_type=service_type,
-            # Same pool: a named clinician's list is not the general clinic's.
-            provider=provider,
-            slot_start=slot_start,
-            status__in=Appointment.OPEN_STATUSES,
-        )
-        .count()
-    )
+    # Lock a row that EXISTS.
+    #
+    # This used to take `select_for_update()` on the appointments themselves,
+    # which reads correctly and does nothing: SELECT ... FOR UPDATE locks rows
+    # it finds, and PostgreSQL takes no gap lock, so when a slot has capacity 1
+    # and nothing booked the filter matches nothing and acquires nothing. Two
+    # transactions both counted 0, both passed the check below, and both
+    # inserted. Raising the capacity did not save it either - under READ
+    # COMMITTED the blocked statement re-checks only the rows it waited on, and
+    # a row the other transaction inserted meanwhile is not in its snapshot.
+    #
+    # The template is the one row guaranteed to be there for every booking
+    # against this slot, so locking it serialises them. `one_active_appointment
+    # _per_slot` never covered this - it is keyed on `patient`, so it stops one
+    # person double-tapping and happily lets two people take the same last slot.
+    ScheduleTemplate.objects.select_for_update().get(pk=template.pk)
+
+    taken = Appointment.objects.filter(
+        facility=facility,
+        service_type=service_type,
+        # Same pool: a named clinician's list is not the general clinic's.
+        provider=provider,
+        slot_start=slot_start,
+        status__in=Appointment.OPEN_STATUSES,
+    ).count()
     if taken >= template.capacity_per_slot:
         raise SlotUnavailable("That time has just been taken. Please choose another.")
 

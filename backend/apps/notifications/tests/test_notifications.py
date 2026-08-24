@@ -303,3 +303,83 @@ def test_cancelled_appointments_get_no_reminder(facility, general, patient):
     )
 
     assert send_appointment_reminders() == 0
+
+
+# --------------------------------------------------------------------------
+# Appointments that never reach a terminal state
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_an_arrived_appointment_does_not_stay_open_forever(facility, general, patient):
+    """`ARRIVED` is in OPEN_STATUSES and only BOOKED was ever swept.
+
+    An appointment where reception pressed "arrived" and never pressed
+    "served" stayed open indefinitely - counting against the patient's
+    three-booking allowance for good, and sitting outside every number on the
+    reports screen.
+    """
+    from apps.notifications.tasks import close_unrecorded
+
+    stale = Appointment.objects.create(
+        facility=facility,
+        patient=patient,
+        service_type=general,
+        slot_start=timezone.now() - timedelta(days=3),
+        slot_end=timezone.now() - timedelta(days=3) + timedelta(minutes=15),
+        status=Appointment.Status.ARRIVED,
+    )
+
+    assert close_unrecorded() == 1
+
+    stale.refresh_from_db()
+    assert stale.status == Appointment.Status.UNRECORDED
+    assert stale.status not in Appointment.OPEN_STATUSES
+
+
+@pytest.mark.django_db
+def test_an_arrival_that_is_still_today_is_left_alone(facility, general, patient):
+    """A patient who arrived an hour ago may simply still be in the room."""
+    from apps.notifications.tasks import close_unrecorded
+
+    recent = Appointment.objects.create(
+        facility=facility,
+        patient=patient,
+        service_type=general,
+        slot_start=timezone.now() - timedelta(hours=1),
+        slot_end=timezone.now() - timedelta(minutes=45),
+        status=Appointment.Status.ARRIVED,
+    )
+
+    assert close_unrecorded() == 0
+
+    recent.refresh_from_db()
+    assert recent.status == Appointment.Status.ARRIVED
+
+
+@pytest.mark.django_db
+def test_an_unrecorded_outcome_is_not_counted_as_a_no_show(
+    facility, general, patient
+):
+    """The patient came. Counting a facility's own record-keeping as its
+    patients' failure would corrupt the number it judges the product by."""
+    from apps.notifications.tasks import close_unrecorded, mark_no_shows
+
+    Appointment.objects.create(
+        facility=facility,
+        patient=patient,
+        service_type=general,
+        slot_start=timezone.now() - timedelta(days=2),
+        slot_end=timezone.now() - timedelta(days=2) + timedelta(minutes=15),
+        status=Appointment.Status.ARRIVED,
+    )
+
+    close_unrecorded()
+    mark_no_shows()
+
+    assert (
+        Appointment.objects.filter(status=Appointment.Status.NO_SHOW).count() == 0
+    )
+    assert (
+        Appointment.objects.filter(status=Appointment.Status.UNRECORDED).count() == 1
+    )
