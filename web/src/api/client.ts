@@ -23,6 +23,7 @@ import type {
   Me,
   Board,
   CheckInResponse,
+  ProviderFilters,
   SyncAction,
   SyncResult,
   TransitionAction,
@@ -217,7 +218,12 @@ export const api = {
 
   provider: (slug: string) => request<ProviderDetail>(`/providers/${slug}`),
 
-  providers: (params: Record<string, unknown>) =>
+  // Named filters, not `Record<string, unknown>`. An unrecognised query
+  // parameter is silently dropped by the serializer, so a typo here would
+  // quietly return the unfiltered list rather than fail - the same shape of
+  // hole that let `clientRecordedAt` reach an endpoint expecting
+  // `client_recorded_at`. These names match ProviderQuerySerializer.
+  providers: (params: ProviderFilters = {}) =>
     request<ProviderList>("/providers", { params }),
 
   specialties: () =>

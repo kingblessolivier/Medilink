@@ -122,3 +122,13 @@ export type AdminStaffList = Schemas["AdminStaffList"]
 export type PlatformActivityReport = Schemas["PlatformActivity"]
 export type AccessLog = Schemas["AccessLog"]
 export type DeliveryReport = Schemas["DeliveryReport"]
+
+/** Query parameters for GET /providers. Mirrors ProviderQuerySerializer. */
+export type ProviderFilters = {
+  specialty?: string
+  facility?: string
+  service?: string
+  language?: "rw" | "en" | "fr" | "sw"
+  search?: string
+  limit?: number
+}
