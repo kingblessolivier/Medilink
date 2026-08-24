@@ -45,7 +45,7 @@ export function Notifications() {
         <EmptyState icon={<IconBell size={20} />}
           title={t("sign_in_to_track")}
           action={
-            <Link to="/sign-in" className="ml-btn-primary ml-btn-sm">
+            <Link to={`/sign-in?next=${encodeURIComponent("/notifications")}`} className="ml-btn-primary ml-btn-sm">
               {t("sign_in")}
             </Link>
           }

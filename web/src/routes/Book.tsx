@@ -105,7 +105,7 @@ export function Book() {
           title={t("sign_in_to_book")}
           body={t("sign_in_to_book_body")}
           action={
-            <Link to="/sign-in" className="ml-btn-primary ml-btn-sm">
+            <Link to={`/sign-in?next=${encodeURIComponent(`/facility/${slug}/book`)}`} className="ml-btn-primary ml-btn-sm">
               {t("sign_in")}
             </Link>
           }

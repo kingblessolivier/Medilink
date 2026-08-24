@@ -336,5 +336,11 @@
   "cached_results": "Ibi byabitswe {ago}. Bishobora kuba byarahindutse.",
   "auth_code_sent_to": "Twoherereje kode y'imibare 6 kuri SMS kuri",
   "auth_code_hint": "Irangira mu minota 5.",
-  "auth_resend_code": "Ongera uyohereze"
+  "auth_resend_code": "Ongera uyohereze",
+  "error_screen_title": "Hari ikitagenze neza kuri iyi paji",
+  "error_screen_body": "Nta cyo wakoze nabi, kandi nta cyo wabitse cyabuze. Ongera ugerageze, cyangwa usubire ku ntangiriro.",
+  "error_screen_retry": "Ongera ugerageze iyi paji",
+  "error_screen_home": "Subira ku ntangiriro",
+  "nearby_needs_a_place_title": "Hitamo aho uri",
+  "nearby_needs_a_place_body": "Hitamo akarere kawe hejuru, tukwereke amavuriro akinguye hafi yawe."
 }
