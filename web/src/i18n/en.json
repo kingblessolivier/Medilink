@@ -112,7 +112,7 @@
   "from_care_guide": "From your Care Guide result",
   "hero_title": "Healthcare, closer to you",
   "hero_body": "Find trusted hospitals, doctors and services near you. Know before you go.",
-  "search_placeholder": "Search hospitals, doctors or services...",
+  "search_placeholder": "Search hospitals or doctors",
   "search_no_matches": "Nothing found for {term}.",
   "group_specialties": "Specialties",
   "group_services": "Services",
@@ -342,5 +342,6 @@
   "error_screen_retry": "Try this screen again",
   "error_screen_home": "Back to the start",
   "nearby_needs_a_place_title": "Choose where you are",
-  "nearby_needs_a_place_body": "Pick your district above and we will show the facilities open near you."
+  "nearby_needs_a_place_body": "Pick your district above and we will show the facilities open near you.",
+  "group_insurers": "Insurance"
 }

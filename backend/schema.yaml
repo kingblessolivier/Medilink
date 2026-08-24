@@ -2267,12 +2267,14 @@ components:
       - results
     KindEnum:
       enum:
+      - insurer
       - specialty
       - service
       - provider
       - facility
       type: string
       description: |-
+        * `insurer` - insurer
         * `specialty` - specialty
         * `service` - service
         * `provider` - provider

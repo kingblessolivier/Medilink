@@ -20,6 +20,18 @@ const TONE: Record<WaitStatus, ChipTone> = {
   insufficient_data: "unknown",
 }
 
+/**
+ * `not_reported` and `insufficient_data` deliberately share one sentence.
+ *
+ * The API keeps them apart because operations needs to know which is which -
+ * "this facility runs no reception tool" is a sales problem, "this one has
+ * too few samples yet" is a time problem. A patient has no use for that
+ * distinction: both mean we do not know, and explaining our data collection
+ * to somebody deciding whether to travel is noise, not honesty.
+ *
+ * Recorded here because it looks like an oversight and is not.
+ */
+
 export function WaitLine({ wait, className }: { wait: Wait; className?: string }) {
   const { t, lang } = useI18n()
   const tone = TONE[wait.status]

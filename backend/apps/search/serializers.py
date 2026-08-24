@@ -32,7 +32,7 @@ class SearchResultSerializer(serializers.Serializer):
 
 class SearchGroupSerializer(serializers.Serializer):
     kind = serializers.ChoiceField(
-        choices=["specialty", "service", "provider", "facility"]
+        choices=["insurer", "specialty", "service", "provider", "facility"]
     )
     results = SearchResultSerializer(many=True)
 

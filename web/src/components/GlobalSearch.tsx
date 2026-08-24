@@ -24,6 +24,7 @@ const DEBOUNCE_MS = 250
 const MIN_CHARS = 2
 
 const GROUP_LABEL: Record<SearchGroup["kind"], string> = {
+  insurer: "group_insurers",
   specialty: "group_specialties",
   service: "group_services",
   provider: "group_doctors",

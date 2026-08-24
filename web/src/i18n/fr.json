@@ -112,7 +112,7 @@
   "from_care_guide": "Depuis votre guide de soins",
   "hero_title": "La sante, plus pres de vous",
   "hero_body": "Trouvez hopitaux, medecins et services pres de chez vous. Sachez avant de partir.",
-  "search_placeholder": "Rechercher hopitaux, medecins ou services...",
+  "search_placeholder": "Chercher hopital ou medecin",
   "search_no_matches": "Aucun resultat pour {term}.",
   "group_specialties": "Specialites",
   "group_services": "Services",
@@ -342,5 +342,6 @@
   "error_screen_retry": "Reessayer cet ecran",
   "error_screen_home": "Revenir au debut",
   "nearby_needs_a_place_title": "Choisissez ou vous etes",
-  "nearby_needs_a_place_body": "Choisissez votre district ci-dessus et nous afficherons les etablissements ouverts pres de vous."
+  "nearby_needs_a_place_body": "Choisissez votre district ci-dessus et nous afficherons les etablissements ouverts pres de vous.",
+  "group_insurers": "Assurance"
 }

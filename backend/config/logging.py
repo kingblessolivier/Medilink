@@ -36,6 +36,18 @@ LONG_DIGITS_PATTERN = re.compile(r"\b\d{9,}\b")
 
 REDACTED = "[redacted]"
 
+# Everything LogRecord sets itself. Anything else on a record arrived through
+# `extra={...}` at a call site, which is where the interesting values are.
+# Taken from a real record rather than hand-listed, so a Python upgrade that
+# adds a field cannot silently turn it into something we try to scrub.
+_BUILT_IN_ATTRS = frozenset(
+    vars(
+        logging.LogRecord(
+            name="", level=0, pathname="", lineno=0, msg="", args=(), exc_info=None
+        )
+    )
+) | {"message", "asctime", "taskName"}
+
 
 def scrub(text: str) -> str:
     """Remove recognisable patient identifiers from a string."""
@@ -67,10 +79,23 @@ class RedactPatientIdentifiers(logging.Filter):
                     for value in record.args
                 )
 
-        # Structured extras travel here. `exc_text` is the rendered traceback,
-        # which is exactly where a phone number ends up when a check-in raises.
+        # `exc_text` is the rendered traceback, which is exactly where a phone
+        # number ends up when a check-in raises.
         if getattr(record, "exc_text", None):
             record.exc_text = scrub(record.exc_text)
+
+        # Structured extras really do travel here - as attributes on the
+        # record, not in `args`. The comment above used to claim `exc_text`
+        # covered them, which is a different thing entirely.
+        #
+        # Nothing leaks today, because the console formatter renders only
+        # `%(message)s`. It leaks the moment somebody adds a JSON formatter
+        # for log aggregation, which is the normal next step - and the whole
+        # argument of this module is that redaction must not depend on people
+        # remembering. So it is handled now, while it costs nothing.
+        for key, value in vars(record).items():
+            if key not in _BUILT_IN_ATTRS and isinstance(value, str):
+                setattr(record, key, scrub(value))
 
         return True
 

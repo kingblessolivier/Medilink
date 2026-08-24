@@ -1272,13 +1272,14 @@ export interface components {
             results: components["schemas"]["Insurer"][];
         };
         /**
-         * @description * `specialty` - specialty
+         * @description * `insurer` - insurer
+         *     * `specialty` - specialty
          *     * `service` - service
          *     * `provider` - provider
          *     * `facility` - facility
          * @enum {string}
          */
-        KindEnum: "specialty" | "service" | "provider" | "facility";
+        KindEnum: "insurer" | "specialty" | "service" | "provider" | "facility";
         /**
          * @description * `rw` - Kinyarwanda
          *     * `en` - English

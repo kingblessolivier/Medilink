@@ -19,11 +19,25 @@ from django.contrib.gis.geos import Point
 from django.db.models import Q
 
 from apps.facilities.models import Facility, ServiceType
+from apps.insurance.models import Insurer
 from apps.providers.models import Specialty
 
 # Below this, a query matches almost everything and the results are noise.
 MIN_QUERY_LENGTH = 2
 PER_GROUP = 5
+
+# What people call things, mapped to what the database calls them.
+#
+# RAMA was absorbed into RSSB in 2015. The database is right and the country
+# has not caught up - patients, and plenty of reception desks, still say RAMA,
+# and the proposal this product was built from names it too. Searching it
+# returned nothing at all, which reads as "this platform does not do RAMA"
+# rather than "that is called RSSB now".
+SEARCH_ALIASES = {
+    "rama": "rssb",
+    "mituweli": "mutuelle",  # how it is written when typed in Kinyarwanda
+    "mutuel": "mutuelle",
+}
 
 
 def _facilities(term: str, point: Point | None, limit: int):
@@ -55,6 +69,16 @@ def search(*, term: str, lat: float | None = None, lng: float | None = None):
 
     point = Point(lng, lat, srid=4326) if lat is not None and lng is not None else None
 
+    # Applied to the whole term, not word by word: these are names, and
+    # somebody typing one has typed only that. The ORIGINAL is echoed back -
+    # a patient who typed "RAMA" should not be told they searched for "rssb".
+    typed = term
+    term = SEARCH_ALIASES.get(term.casefold(), term)
+
+    insurers = Insurer.objects.filter(
+        Q(name__icontains=term) | Q(code__icontains=term)
+    )[:PER_GROUP]
+
     specialties = Specialty.objects.filter(
         Q(name_en__icontains=term)
         | Q(name_rw__icontains=term)
@@ -70,6 +94,26 @@ def search(*, term: str, lat: float | None = None, lng: float | None = None):
     )[:PER_GROUP]
 
     groups = []
+
+    # Above specialties: somebody who types the name of their insurance is
+    # asking one question - "where can I use this" - and it has one answer.
+    if insurers:
+        groups.append(
+            {
+                "kind": "insurer",
+                "results": [
+                    {
+                        "code": i.code,
+                        "label": i.name,
+                        "label_rw": i.name,
+                        "label_fr": i.name,
+                        "href": f"/search?insurer={i.code}",
+                        "routable": True,
+                    }
+                    for i in insurers
+                ],
+            }
+        )
 
     if specialties:
         groups.append(
@@ -148,4 +192,4 @@ def search(*, term: str, lat: float | None = None, lng: float | None = None):
             }
         )
 
-    return {"query": term, "groups": groups}
+    return {"query": typed, "groups": groups}
