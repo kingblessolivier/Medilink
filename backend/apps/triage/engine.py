@@ -45,6 +45,16 @@ class SessionState:
     recommendation: str = ""
     finished: bool = False
 
+    @property
+    def has_outcome(self) -> bool:
+        """Did this session actually reach an answer?
+
+        A session can finish three ways: escalated, recommended, or run out of
+        questions. The third is a protocol defect, and telling those three
+        apart is what stops the last one being served as if it were an answer.
+        """
+        return self.escalated or bool(self.recommendation)
+
     def to_json(self) -> str:
         return json.dumps(
             {

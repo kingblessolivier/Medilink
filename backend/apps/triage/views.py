@@ -168,6 +168,29 @@ def answer_question(request, session_id):
             status=http.HTTP_400_BAD_REQUEST,
         )
 
+    if state.finished and not state.has_outcome:
+        # The flow ran out of questions without escalating or recommending.
+        # Load-time validation should make this unreachable, so getting here
+        # means the deployed protocol has a defect the checks missed.
+        #
+        # The one thing not to do is serve it. `finished: true` with a null
+        # recommendation renders as a symptom check that completed and said
+        # nothing, which a patient reads as "there is nothing wrong with me".
+        # Refuse instead - the same rule the wait estimate follows, where not
+        # knowing is stated rather than dressed up as an answer.
+        logger.error(
+            "triage_flow_dead_end",
+            extra={
+                "protocol_version": protocol.version,
+                "asked": len(state.asked),
+            },
+        )
+        engine.discard(state.session_id)
+        return _unavailable(
+            "The symptom checker could not complete. Please speak to a health "
+            "worker at your nearest facility."
+        )
+
     body = _render(protocol, state, record)
 
     if state.finished:

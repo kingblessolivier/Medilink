@@ -265,3 +265,147 @@ def test_repeated_escalation_posts_are_harmless(protocol):
         state = engine.answer(protocol, state, "route", "a")
         assert state.escalated is True
         assert state.recommendation == ""
+
+
+# --------------------------------------------------------------------------
+# Dead ends - a completed check that says nothing
+# --------------------------------------------------------------------------
+
+
+def looping_protocol_dict():
+    """"Any other symptoms?" -> yes -> back to the list.
+
+    The most natural follow-up in triage, and every other check passes it:
+    each option escalates, recommends, or links to a question that exists.
+    """
+    return {
+        "schema": 1,
+        "version": "loop.1",
+        "disclaimer": TEXT,
+        "emergency_advice": TEXT,
+        "first_question": "symptom",
+        "questions": [
+            {
+                "code": "symptom",
+                "text": TEXT,
+                "options": [
+                    {"code": "cough", "text": TEXT, "next_question": "more"},
+                    {"code": "rash", "text": TEXT, "recommend_service": "dental"},
+                ],
+            },
+            {
+                "code": "more",
+                "text": TEXT,
+                "options": [
+                    {"code": "yes", "text": TEXT, "next_question": "symptom"},
+                    {"code": "no", "text": TEXT, "recommend_service": "general"},
+                ],
+            },
+        ],
+    }
+
+
+def test_a_flow_that_can_return_to_a_question_is_rejected():
+    """The engine asks each question once, so this does not loop - it stops,
+    leaving the patient at `finished` with no recommendation and no error."""
+    with pytest.raises(ProtocolError, match="return to 'symptom'"):
+        parse(looping_protocol_dict())
+
+
+def test_the_rejection_names_the_loop():
+    """A clinician has to be able to find it in their own file."""
+    with pytest.raises(ProtocolError) as exc:
+        parse(looping_protocol_dict())
+
+    assert "symptom -> more -> symptom" in str(exc.value)
+
+
+def test_a_question_nothing_reaches_is_rejected():
+    """Usually a typo in a next_question, which leaves the intended question
+    silently unasked - so the flow that runs is not the flow reviewed."""
+    data = protocol_dict()
+    data["questions"].append(
+        {
+            "code": "orphan",
+            "text": TEXT,
+            "options": [{"code": "x", "text": TEXT, "recommend_service": "dental"}],
+        }
+    )
+
+    with pytest.raises(ProtocolError, match=r"no path reaches \['orphan'\]"):
+        parse(data)
+
+
+def test_a_red_flag_is_always_reachable(protocol):
+    """Red flags are asked before anything else regardless of what links to
+    them, so an unlinked one is not an orphan."""
+    data = protocol_dict()
+    data["questions"].append(
+        {
+            "code": "second_red",
+            "red_flag": True,
+            "text": TEXT,
+            "options": [
+                {"code": "yes", "text": TEXT, "escalate_emergency": True},
+                {"code": "no", "text": TEXT, "next_question": "route"},
+            ],
+        }
+    )
+
+    parsed = parse(data)  # must not raise
+
+    assert len(parsed.red_flag_questions) == 2
+
+
+def test_a_diamond_is_still_allowed():
+    """Two paths converging on one follow-up is ordinary clinical logic and
+    is NOT a cycle - the shared question is still only asked once."""
+    data = {
+        "schema": 1,
+        "version": "diamond.1",
+        "disclaimer": TEXT,
+        "emergency_advice": TEXT,
+        "first_question": "start",
+        "questions": [
+            {
+                "code": "start",
+                "text": TEXT,
+                "options": [
+                    {"code": "a", "text": TEXT, "next_question": "left"},
+                    {"code": "b", "text": TEXT, "next_question": "right"},
+                ],
+            },
+            {
+                "code": "left",
+                "text": TEXT,
+                "options": [{"code": "x", "text": TEXT, "next_question": "shared"}],
+            },
+            {
+                "code": "right",
+                "text": TEXT,
+                "options": [{"code": "y", "text": TEXT, "next_question": "shared"}],
+            },
+            {
+                "code": "shared",
+                "text": TEXT,
+                "options": [{"code": "z", "text": TEXT, "recommend_service": "dental"}],
+            },
+        ],
+    }
+
+    parsed = parse(data)  # must not raise
+
+    assert len(parsed.questions) == 4
+
+
+def test_a_session_without_an_outcome_is_not_an_outcome(protocol):
+    """The distinction the view refuses on: escalated or recommended is an
+    answer, running out of questions is a defect."""
+    state = engine.new_session(protocol)
+    assert state.has_outcome is False
+
+    state = engine.answer(protocol, state, "red", "no")
+    state = engine.answer(protocol, state, "route", "a")
+
+    assert state.finished is True
+    assert state.has_outcome is True
