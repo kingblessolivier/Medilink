@@ -10,5 +10,16 @@ ignore = ["E501"]
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings.test"
 python_files = ["test_*.py"]
-addopts = "-q --reuse-db"
+# `--ds` is NOT redundant with the line above. pytest-django resolves the
+# settings module as: --ds, then the DJANGO_SETTINGS_MODULE environment
+# variable, then this ini option - so an exported variable silently BEATS the
+# ini setting. The compose `api` service exports config.settings.dev, which is
+# correct for runserver and wrong for pytest, so running the suite in the
+# container quietly used dev settings: Redis cache and throttling both on.
+#
+# That reintroduced exactly the failure config/settings/test.py was written to
+# prevent - one shared IP spending the rate-limit budget, so ~25 tests fail in
+# a full run and pass when run alone. --ds wins over the environment, so the
+# suite now resolves the same way however it is invoked.
+addopts = "-q --reuse-db --ds=config.settings.test"
 testpaths = ["apps"]
