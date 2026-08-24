@@ -530,7 +530,11 @@ instead. Changing this needs an admin approval step first (R7), not a form.
 - [x] Platform analytics: adoption, verification backlog, booking channels
 - [x] Providers - verification workflow. CRUD stays in Django admin
 
-Lives in a third Vite app, `web-admin` on port 5175, superuser-only.
+Superuser-only, at `/platform` in `web/`. It shipped as a third Vite
+app (`web-admin`, :5175) and was folded into the single frontend on
+2026-08-21 - see the changelog entry for that date. The reasoning below
+is why it stayed a separate SURFACE with its own permission model, which
+the consolidation did not change.
 
 **Why a third app rather than a section of the reception app.** The provider
 app's entire session model is "which facility am I?" - `/staff/me` requires a

@@ -52,8 +52,7 @@ the build order in [docs/09-roadmap-and-milestones.md](docs/09-roadmap-and-miles
 | Backend        | Django 5 + Django REST Framework        |
 | Database       | PostgreSQL 16 + PostGIS 3.4             |
 | Cache / jobs   | Redis 7 + Celery                        |
-| Provider app   | React 18 + Vite + TypeScript            |
-| Patient app    | React 18 + Vite + TypeScript (PWA)      |
+| Frontend       | React 18 + Vite + TypeScript (one app, PWA) |
 | Notifications  | SMS (primary) + Web Push (secondary)    |
 | USSD           | Africa's Talking (or equivalent aggregator) |
 | WhatsApp       | Meta WhatsApp Business Cloud API        |
@@ -217,7 +216,7 @@ docker compose -f infra/docker-compose.yml up -d
 docker compose -f infra/docker-compose.yml exec api python manage.py migrate
 docker compose -f infra/docker-compose.yml exec api python manage.py loaddata fixtures/insurers.json fixtures/service_types.json fixtures/kigali_facilities.json
 docker compose -f infra/docker-compose.yml exec api python manage.py seed_demo
-docker compose -f infra/docker-compose.yml exec api python manage.py createsuperuser
+docker compose -f infra/docker-compose.yml exec api python manage.py seed_accounts
 
 # 3. Frontend
 cd web && npm install && npm run dev          # http://localhost:5173
@@ -231,20 +230,32 @@ rebuild.
 native libraries; a failed install leaves an empty venv, which shows up as
 `ModuleNotFoundError: No module named 'django'`.
 
-The facility workspace needs a staff account. Create one after `createsuperuser`:
+### Signing in
+
+One command creates one account per user type:
 
 ```bash
-docker compose -f infra/docker-compose.yml exec api python manage.py shell -c "
-from django.contrib.auth.models import User
-from apps.facilities.models import Facility
-from apps.staff.models import StaffMember
-u, _ = User.objects.get_or_create(username='reception')
-u.set_password('choose-a-password'); u.save()
-StaffMember.objects.update_or_create(
-    user=u,
-    defaults={'facility': Facility.objects.first(), 'role': 'receptionist'},
-)"
+docker compose -f infra/docker-compose.yml exec api python manage.py seed_accounts
 ```
+
+| Username | Signs in as | Lands on |
+|---|---|---|
+| `patient` | Patient | `/` — visits, bookings, queue tracking |
+| `reception` | Receptionist | `/workspace` — check-in, queue, appointments |
+| `clinician` | Clinician | `/workspace` — same screens, read-only queue |
+| `facility-admin` | Facility administrator | `/workspace` — check-in plus reports |
+| `platform` | Platform administrator | `/platform` — oversight across all facilities |
+
+Password for all five: `demo-pass-123`.
+
+Sign-in is one form at `/sign-in` for everybody; the API answers with a session
+`kind` and the app routes on it. There is no separate staff login URL, and
+visiting the wrong surface shows a refusal rather than a redirect — so a
+receptionist who bookmarks `/platform` is told why, not bounced silently.
+
+The command refuses to run with `DEBUG` off, and picks the facility that
+actually has a queue so the workspace has something in it. It is idempotent —
+run it again whenever you are not sure whether you already did.
 
 Verify the whole stack in one command:
 
