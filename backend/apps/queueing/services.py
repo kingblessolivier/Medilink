@@ -10,7 +10,7 @@ import statistics
 from datetime import timedelta
 
 from django.conf import settings
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Count
 from django.utils import timezone
 
@@ -66,6 +66,65 @@ def next_ticket_code(facility: Facility, service_type: ServiceType, now=None) ->
     return f"{letter}-{todays_count + 1:03d}"
 
 
+TICKET_ATTEMPTS = 6
+
+
+def _create_with_unique_ticket(
+    *,
+    facility,
+    service_type,
+    patient,
+    walk_in_name,
+    joined_at,
+    staff_user,
+    idempotency_key,
+):
+    """Insert the entry, retrying if two desks picked the same ticket code.
+
+    `next_ticket_code` counts today's entries and adds one, so two
+    receptionists checking somebody in at the same moment both read N and both
+    produce N+1. A busy hospital runs several desks, and the code is printed on
+    the slip a patient carries and heard called across the waiting room -
+    duplicates there are a real-world mix-up, not a cosmetic one.
+
+    A database constraint decides the winner and the loser recounts. Returns
+    None if the collision was on the idempotency key instead, which means the
+    request had already been recorded and the caller should return that entry.
+
+    Each attempt is its own nested transaction: an IntegrityError aborts the
+    block it happens in, and without the nesting the whole caller's transaction
+    would be poisoned - taking a replayed batch of forty check-ins with it.
+    """
+    for _ in range(TICKET_ATTEMPTS):
+        try:
+            with transaction.atomic():
+                return QueueEntry.objects.create(
+                    facility=facility,
+                    service_type=service_type,
+                    patient=patient,
+                    walk_in_name=walk_in_name,
+                    joined_at=joined_at,
+                    checked_in_by=staff_user,
+                    ticket_code=next_ticket_code(facility, service_type),
+                    ticket_day=timezone.localtime(joined_at).date(),
+                    idempotency_key=idempotency_key,
+                )
+        except IntegrityError:
+            if (
+                idempotency_key
+                and QueueEntry.objects.filter(
+                    facility=facility, idempotency_key=idempotency_key
+                ).exists()
+            ):
+                return None
+            # Ticket code taken. Recount and try the next one.
+            continue
+
+    raise QueueError(
+        "Could not allocate a ticket number. Please try again."
+    )
+
+
 # --------------------------------------------------------------------------
 # Check-in
 # --------------------------------------------------------------------------
@@ -118,16 +177,24 @@ def check_in(
 
     joined_at = joined_at or timezone.now()
 
-    entry = QueueEntry.objects.create(
+    entry = _create_with_unique_ticket(
         facility=facility,
         service_type=service_type,
         patient=patient,
         walk_in_name="" if patient else walk_in_name,
         joined_at=joined_at,
-        checked_in_by=staff_user,
-        ticket_code=next_ticket_code(facility, service_type),
+        staff_user=staff_user,
         idempotency_key=idempotency_key,
     )
+    if entry is None:
+        # Somebody else's insert carried our idempotency key: the retry we
+        # raced has already been recorded, so return theirs.
+        return (
+            QueueEntry.objects.get(
+                facility=facility, idempotency_key=idempotency_key
+            ),
+            False,
+        )
 
     # The first check-in is what makes a facility a queue reporter.
     if not facility.reports_queue:

@@ -17,7 +17,6 @@ from django.utils import timezone
 from apps.notifications.models import Notification
 from apps.notifications.services import dispatch
 from apps.queueing.models import QueueEntry
-from apps.queueing.services import eta_for
 from apps.queueing.travel import leave_by, travel_minutes
 from apps.scheduling.models import Appointment
 
@@ -41,19 +40,95 @@ def short_name(name: str, limit: int = 22) -> str:
     return name[:limit]
 
 
+def _positions_for(entries) -> dict[int, int]:
+    """Queue position for every entry, in one query.
+
+    Position is "how many WAITING entries in the same facility and service
+    joined before me, plus one" - which is a rank, and the database can rank a
+    whole country's queues at once far more cheaply than one COUNT per patient.
+    """
+    from django.db.models import F, Window
+    from django.db.models.functions import RowNumber
+
+    ranked = (
+        QueueEntry.objects.filter(
+            status=QueueEntry.Status.WAITING,
+            id__in=[e.id for e in entries],
+        )
+        .annotate(
+            rank=Window(
+                expression=RowNumber(),
+                partition_by=[F("facility_id"), F("service_type_id")],
+                order_by=F("joined_at").asc(),
+            )
+        )
+        .values_list("id", "rank")
+    )
+    return dict(ranked)
+
+
+def _rates_for(entries, now) -> dict[tuple[int, int], float]:
+    """Minutes-per-patient for every (facility, service) in play, in one query.
+
+    Only pairs that clear the sample-size gate are returned, so a missing key
+    means "we do not know" and the caller stays silent rather than guessing.
+    """
+    from django.conf import settings
+
+    from apps.queueing.models import ServiceTimeStat
+
+    pairs = {(e.facility_id, e.service_type_id) for e in entries}
+    stats = ServiceTimeStat.objects.filter(
+        facility_id__in={f for f, _ in pairs},
+        service_type_id__in={s for _, s in pairs},
+        hour_of_day=now.hour,
+        sample_size__gte=settings.MIN_SERVICE_TIME_SAMPLES,
+    ).values_list("facility_id", "service_type_id", "median_minutes_per_patient")
+
+    return {
+        (facility_id, service_id): rate
+        for facility_id, service_id, rate in stats
+        if (facility_id, service_id) in pairs
+    }
+
+
 def send_leave_now_notifications() -> int:
-    """Tell waiting patients when to set off."""
+    """Tell waiting patients when to set off.
+
+    Runs every minute against every waiting patient in the country, so the
+    query count has to scale with FACILITIES, not with people in waiting
+    rooms. It used to call `eta_for` per entry, and each of those issued a
+    position COUNT and a statistics lookup of its own - two queries per
+    waiting patient, every minute, on a schedule.
+
+    That is the same N+1 `wait_snapshot` carries an explicit warning about.
+    The positions and rates are now resolved in two queries for the whole
+    country and the loop does arithmetic.
+    """
     now = timezone.localtime()
     sent = 0
 
-    entries = QueueEntry.objects.filter(
-        status=QueueEntry.Status.WAITING, patient__isnull=False
-    ).select_related("patient", "facility", "service_type")
+    entries = list(
+        QueueEntry.objects.filter(
+            status=QueueEntry.Status.WAITING, patient__isnull=False
+        ).select_related("patient", "facility", "service_type")
+    )
+    if not entries:
+        return 0
+
+    positions = _positions_for(entries)
+    rates = _rates_for(entries, now)
 
     for entry in entries:
-        estimate = eta_for(entry, now=now)
-        if estimate["eta_minutes"] is None:
+        rate = rates.get((entry.facility_id, entry.service_type_id))
+        if rate is None:
             continue  # no reliable statistics - say nothing rather than guess
+
+        people_ahead = max(0, positions.get(entry.id, 1) - 1)
+        estimate = {
+            "eta_minutes": round(people_ahead * rate),
+            "position": positions.get(entry.id, 1),
+        }
 
         travel = travel_minutes(entry.patient.home_location, entry.facility.location)
         depart = leave_by(

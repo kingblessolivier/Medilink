@@ -383,3 +383,64 @@ def test_an_unrecorded_outcome_is_not_counted_as_a_no_show(
     assert (
         Appointment.objects.filter(status=Appointment.Status.UNRECORDED).count() == 1
     )
+
+
+@pytest.mark.django_db
+def test_the_leave_now_sweep_does_not_query_per_patient(
+    facility, general, patient, django_assert_max_num_queries
+):
+    """It runs every minute against every waiting patient in the country.
+
+    It used to call `eta_for` per entry, and each of those issued a position
+    COUNT and a statistics lookup of its own - two queries per waiting patient,
+    every minute. That is the same N+1 `wait_snapshot` carries an explicit
+    warning about. The count must scale with facilities, not with people in
+    waiting rooms, so adding more patients must not add more queries.
+    """
+    from apps.notifications.tasks import send_leave_now_notifications
+
+    make_service_time_stat(facility, general, median=10.0, samples=100)
+    for index in range(12):
+        person = Patient.objects.create(phone=f"+2507885000{index:02d}")
+        QueueEntry.objects.create(
+            facility=facility,
+            service_type=general,
+            patient=person,
+            joined_at=timezone.now() - timedelta(minutes=30 - index),
+            status=QueueEntry.Status.WAITING,
+            ticket_code=f"G-{index:03d}",
+            ticket_day=timezone.localtime().date(),
+        )
+
+    # Twelve patients. A per-entry implementation would need 24 queries for
+    # the estimates alone, before any notification work.
+    with django_assert_max_num_queries(12):
+        send_leave_now_notifications()
+
+
+@pytest.mark.django_db
+def test_the_leave_now_sweep_still_ranks_the_queue_correctly(
+    facility, general
+):
+    """Batching the positions must not change what they are."""
+    from apps.notifications.tasks import _positions_for
+
+    entries = []
+    for index in range(4):
+        entries.append(
+            QueueEntry.objects.create(
+                facility=facility,
+                service_type=general,
+                walk_in_name=f"P{index}",
+                joined_at=timezone.now() - timedelta(minutes=40 - index * 5),
+                status=QueueEntry.Status.WAITING,
+                ticket_code=f"G-{index:03d}",
+                ticket_day=timezone.localtime().date(),
+            )
+        )
+
+    positions = _positions_for(entries)
+
+    assert [positions[e.id] for e in entries] == [1, 2, 3, 4]
+    # And it agrees with the per-entry computation it replaced.
+    assert positions[entries[2].id] == entries[2].position()

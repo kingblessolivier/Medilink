@@ -41,6 +41,11 @@ class QueueEntry(models.Model):
         "auth.User", null=True, blank=True, on_delete=models.SET_NULL
     )
     ticket_code = models.CharField(max_length=8, blank=True)
+    # The local day the ticket belongs to. Stored rather than derived, because
+    # the uniqueness of a ticket code is per facility, per service, PER DAY -
+    # G-001 recurs every morning - and a partial index cannot be built on a
+    # timezone-converted expression.
+    ticket_day = models.DateField(null=True, blank=True)
 
     # Reception networks drop constantly. A retry after a timeout must return
     # the original entry rather than creating a duplicate.
@@ -61,6 +66,16 @@ class QueueEntry(models.Model):
                 fields=["facility", "idempotency_key"],
                 condition=models.Q(idempotency_key__gt=""),
                 name="unique_idempotency_key_per_facility",
+            ),
+            # Two desks checking somebody in at the same moment both counted
+            # today's entries and both produced the same code. The code is
+            # printed on the patient's slip and called across the waiting
+            # room, so a duplicate is a real mix-up. The database decides who
+            # gets it; the loser recounts. See services._create_with_unique_ticket.
+            models.UniqueConstraint(
+                fields=["facility", "service_type", "ticket_day", "ticket_code"],
+                condition=models.Q(ticket_day__isnull=False),
+                name="unique_ticket_code_per_day",
             ),
         ]
 
