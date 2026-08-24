@@ -65,9 +65,15 @@ export function FacilityCard({
 
         <div className="min-w-0 flex-1">
           <h3 className="text-h3 leading-snug">
+            {/* The ::after stretches this link over the whole card, so the
+                body is the way to the facility page and the "View facility"
+                button that used to say so is gone. Three actions on a tile
+                this size made none of them read as the obvious one, and the
+                card already looked clickable without being clickable.
+                One link for a screen reader, not two. */}
             <Link
               to={`/facility/${facility.slug}`}
-              className="hover:text-primary hover:underline"
+              className="hover:text-primary hover:underline after:absolute after:inset-0 after:content-['']"
             >
               {facility.name}
             </Link>
@@ -107,7 +113,9 @@ export function FacilityCard({
         <WaitLine wait={facility.wait} className="mt-2.5" />
       )}
 
-      <div className="mt-4 flex flex-wrap items-center gap-2 pt-0 [&]:mt-auto">
+      {/* `relative` lifts these above the stretched card link, so they stay
+          separately clickable while the body routes to the facility page. */}
+      <div className="relative mt-4 flex flex-wrap items-center gap-2 pt-0 [&]:mt-auto">
         <a
           className="ml-btn-secondary ml-btn-sm"
           href={`https://www.google.com/maps/dir/?api=1&destination=${facility.location.lat},${facility.location.lng}`}
@@ -117,12 +125,9 @@ export function FacilityCard({
           <IconRoute size={15} />
           {t("directions")}
         </a>
-        <Link
-          to={`/facility/${facility.slug}`}
-          className="ml-btn-tertiary ml-btn-sm"
-        >
-          {t("view_facility")}
-        </Link>
+        {/* Book stays primary. It was tempting to demote it in a list, but
+            it is the one action that changes a patient's day, and a facility
+            that cannot be booked simply does not render it. */}
         {facility.bookable && (
           <Link
             to={`/facility/${facility.slug}/book`}

@@ -33,6 +33,13 @@
   h2 { @apply text-h2 font-semibold; }
   h3 { @apply text-h3 font-semibold; }
 
+  /* The top bar is sticky, so anything scrolled to by an in-page anchor -
+     or by scrollIntoView after a filter change - lands underneath it and is
+     invisible until you scroll back up. Clear the header height. */
+  :is(h1, h2, h3, [id]) {
+    scroll-margin-top: 5rem;
+  }
+
   /* Visible focus is an accessibility requirement here, not a preference:
      a meaningful share of users navigate by keyboard, and reception staff
      work this product without touching the mouse. */
@@ -125,7 +132,15 @@
   .ml-btn-destructive {
     @apply ml-btn border border-danger-border bg-surface text-danger hover:bg-danger-subtle;
   }
+  /* 36px is right at a desk with a mouse - the workspace tables are dense on
+     purpose and a 44px control in every row would halve what fits on screen.
+     It is NOT right under a thumb, and the patient app uses this size for
+     real actions: "Book", "See all", "Change filters". Raised on coarse
+     pointers only, so both audiences get the size that suits their input. */
   .ml-btn-sm { @apply min-h-0 h-9 px-3 text-small; }
+  @media (pointer: coarse) {
+    .ml-btn-sm { @apply min-h-touch h-auto py-2; }
+  }
   .ml-btn-icon { @apply min-h-touch w-touch px-0; }
 
   /* ----------------------------------------------------------------- inputs */

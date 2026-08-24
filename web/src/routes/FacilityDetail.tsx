@@ -91,14 +91,20 @@ export function FacilityDetail() {
                     I need", which is what a patient actually asks. */}
                 <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
                   {data.services.slice(0, 6).map((service) => (
+                    // Stacks on a narrow screen. Side by side, the service
+                    // name was the half that gave way - and it is the half
+                    // that identifies the row, so "Kwivuza rusange" became
+                    // "Kwivuza rusa..." next to an intact wait chip. The
+                    // Kinyarwanda names are the longest of the three
+                    // languages, so the default language was worst hit.
                     <li
                       key={service.code}
-                      className="flex items-center justify-between gap-3 px-4 py-3"
+                      className="flex flex-col gap-1.5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
                     >
-                      <span className="min-w-0 truncate text-body">
+                      <span className="min-w-0 text-body sm:truncate">
                         {label(service)}
                       </span>
-                      <WaitLine wait={service.wait} />
+                      <WaitLine wait={service.wait} className="shrink-0" />
                     </li>
                   ))}
                 </ul>

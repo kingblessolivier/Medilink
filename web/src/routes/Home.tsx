@@ -147,10 +147,18 @@ export function Home() {
                 <GlobalSearch coords={coords} />
               </div>
 
+              {/* One primary affordance, not two.
+                  The search field above and this button did the same job with
+                  the same weight, stacked, so neither read as the thing to
+                  use. Typing is the better path - it reaches doctors and
+                  services, not just facilities - so the field keeps the
+                  emphasis and this is demoted to the outline treatment the
+                  Care Guide already uses. Kept rather than removed: somebody
+                  who does not know what to type still needs a way in. */}
               <div className="mt-4 flex flex-wrap gap-2">
                 <Link
                   to="/search"
-                  className="ml-btn inline-flex bg-white text-primary hover:bg-white/90"
+                  className="ml-btn inline-flex border border-white/30 text-white hover:bg-white/10"
                 >
                   <IconSearch size={17} />
                   {t("find_care")}

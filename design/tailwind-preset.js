@@ -130,7 +130,14 @@ export default {
         overlay:
           "0 1px 2px rgba(23, 32, 28, 0.04), 0 8px 24px -4px rgba(23, 32, 28, 0.10)",
         // Focus ring, applied as a shadow so it survives overflow clipping.
-        focus: "0 0 0 3px rgba(11, 107, 85, 0.22)",
+        //
+        // 0.22 opacity measured about 1.3:1 against the page - a hint of a
+        // halo rather than an indicator, and WCAG 2.2 asks for 3:1 against
+        // what is next to it. At 0.9 the same ring reads as a ring. This
+        // matters more here than on most products: reception staff work the
+        // workspace entirely from the keyboard, so this is how they know
+        // where they are.
+        focus: "0 0 0 3px rgba(11, 107, 85, 0.9)",
       },
 
       spacing: {

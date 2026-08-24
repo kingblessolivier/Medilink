@@ -11,7 +11,7 @@ import logging
 
 import pytest
 
-from config.logging import RedactPatientIdentifiers, scrub
+from config.logging import REDACTED, RedactPatientIdentifiers, scrub
 
 
 @pytest.fixture
@@ -155,3 +155,52 @@ def test_every_settings_module_redacts():
                 f"{name}: handler {handler!r} is missing the redact_pii "
                 f"filter, so patient identifiers would reach the logs"
             )
+
+
+def test_structured_extras_are_scrubbed_too(caplog):
+    """`extra={...}` becomes ATTRIBUTES on the record, not `args`.
+
+    Nothing leaked while the console formatter rendered only %(message)s, but
+    the whole argument of config/logging.py is that redaction must not depend
+    on somebody remembering - and a JSON formatter for log aggregation is the
+    normal next step. The comment in the filter used to claim `exc_text`
+    covered these, which is a different thing entirely.
+    """
+    record = logging.LogRecord(
+        name="apps.gateway",
+        level=logging.WARNING,
+        pathname=__file__,
+        lineno=1,
+        msg="ussd_bad_secret",
+        args=(),
+        exc_info=None,
+    )
+    record.phone = "+250788123456"
+    record.national_id = "1199780012345678"
+    record.count = 3  # not a string; must survive untouched
+
+    RedactPatientIdentifiers().filter(record)
+
+    assert "788123456" not in record.phone
+    assert record.phone == REDACTED
+    assert "1199780012345678" not in record.national_id
+    assert record.count == 3
+
+
+def test_the_records_own_fields_are_left_alone():
+    """Scrubbing every attribute would mangle the logger name and the path."""
+    record = logging.LogRecord(
+        name="apps.queueing",
+        level=logging.INFO,
+        pathname="/app/apps/queueing/services.py",
+        lineno=42,
+        msg="checked in",
+        args=(),
+        exc_info=None,
+    )
+
+    RedactPatientIdentifiers().filter(record)
+
+    assert record.name == "apps.queueing"
+    assert record.pathname == "/app/apps/queueing/services.py"
+    assert record.lineno == 42

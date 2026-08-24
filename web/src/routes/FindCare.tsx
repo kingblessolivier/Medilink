@@ -155,6 +155,26 @@ export function FindCare() {
             </label>
           </div>
 
+          {/* The district picker decides WHERE the search happens - it is
+              the origin, not a filter - so it belongs with the other controls
+              that shape the list, above the count. It used to sit below "N
+              results", which announced a number before offering the control
+              that determines it. */}
+          {geoFailed && (
+            <div className="mb-4">
+              <DistrictPicker
+                message={
+                  geo.status === "out_of_bounds"
+                    ? t("out_of_bounds")
+                    : t("location_denied")
+                }
+                selected={district}
+                onPick={(picked) => setParam("district", picked)}
+                onRetry={locate}
+              />
+            </div>
+          )}
+
           <div className="mb-3 flex items-center justify-between">
             {/* An h2, not a styled paragraph. This heads the results list,
                 and without it the page jumped H1 -> H3 - the only screen in
@@ -172,21 +192,6 @@ export function FindCare() {
               {showMap ? t("hide_map") : t("show_map")}
             </Button>
           </div>
-
-          {geoFailed && (
-            <div className="mb-4">
-              <DistrictPicker
-                message={
-                  geo.status === "out_of_bounds"
-                    ? t("out_of_bounds")
-                    : t("location_denied")
-                }
-                selected={district}
-                onPick={(picked) => setParam("district", picked)}
-                onRetry={locate}
-              />
-            </div>
-          )}
 
           <div className="mb-3 empty:mb-0">
             <CachedNotice updatedAt={query.dataUpdatedAt} />

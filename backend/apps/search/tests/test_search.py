@@ -13,6 +13,7 @@ from rest_framework.test import APIClient
 
 from apps.facilities.models import Facility, FacilityService, OpeningHours, ServiceType
 from apps.providers.models import Provider, ProviderFacility, Specialty
+from apps.search.services import search
 
 SEARCH = "/api/v1/search"
 KCC_LAT, KCC_LNG = -1.9536, 30.0606
@@ -242,3 +243,35 @@ def test_query_count_is_bounded(
 
     with django_assert_max_num_queries(8):
         api_client.get(SEARCH, {"q": "health", "lat": KCC_LAT, "lng": KCC_LNG})
+
+
+@pytest.mark.django_db
+def test_searching_an_insurer_finds_it(db):
+    """Typing the name of your insurance is one question - "where can I use
+    this" - and it had no answer at all: insurers were not searched."""
+    from apps.insurance.models import Insurer
+
+    Insurer.objects.create(code="mutuelle", name="Mutuelle de Sante")
+
+    groups = {g["kind"]: g for g in search(term="mutuelle")["groups"]}
+
+    assert "insurer" in groups
+    assert groups["insurer"]["results"][0]["code"] == "mutuelle"
+
+
+@pytest.mark.django_db
+def test_rama_still_finds_rssb(db):
+    """RAMA was absorbed into RSSB in 2015. The database is right and the
+    country has not caught up - patients say RAMA, reception desks say RAMA,
+    and the proposal this was built from says RAMA. Returning nothing reads as
+    "this platform does not do RAMA", not "that is called RSSB now"."""
+    from apps.insurance.models import Insurer
+
+    Insurer.objects.create(code="rssb", name="RSSB (formerly RAMA)")
+
+    result = search(term="RAMA")
+    groups = {g["kind"]: g for g in result["groups"]}
+
+    assert groups["insurer"]["results"][0]["code"] == "rssb"
+    # And they are told what they searched for, not what we turned it into.
+    assert result["query"] == "RAMA"
