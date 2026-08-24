@@ -85,6 +85,9 @@ export type StaffService = Schemas["StaffService"]
 export type Board = Schemas["Board"]
 export type ServiceGroup = Schemas["ServiceGroup"]
 export type SyncResult = Schemas["SyncResponse"]
+/** One replayed offline action, exactly as the wire wants it.
+ *  Snake_case on purpose - this is the payload, not our model. */
+export type SyncAction = Schemas["SyncAction"]
 export type CheckInResponse = Schemas["CheckInResponse"]
 export type StaffAppointment = Schemas["StaffAppointment"]
 export type StaffAppointmentList = Schemas["StaffAppointmentList"]

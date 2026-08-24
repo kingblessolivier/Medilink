@@ -23,6 +23,7 @@ import type {
   Me,
   Board,
   CheckInResponse,
+  SyncAction,
   SyncResult,
   TransitionAction,
   StaffAppointment,
@@ -349,7 +350,12 @@ export const api = {
       method: "POST",
     }),
 
-  syncQueue: (actions: unknown[]) =>
+  // `SyncAction[]`, not `unknown[]`. It was `unknown[]`, and that is exactly
+  // why nothing caught the client sending `clientRecordedAt` to an endpoint
+  // that requires `client_recorded_at` - every replay 400'd, so no check-in
+  // made offline ever reached the server. Typed against the generated schema,
+  // the compiler now refuses the mismatch.
+  syncQueue: (actions: SyncAction[]) =>
     request<SyncResult>("/queue/sync", {
       method: "POST",
       body: { actions },

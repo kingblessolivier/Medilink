@@ -19,9 +19,8 @@ vi.mock("idb-keyval", () => ({
   entries: async () => [...store.entries()],
 }))
 
-const { dequeue, enqueue, newKey, pending, pendingCount } = await import(
-  "./offlineQueue"
-)
+const { dequeue, enqueue, newKey, pending, pendingCount, toWire } =
+  await import("./offlineQueue")
 
 function action(minutesAgo: number, name: string) {
   return {
@@ -73,5 +72,48 @@ describe("offlineQueue", () => {
     await enqueue(action(5, "A"))
 
     expect(await pendingCount()).toBe(1)
+  })
+})
+
+describe("the wire shape", () => {
+  /**
+   * This is not a formatting preference. The client used to post the stored
+   * record verbatim - `clientRecordedAt` - to an endpoint that requires
+   * `client_recorded_at`. Every replay came back 400, forever, so no check-in
+   * made during an outage ever reached the server, and nothing failed loudly
+   * enough to notice.
+   */
+  it("uses the field names the server actually requires", () => {
+    const stored = {
+      key: newKey(),
+      type: "check_in" as const,
+      clientRecordedAt: "2026-08-24T09:15:00.000Z",
+      payload: { service: "general_consultation", walk_in_name: "Uwase Alice" },
+    }
+
+    const wire = toWire(stored)
+
+    expect(wire).toEqual({
+      key: stored.key,
+      type: "check_in",
+      client_recorded_at: "2026-08-24T09:15:00.000Z",
+      payload: { service: "general_consultation", walk_in_name: "Uwase Alice" },
+    })
+    expect(wire).not.toHaveProperty("clientRecordedAt")
+  })
+
+  it("keeps the timestamp the receptionist recorded, not a fresh one", () => {
+    // The server orders the replayed batch on this. Regenerating it would put
+    // an hour of offline patients behind everyone checked in since.
+    const recorded = "2026-08-24T08:00:00.000Z"
+
+    const wire = toWire({
+      key: newKey(),
+      type: "check_in",
+      clientRecordedAt: recorded,
+      payload: {},
+    })
+
+    expect(wire.client_recorded_at).toBe(recorded)
   })
 })
