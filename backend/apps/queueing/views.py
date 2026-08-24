@@ -263,6 +263,11 @@ def sync(request):
     Per-item results, so one rejected action does not fail the whole batch -
     a receptionist reconnecting after an hour must not lose the other 39
     check-ins because one patient was a duplicate.
+
+    Every applied action writes the same PatientAccessLog row its online
+    handler would. Being offline changes when a patient record was written,
+    not whether the write has to be attributable - and a batch of forty
+    arriving at once is precisely the pattern docs/08 s6 wants visible.
     """
     staff = active_staff(request)
     payload = SyncSerializer(data=request.data)
@@ -292,6 +297,19 @@ def sync(request):
                     # The receptionist's clock, not the server's arrival time.
                     joined_at=action["client_recorded_at"],
                 )
+                # Same audit row the online handler writes. A replayed
+                # check-in is still a write to an identifiable patient record,
+                # and docs/08 s6 requires every one of them to be attributable
+                # - a receptionist reconnecting after an hour writes forty of
+                # them at once, which is also the shape a bulk access would
+                # take. Only replays that actually applied are recorded.
+                if created:
+                    record_access(
+                        request,
+                        action=PatientAccessLog.Action.CHECK_IN,
+                        patient=entry.patient,
+                        facility=staff.facility,
+                    )
                 results.append(
                     {
                         "key": key,
@@ -307,6 +325,12 @@ def sync(request):
                     facility_id=staff.facility_id,
                 )
                 TRANSITIONS[kind](entry)
+                record_access(
+                    request,
+                    action=PatientAccessLog.Action.TRANSITION,
+                    patient=entry.patient,
+                    facility=entry.facility,
+                )
                 results.append({"key": key, "ok": True, "entry_id": entry.id})
         except QueueEntry.DoesNotExist:
             results.append(

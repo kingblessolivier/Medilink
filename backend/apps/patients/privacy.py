@@ -42,6 +42,9 @@ def export(patient) -> dict:
         "exported_at": timezone.now().isoformat(),
         "profile": {
             "phone": patient.phone,
+            # Held about them, so it is disclosed. Its absence made the export
+            # incomplete for anyone who had registered on the web.
+            "username": patient.username,
             "full_name": patient.full_name,
             "language": patient.language,
             "district": patient.district,
@@ -57,6 +60,15 @@ def export(patient) -> dict:
             ),
             # The hash is disclosed, not the number - we never held the number.
             "national_id_hash": patient.national_id_hash or None,
+            # What they agreed to and when. A person asking what is held about
+            # them is entitled to see the record of their own consent, and to
+            # notice if it names a notice version they never saw.
+            "consent": {
+                "given_at": (
+                    patient.consented_at.isoformat() if patient.consented_at else None
+                ),
+                "notice_version": patient.consent_version or None,
+            },
         },
         "appointments": [
             {
@@ -123,8 +135,9 @@ def anonymise(patient) -> None:
     # Queue history stays; the name and the link to a person do not.
     QueueEntry.objects.filter(patient=patient).update(patient=None, walk_in_name="")
 
-    # Appointments have a PROTECT foreign key - the counts a facility needs
-    # would otherwise block erasure entirely. Cancel and detach.
+    # Cancel and detach rather than delete. The facility keeps the booking in
+    # its own counts - a slot that was held and not released is part of its
+    # no-show and utilisation picture - and the person is no longer in it.
     Appointment.objects.filter(patient=patient).update(
         patient=None, status=Appointment.Status.CANCELLED, cancelled_at=timezone.now()
     )
@@ -139,6 +152,24 @@ def anonymise(patient) -> None:
     patient.national_id_hash = ""
     patient.home_location = None
     patient.insurer = None
+
+    # Web credentials go too. Without this the account stays reachable: sign-in
+    # resolves a patient by username and the password hash was left intact, so
+    # somebody who had exercised their right to erasure could still log in
+    # afterwards. The username is identifying data in its own right as well -
+    # people choose their own name for it.
+    #
+    # None rather than "", because the column is unique: a second erasure would
+    # collide on an empty string the way it would have collided on a blank
+    # phone. Postgres permits many NULLs in a unique index.
+    patient.username = None
+    patient.password = ""
+
+    # `consented_at` and `consent_version` are deliberately NOT cleared. Once
+    # the row is severed from the person they are no longer personal data, and
+    # they are the controller's record that processing had a lawful basis while
+    # it was happening. Erasing the evidence of consent is not the same as
+    # erasing the person.
     patient.save()
 
     logger.info("patient_anonymised", extra={"patient_id": patient.pk})

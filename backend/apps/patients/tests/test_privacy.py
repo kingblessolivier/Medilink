@@ -334,3 +334,68 @@ def test_an_audit_failure_never_breaks_the_request(
     )
 
     assert response.status_code == 201
+
+
+@pytest.mark.django_db
+def test_erasure_revokes_the_ability_to_sign_in(patient, history):
+    """Erasure that leaves working credentials has not erased anybody.
+
+    Sign-in resolves a patient by username and the password hash was left
+    intact, so somebody who had exercised their right to erasure could still
+    log in afterwards and find the shell of their own record.
+    """
+    patient.username = "claire"
+    patient.set_password("correct-horse-battery")
+    patient.save()
+
+    anonymise(patient)
+    patient.refresh_from_db()
+
+    assert patient.username is None
+    assert not patient.password
+    assert not patient.check_password("correct-horse-battery")
+
+
+@pytest.mark.django_db
+def test_two_erasures_of_named_accounts_do_not_collide(db):
+    """`username` is unique, so blanking it would make the second erasure fail
+    the way blanking `phone` would have."""
+    first = Patient.objects.create(phone="+250788111444", username="alice")
+    second = Patient.objects.create(phone="+250788222444", username="bob")
+
+    anonymise(first)
+    anonymise(second)
+
+    assert Patient.objects.filter(username__isnull=True).count() == 2
+
+
+@pytest.mark.django_db
+def test_erasure_keeps_the_record_that_consent_was_given(patient, history):
+    """Deliberate. Once the row is severed from the person these are no longer
+    personal data, and they are the controller's evidence that processing had a
+    lawful basis while it was happening."""
+    patient.consented_at = timezone.now()
+    patient.consent_version = "2026-08"
+    patient.save()
+
+    anonymise(patient)
+    patient.refresh_from_db()
+
+    assert patient.consented_at is not None
+    assert patient.consent_version == "2026-08"
+
+
+@pytest.mark.django_db
+def test_the_export_includes_the_username_and_the_consent_record(patient):
+    """A person asking what is held about them is entitled to both - and to
+    notice if the consent names a notice version they never saw."""
+    patient.username = "claire"
+    patient.consented_at = timezone.now()
+    patient.consent_version = "2026-08"
+    patient.save()
+
+    profile = export(patient)["profile"]
+
+    assert profile["username"] == "claire"
+    assert profile["consent"]["notice_version"] == "2026-08"
+    assert profile["consent"]["given_at"] is not None
