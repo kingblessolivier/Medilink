@@ -96,7 +96,22 @@ class QueueEntry(models.Model):
 
 
 class ServiceTimeStat(models.Model):
-    """Rolling median of how long a patient actually takes, per hour of day.
+    """How fast this service clears patients, per hour of day.
+
+    **This is a RATE, not a wait.** The field is the median gap between one
+    patient being served and the next - minutes per patient - because that is
+    the only quantity the ETA formula can use: `people_ahead x rate`.
+
+    It used to store `served_at - joined_at`, which is a patient's entire wait
+    including the queue in front of them. Multiplying a queue-length-dependent
+    quantity by queue length compounds, so the estimate ran roughly nine times
+    high on a busy clinic and got worse the busier it was. The name said
+    "service time" and the value was a latency; the field name now says which
+    of the two it is, because that confusion is the whole bug.
+
+    Inter-departure rather than `served_at - called_at` (the consultation
+    itself): where two clinicians run one service in parallel the gap between
+    departures correctly halves, and a consultation duration does not.
 
     Median, not mean: one patient who takes ninety minutes must not drag the
     estimate for everyone behind them.
@@ -107,7 +122,7 @@ class ServiceTimeStat(models.Model):
         "facilities.ServiceType", on_delete=models.CASCADE
     )
     hour_of_day = models.SmallIntegerField()
-    median_minutes = models.FloatField()
+    median_minutes_per_patient = models.FloatField()
     sample_size = models.PositiveIntegerField()
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -117,5 +132,6 @@ class ServiceTimeStat(models.Model):
     def __str__(self) -> str:
         return (
             f"{self.facility.name} {self.service_type.code} @{self.hour_of_day}h: "
-            f"{self.median_minutes:.0f} min (n={self.sample_size})"
+            f"{self.median_minutes_per_patient:.0f} min/patient "
+            f"(n={self.sample_size})"
         )
