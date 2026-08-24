@@ -145,6 +145,9 @@ def parse(raw: dict, source: str = "<memory>") -> Protocol:
                     "it must escalate, recommend a service, or ask another question"
                 )
 
+    _reject_cycles(questions, first_question, source)
+    _reject_unreachable(questions, first_question, source)
+
     return Protocol(
         version=version,
         source=source,
@@ -154,6 +157,92 @@ def parse(raw: dict, source: str = "<memory>") -> Protocol:
         questions=questions,
         first_question=first_question,
     )
+
+
+def _links(question: Question) -> tuple[str, ...]:
+    return tuple(o.next_question for o in question.options if o.next_question)
+
+
+def _entry_points(questions: dict, first_question: str) -> list[str]:
+    """Where the flow can begin.
+
+    `first_question`, plus anything a red-flag answer routes to - a red flag
+    that does not escalate hands the patient on, and that target is reachable
+    without ever passing through first_question.
+    """
+    entries = [first_question]
+    for question in questions.values():
+        if question.red_flag:
+            entries.extend(_links(question))
+    return entries
+
+
+def _reject_cycles(questions: dict, first_question: str, source: str) -> None:
+    """A question the flow can return to is a dead end, not a loop.
+
+    The engine asks each question at most once - `asked` guards it - so a
+    protocol that routes back to somewhere already answered does not loop. It
+    stops. The patient reaches `finished` with no recommendation, no
+    escalation and no error: a completed symptom check that says nothing.
+
+    This is not an exotic authoring mistake. "Do you have any other symptoms?
+    -> yes -> back to the list" is the most natural follow-up in triage, and
+    every option in it escalates, recommends or links to a question that
+    exists, so every other check here passes it.
+
+    Rejected at load rather than handled at runtime, because the clinician who
+    signed the protocol off needs to know the flow they reviewed is the flow
+    that runs.
+    """
+    WHITE, GREY, BLACK = 0, 1, 2
+    colour = dict.fromkeys(questions, WHITE)
+
+    def walk(code: str, path: list[str]) -> None:
+        colour[code] = GREY
+        for target in _links(questions[code]):
+            if colour.get(target) == GREY:
+                loop = " -> ".join([*path[path.index(target) :], target])
+                raise ProtocolError(
+                    f"{source}: the flow can return to '{target}' ({loop}). "
+                    "A question is only ever asked once, so this ends the "
+                    "session with no recommendation instead of looping."
+                )
+            if colour.get(target) == WHITE:
+                walk(target, [*path, target])
+        colour[code] = BLACK
+
+    for entry in _entry_points(questions, first_question):
+        if entry in questions and colour[entry] == WHITE:
+            walk(entry, [entry])
+
+
+def _reject_unreachable(questions: dict, first_question: str, source: str) -> None:
+    """A question nobody can reach is not the protocol that was reviewed.
+
+    Usually a typo in a `next_question` that points somewhere else, which
+    leaves the intended question silently unasked. Red-flag questions are
+    always reachable - the engine asks them before anything else, regardless
+    of what links to them.
+    """
+    seen: set[str] = set()
+    queue = [e for e in _entry_points(questions, first_question) if e in questions]
+    while queue:
+        code = queue.pop()
+        if code in seen:
+            continue
+        seen.add(code)
+        queue.extend(t for t in _links(questions[code]) if t in questions)
+
+    orphans = sorted(
+        code
+        for code, question in questions.items()
+        if code not in seen and not question.red_flag
+    )
+    if orphans:
+        raise ProtocolError(
+            f"{source}: no path reaches {orphans}. A question that cannot be "
+            "asked is not part of the flow that was signed off."
+        )
 
 
 def load(path: str | Path) -> Protocol:

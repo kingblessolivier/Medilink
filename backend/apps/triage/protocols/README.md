@@ -45,9 +45,26 @@ so the recommendation joins straight onto the facility directory.
 3. **Every option must lead somewhere.** An option that neither escalates,
    recommends, nor continues is rejected at load time rather than producing a
    dead end in front of a patient.
-4. **Every string needs all three languages.** A missing translation fails the
+4. **The flow may never return to an earlier question.** This is the one that
+   catches people out. *"Do you have any other symptoms?" → yes → back to the
+   list* is the most natural follow-up in triage, and it does **not** loop:
+   the engine asks each question at most once, so coming back to one ends the
+   session with no recommendation at all — a completed symptom check that says
+   nothing. Rejected at load, with the path named so you can find it.
+
+   Two paths **converging** on a shared follow-up question are fine. That is
+   not a return; the shared question is still asked once.
+
+   To ask "anything else?", give the option its own question with its own
+   options rather than pointing back.
+5. **Every question must be reachable.** A question nothing links to is
+   usually a typo in a `next_question`, which leaves your intended question
+   silently unasked — so the flow that runs is not the flow you reviewed.
+   Red-flag questions are exempt: they are asked before anything else
+   regardless of what links to them.
+6. **Every string needs all three languages.** A missing translation fails the
    load; it does not silently fall back.
-5. **The file version must match the approved version.** Otherwise the sign-off
+7. **The file version must match the approved version.** Otherwise the sign-off
    record describes something nobody reviewed.
 
 ## Turning it on
