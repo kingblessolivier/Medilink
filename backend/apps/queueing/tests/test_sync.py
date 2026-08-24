@@ -226,3 +226,78 @@ def test_check_in_endpoint_honours_the_idempotency_key_header(
     assert second.status_code == 200
     assert first.json()["id"] == second.json()["id"]
     assert QueueEntry.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_replayed_actions_are_audited_like_online_ones(
+    staff_client, facility, general, make_entry
+):
+    """docs/08 s6: every write to an identifiable patient record has to be
+    attributable, however it reached the server.
+
+    The online handlers recorded one; `sync` recorded none - so a receptionist
+    reconnecting after an outage wrote a batch of patient records leaving no
+    trail. That is also the shape a deliberate bulk access would take, which is
+    exactly what this table exists to surface.
+    """
+    from apps.patients.models import PatientAccessLog
+
+    entry = make_entry(facility, general)
+    PatientAccessLog.objects.all().delete()
+
+    response = staff_client.post(
+        SYNC,
+        {
+            "actions": [
+                action(
+                    "a1",
+                    "check_in",
+                    minutes_ago=10,
+                    payload={"service": general.code, "phone": "0788323232"},
+                ),
+                action("a2", "call", minutes_ago=5, payload={"entry_id": entry.id}),
+            ]
+        },
+        format="json",
+    )
+
+    assert response.json()["applied"] == 2
+    actions = set(PatientAccessLog.objects.values_list("action", flat=True))
+    assert actions == {
+        PatientAccessLog.Action.CHECK_IN,
+        PatientAccessLog.Action.TRANSITION,
+    }
+    assert PatientAccessLog.objects.filter(facility=facility).count() == 2
+
+
+@pytest.mark.django_db
+def test_a_replayed_duplicate_does_not_write_a_second_audit_row(
+    staff_client, facility, general
+):
+    """The retry returns the original entry rather than creating one, so it is
+    not a new access and must not look like one."""
+    from apps.patients.models import PatientAccessLog
+
+    batch = {
+        "actions": [
+            action(
+                "dup",
+                "check_in",
+                minutes_ago=10,
+                payload={"service": general.code, "walk_in_name": "Retried"},
+            )
+        ]
+    }
+    staff_client.post(SYNC, batch, format="json")
+    before = PatientAccessLog.objects.filter(
+        action=PatientAccessLog.Action.CHECK_IN
+    ).count()
+
+    staff_client.post(SYNC, batch, format="json")
+
+    assert (
+        PatientAccessLog.objects.filter(
+            action=PatientAccessLog.Action.CHECK_IN
+        ).count()
+        == before
+    )

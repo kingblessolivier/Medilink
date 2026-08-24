@@ -746,6 +746,11 @@ export interface paths {
          *     Per-item results, so one rejected action does not fail the whole batch -
          *     a receptionist reconnecting after an hour must not lose the other 39
          *     check-ins because one patient was a duplicate.
+         *
+         *     Every applied action writes the same PatientAccessLog row its online
+         *     handler would. Being offline changes when a patient record was written,
+         *     not whether the write has to be attributable - and a batch of forty
+         *     arriving at once is precisely the pattern docs/08 s6 wants visible.
          */
         post: operations["queue_sync_create"];
         delete?: never;
