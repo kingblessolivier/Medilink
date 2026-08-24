@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import { Link, NavLink } from "react-router-dom"
 import { useI18n } from "../i18n"
 import { LanguageToggle } from "./LanguageToggle"
 import {
   IconCalendar,
-  IconChevronRight,
   IconHospital,
   IconSearch,
   IconStethoscope,
@@ -55,7 +54,6 @@ export function TopNav({
   onSignOut: () => void
 }) {
   const { t } = useI18n()
-  const [open, setOpen] = useState(false)
   const barRef = useRef<HTMLElement>(null)
 
   // The dashboard sidebar sticks directly beneath this bar, and the bar is
@@ -80,7 +78,6 @@ export function TopNav({
     return () => observer.disconnect()
   }, [])
   const items = itemsFor(session, t)
-  const isPatientSurface = !session || session.kind === "patient"
 
   return (
     <header ref={barRef} className="sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80">
@@ -107,14 +104,18 @@ export function TopNav({
           )}
         </Link>
 
-        {/* Patient links hide on mobile - the bottom nav covers those, and a
-            thumb reaches the bottom of a phone, not the top. Staff and admin
-            links stay, because those surfaces have no bottom nav. */}
-        <nav
-          className={
-            "min-w-0 flex-1 " + (isPatientSurface ? "hidden md:block" : "hidden sm:block")
-          }
-        >
+        {/* Patient links only. They hide on mobile because the bottom tab bar
+            covers them, and a thumb reaches the bottom of a phone rather than
+            the top.
+
+            Staff and admin carry no links here at all - their sections live in
+            the DashboardShell sidebar. Until this was fixed, a hamburger button
+            still rendered on those surfaces and opened an empty panel, because
+            the items were moved to the sidebar and the control that revealed
+            them was left behind. It was also what pushed the bar past the edge
+            of a 360px phone. */}
+{items.length > 0 && (
+        <nav className="hidden min-w-0 flex-1 md:block">
           <ul className="flex items-center gap-1 overflow-x-auto">
             {items.map(({ to, label, icon: Glyph, end }) => (
               <li key={to}>
@@ -137,6 +138,7 @@ export function TopNav({
             ))}
           </ul>
         </nav>
+        )}
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
           <LanguageToggle />
@@ -160,46 +162,9 @@ export function TopNav({
             </Link>
           )}
 
-          {/* Only the staff and admin surfaces need this: their links are the
-              only ones that vanish entirely below the `sm` breakpoint. */}
-          {!isPatientSurface && (
-            <button
-              className="ml-btn-secondary ml-btn-sm sm:hidden min-h-touch sm:min-h-0 sm:h-9"
-              aria-expanded={open}
-              aria-controls="topnav-mobile"
-              onClick={() => setOpen((v) => !v)}
-            >
-              {t("menu")}
-            </button>
-          )}
         </div>
       </div>
 
-      {!isPatientSurface && open && (
-        <nav id="topnav-mobile" className="border-t border-line sm:hidden">
-          <ul className="ml-shell py-2">
-            {items.map(({ to, label, icon: Glyph, end }) => (
-              <li key={to}>
-                <NavLink
-                  to={to}
-                  end={end}
-                  onClick={() => setOpen(false)}
-                  className={({ isActive }) =>
-                    "flex min-h-touch items-center gap-3 rounded-md px-3 text-body " +
-                    (isActive
-                      ? "bg-primary-subtle font-medium text-primary"
-                      : "text-ink-muted")
-                  }
-                >
-                  <Glyph size={18} />
-                  <span className="flex-1">{label}</span>
-                  <IconChevronRight size={16} className="text-ink-subtle" />
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      )}
     </header>
   )
 }

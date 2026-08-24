@@ -149,7 +149,7 @@ export function WorkspaceAppointments({ canManage }: { canManage: boolean }) {
         )}
 
         {rows.length > 0 && (
-          <div className="overflow-x-auto rounded-lg border border-line bg-surface">
+          <div className="ml-scroll-x rounded-lg border border-line bg-surface">
             <table className="ml-table">
               <thead>
                 <tr>

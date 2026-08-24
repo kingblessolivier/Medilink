@@ -157,7 +157,7 @@ function Body({ data }: { data: TriageMonitoring }) {
         <p className="mb-3 text-small text-ink-muted">
           A rule change has to be traceable to what it did to these numbers.
         </p>
-        <div className="overflow-x-auto rounded-lg border border-line bg-surface">
+        <div className="ml-scroll-x rounded-lg border border-line bg-surface">
           <table className="ml-table">
             <thead>
               <tr>

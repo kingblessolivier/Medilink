@@ -97,7 +97,7 @@ export function Compare() {
       )}
 
       {!loading && (
-        <div className="overflow-x-auto">
+        <div className="ml-scroll-x">
           <table className="ml-table min-w-[40rem]">
             <thead>
               <tr>

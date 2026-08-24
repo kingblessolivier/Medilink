@@ -75,6 +75,12 @@ export function QueueTracking() {
   if (!entry) {
     return (
       <div className="ml-page py-6">
+        {/* The same heading the signed-out branch above carries. Without it
+            this was the one patient screen that rendered no h1 at all, so a
+            screen reader landing here had nothing to orient on - and it was
+            the empty state, which is exactly when you most need telling
+            where you are. */}
+        <h1 className="mb-4 text-h1">{t("queue_title")}</h1>
         <EmptyState icon={<IconClock size={20} />}
           title={t("no_active_queue")}
           body={t("no_active_queue_body")}

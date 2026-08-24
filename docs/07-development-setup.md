@@ -116,35 +116,29 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
 python manage.py migrate
-python manage.py createsuperuser
+python manage.py seed_accounts   # one account per user type
 python manage.py runserver
 ```
 
-## 6. `requirements.txt`
+## 6. Dependencies
 
-```
-Django==5.0.*
-djangorestframework==3.15.*
-djangorestframework-simplejwt==5.3.*
-drf-spectacular==0.27.*
-psycopg[binary]==3.1.*
-django-cors-headers==4.3.*
-django-environ==0.11.*
-celery==5.3.*
-redis==5.0.*
-django-redis==5.4.*
-phonenumbers==8.13.*
-```
+[`backend/requirements.txt`](../backend/requirements.txt) and
+[`backend/requirements-dev.txt`](../backend/requirements-dev.txt) are the
+source of truth. They are deliberately **not** duplicated here.
 
-```
-# requirements-dev.txt
-pytest==8.*
-pytest-django==4.8.*
-pytest-cov==5.*
-factory-boy==3.3.*
-freezegun==1.4.*
-ruff==0.4.*
-django-debug-toolbar==4.3.*
+A copy in a document drifts silently, and the drift is dangerous rather than
+merely untidy: this section used to pin `Django==5.0.*`, which reached end of
+life carrying nine advisories. Anyone who trusted the document over the file
+would have installed the vulnerable version on purpose.
+
+Every dependency is pinned to an exact version, not a range. `5.0.*` resolves
+to something different on Tuesday than it did on Monday, which means a build
+that passed cannot be reproduced.
+
+Check them with:
+
+```bash
+docker compose -f infra/docker-compose.yml exec api pip-audit
 ```
 
 ## 7. Settings

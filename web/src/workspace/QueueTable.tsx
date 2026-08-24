@@ -165,7 +165,7 @@ export function QueueTable({ group, canManage, onAction }: Props) {
         )}
       </div>
 
-      <div className="overflow-x-auto px-4 pb-3">
+      <div className="ml-scroll-x px-4 pb-3">
         <table className="w-full min-w-[38rem] text-left">
           <thead>
             <tr className="text-caption uppercase tracking-wide text-ink-subtle">

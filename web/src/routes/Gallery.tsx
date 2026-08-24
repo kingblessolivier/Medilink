@@ -227,7 +227,7 @@ export function Gallery() {
 
       {/* ----------------------------------------------------------- table */}
       <Section title="Table">
-        <div className="overflow-x-auto rounded-lg border border-line bg-surface">
+        <div className="ml-scroll-x rounded-lg border border-line bg-surface">
           <table className="ml-table">
             <thead>
               <tr>

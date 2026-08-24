@@ -179,7 +179,7 @@ export function FacilityDetail() {
                 <EmptyState icon={<IconHospital size={20} />} title={t("no_insurers_listed")} />
               </div>
             ) : (
-              <div className="mt-3 overflow-x-auto">
+              <div className="mt-3 ml-scroll-x">
                 <table className="ml-table min-w-[34rem]">
                   <thead>
                     <tr>
