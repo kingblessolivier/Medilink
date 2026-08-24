@@ -345,18 +345,28 @@ that ranks facilities wrongly and hides bugs in the geo query.
 | `OSError: No translation files found for default language rw` | `LANGUAGE_CODE = "rw"`; Django ships no Kinyarwanda catalog | Keep `LANGUAGE_CODE = "en-us"` (it only governs the admin). Patient-facing Kinyarwanda lives in the React bundle and the `name_rw` columns |
 | `loaddata`: `null value in column "created_at"` | `loaddata` performs raw saves, which skip `auto_now_add` / `auto_now` | Include `created_at` and `updated_at` in the fixture rows |
 | `docker run -v` mount silently ignored on Windows; container runs stale baked-in code | Git Bash rewrites `/app` to `C:/Program Files/Git/app` | Prefix the command with `MSYS_NO_PATHCONV=1`, and pass the host path via `pwd -W` |
+| ~25 tests fail in a full run but pass when run alone, many asserting `429` | pytest-django resolves settings as `--ds` → `DJANGO_SETTINGS_MODULE` env var → ini option, so the compose service's exported `config.settings.dev` **beat** the ini setting. Dev settings mean Redis cache and live throttling, so one shared IP spends the rate-limit budget | Already fixed: `addopts` in `backend/pyproject.toml` passes `--ds=config.settings.test`, which wins over the environment. Do not remove it as "redundant" |
 
 That third row costs hours if you do not know it: the container starts fine and
 runs the code copied in at **build** time, so edits appear to have no effect.
 
 ## 13. Definition of "environment is working"
 
+On Windows, run all four **inside the container** — there is no supported
+native GDAL path on this machine, and the compose stack is the whole
+environment:
+
 ```bash
-python manage.py check                      # no issues
-python manage.py migrate --check            # no pending migrations
-pytest                                       # all green
-curl "localhost:8000/api/v1/facilities/nearby?lat=-1.9536&lng=30.0606"
+cd infra && docker compose up -d --build
+docker compose exec api python manage.py check          # no issues
+docker compose exec api python manage.py migrate --check # no pending migrations
+docker compose exec api pytest                           # 585 passed, 94% cover
+docker compose exec api curl "localhost:8000/api/v1/facilities/nearby?lat=-1.9536&lng=30.0606"
 ```
+
+Verified on 2026-08-24: 585 passed in 69 s, 94% coverage. If your run reports
+fewer, check the settings-module row in section 12 before assuming a
+regression.
 
 That last command must return real Kigali facilities with sane `distance_m`
 values. If distances look wrong, stop and fix the coordinate order before

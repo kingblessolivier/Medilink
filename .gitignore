@@ -29,6 +29,9 @@ dist-ssr/
 
 # Editors
 .vscode/
+# Claude Code local overrides. launch.json IS shared - it is how the app is
+# started from the editor, same role as .vscode/launch.json would be.
+.claude/settings.local.json
 .idea/
 .DS_Store
 
