@@ -10,7 +10,7 @@ from apps.facilities.wait import (
     STATUS_NOT_REPORTED,
 )
 from apps.patients.models import Patient
-from apps.queueing.models import QueueEntry
+from apps.queueing.models import QueueEntry, ServiceTimeStat
 from apps.queueing.services import (
     QueueError,
     call,
@@ -230,32 +230,163 @@ def test_confidence_falls_with_sample_size(facility, general, make_entry, make_s
     assert eta_for(entry)["eta_confidence"] == "medium"
 
 
+def _run_clinic(facility, service, *, served_every, arrive_every, count, hour=10):
+    """A clinic where patients ARRIVE faster than they are SERVED, so a queue
+    builds - which is the only arrangement that tells the two quantities apart.
+
+    Returns the served entries, oldest first.
+    """
+    start = timezone.localtime().replace(
+        hour=hour, minute=0, second=0, microsecond=0
+    )
+    free = start
+    entries = []
+    for index in range(count):
+        joined = start + timedelta(minutes=index * arrive_every)
+        began = max(joined, free)
+        finished = began + timedelta(minutes=served_every)
+        free = finished
+        entries.append(
+            QueueEntry.objects.create(
+                facility=facility,
+                service_type=service,
+                walk_in_name=f"Patient {index}",
+                joined_at=joined,
+                served_at=finished,
+                status=QueueEntry.Status.SERVED,
+                ticket_code=f"G-{index:03d}",
+            )
+        )
+    return entries
+
+
+@pytest.mark.django_db
+def test_the_stat_measures_the_service_rate_not_the_wait(facility, general):
+    """The defect this test used to hide.
+
+    It previously gave every patient an IDENTICAL joined_at - the one
+    arrangement in which a patient's total wait and the clinic's per-patient
+    rate are the same number. With staggered arrivals they diverge sharply, and
+    the old implementation stored the wait: `served_at - joined_at` grows with
+    the queue, and the ETA then multiplied it by the queue again.
+
+    Here the clinic serves one patient every 10 minutes while patients arrive
+    every 6, so a queue builds and individual waits climb past an hour. The
+    rate is still 10.
+    """
+    entries = _run_clinic(
+        facility, general, served_every=10, arrive_every=6, count=30
+    )
+
+    # The waits really do diverge - otherwise this test proves nothing.
+    last = entries[-1]
+    assert (last.served_at - last.joined_at).total_seconds() / 60 > 60
+
+    refresh_service_time_stats()
+
+    stat = ServiceTimeStat.objects.get(hour_of_day=10)
+    assert stat.median_minutes_per_patient == pytest.approx(10, abs=1)
+
+
 @pytest.mark.django_db
 def test_refresh_stats_uses_median_not_mean(facility, general):
     """One ninety-minute patient must not drag the estimate for everyone."""
-    from datetime import timedelta
-
-    # All five join within the same clock hour, so they land in one bucket
-    # regardless of when the suite happens to run.
-    joined = timezone.localtime().replace(hour=10, minute=0, second=0, microsecond=0)
-    for index, minutes in enumerate((5, 6, 7, 6, 90)):
+    start = timezone.localtime().replace(hour=10, minute=0, second=0, microsecond=0)
+    # Gaps between consecutive departures: 5, 6, 7, 6, then one 90-minute slog.
+    served_at = start
+    for index, gap in enumerate((0, 5, 6, 7, 6, 90)):
+        served_at = served_at + timedelta(minutes=gap)
         QueueEntry.objects.create(
             facility=facility,
             service_type=general,
             walk_in_name=f"Patient {index}",
-            joined_at=joined,
-            served_at=joined + timedelta(minutes=minutes),
+            joined_at=start,
+            served_at=served_at,
             status=QueueEntry.Status.SERVED,
             ticket_code=f"G-{index:03d}",
         )
 
     refresh_service_time_stats()
 
-    from apps.queueing.models import ServiceTimeStat
-
     stat = ServiceTimeStat.objects.get(hour_of_day=10)
     assert stat.sample_size == 5
-    assert 5 <= stat.median_minutes <= 8  # a mean would be about 23
+    # A mean would be about 23.
+    assert 5 <= stat.median_minutes_per_patient <= 8
+
+
+@pytest.mark.django_db
+def test_an_empty_waiting_room_is_quiet_not_slow(facility, general):
+    """The distinction the join time exists to make.
+
+    Three patients are seen ten minutes apart, the clinic then empties, and
+    nobody else arrives until the afternoon. Measured on the clock alone that
+    looks like one appalling three-hour service. It was nothing of the kind -
+    there was no one to serve, and counting it would make a quiet morning read
+    as a catastrophic afternoon.
+    """
+    start = timezone.localtime().replace(hour=10, minute=0, second=0, microsecond=0)
+
+    # Morning: three people already waiting, served ten minutes apart.
+    for index, offset in enumerate((0, 10, 20)):
+        QueueEntry.objects.create(
+            facility=facility,
+            service_type=general,
+            walk_in_name=f"Morning {index}",
+            joined_at=start,
+            served_at=start + timedelta(minutes=offset),
+            status=QueueEntry.Status.SERVED,
+            ticket_code=f"G-{index:03d}",
+        )
+
+    # Afternoon: they arrive AFTER the waiting room emptied, so the gap in
+    # between was idle rather than slow.
+    afternoon = start + timedelta(minutes=180)
+    for index, offset in enumerate((0, 10)):
+        QueueEntry.objects.create(
+            facility=facility,
+            service_type=general,
+            walk_in_name=f"Afternoon {index}",
+            joined_at=afternoon,
+            served_at=afternoon + timedelta(minutes=offset),
+            status=QueueEntry.Status.SERVED,
+            ticket_code=f"G-1{index:02d}",
+        )
+
+    refresh_service_time_stats()
+
+    # Only the real ten-minute intervals survive - two in the morning hour, one
+    # in the afternoon. The three-hour lull between them is nowhere.
+    rates = list(
+        ServiceTimeStat.objects.values_list("median_minutes_per_patient", flat=True)
+    )
+    assert rates == [10.0, 10.0]
+    assert sum(ServiceTimeStat.objects.values_list("sample_size", flat=True)) == 3
+
+
+@pytest.mark.django_db
+def test_a_genuinely_long_consultation_is_still_counted(facility, general):
+    """The other side of the same rule.
+
+    Ninety minutes with somebody sitting in the waiting room is slow service,
+    and it has to count - otherwise the estimate flatters a clinic exactly
+    where patients most need the truth. A fixed "too long to be real" cutoff
+    could not tell this apart from the case above; the join time can.
+    """
+    start = timezone.localtime().replace(hour=10, minute=0, second=0, microsecond=0)
+    for index, offset in enumerate((0, 90)):
+        QueueEntry.objects.create(
+            facility=facility,
+            service_type=general,
+            walk_in_name=f"Patient {index}",
+            joined_at=start,  # both waiting from the outset
+            served_at=start + timedelta(minutes=offset),
+            status=QueueEntry.Status.SERVED,
+            ticket_code=f"G-{index:03d}",
+        )
+
+    refresh_service_time_stats()
+
+    assert ServiceTimeStat.objects.get().median_minutes_per_patient == 90.0
 
 
 # --------------------------------------------------------------------------
@@ -368,3 +499,89 @@ def test_a_wait_survives_the_clock_rolling_into_the_next_hour(
 
     assert snapshot[facility.id]["status"] == STATUS_AVAILABLE
     assert snapshot[facility.id]["minutes"] == 24
+
+
+@pytest.mark.django_db
+def test_the_eta_a_patient_is_shown_matches_the_wait_they_get(
+    facility, general, settings
+):
+    """The property the product actually sells, and nothing asserted it.
+
+    Every other test here checks a piece - the median, the sample gate, the
+    position count. None of them checked that the number on the patient's
+    screen resembles the wait they then experience, which is why an
+    eight-fold error survived a suite of 585 tests.
+
+    A clinic that serves one patient every 10 minutes, with five people ahead,
+    is a 50-minute wait. Before this fix the same setup was shown as roughly
+    440 minutes.
+    """
+    # The gate is a separate rule with its own tests; this one is about the
+    # arithmetic, so let a short history through.
+    settings.MIN_SERVICE_TIME_SAMPLES = 3
+
+    _run_clinic(facility, general, served_every=10, arrive_every=6, count=30)
+    refresh_service_time_stats()
+
+    now = timezone.localtime().replace(hour=10, minute=0, second=0, microsecond=0)
+    for index in range(6):
+        QueueEntry.objects.create(
+            facility=facility,
+            service_type=general,
+            walk_in_name=f"Waiting {index}",
+            joined_at=now + timedelta(seconds=index),
+            status=QueueEntry.Status.WAITING,
+            ticket_code=f"W-{index:03d}",
+        )
+
+    last = QueueEntry.objects.filter(status=QueueEntry.Status.WAITING).last()
+    estimate = eta_for(last, now=now)
+
+    assert estimate["people_ahead"] == 5
+    # Five people ahead at ten minutes each. Allow a little slack for the
+    # median landing a minute either side of the true rate.
+    assert 40 <= estimate["eta_minutes"] <= 60
+
+
+@pytest.mark.django_db
+def test_parallel_services_are_not_multiplied_together(
+    facility, general, maternity, settings
+):
+    """Two queues at one site run side by side.
+
+    The facility-level estimate used to multiply EVERY waiting patient in the
+    building by a single service's rate, describing a wait nobody was in. At a
+    referral hospital with a dozen services that is out by close to an order of
+    magnitude. The answer a patient can act on is the longest of the real
+    per-service waits.
+    """
+    settings.MIN_SERVICE_TIME_SAMPLES = 5
+    facility.reports_queue = True
+    facility.save(update_fields=["reports_queue"])
+
+    now = timezone.localtime()
+    for service, waiting, rate in ((general, 4, 10.0), (maternity, 2, 5.0)):
+        ServiceTimeStat.objects.create(
+            facility=facility,
+            service_type=service,
+            hour_of_day=now.hour,
+            median_minutes_per_patient=rate,
+            sample_size=50,
+        )
+        for index in range(waiting):
+            QueueEntry.objects.create(
+                facility=facility,
+                service_type=service,
+                walk_in_name=f"{service.code}-{index}",
+                joined_at=now,
+                status=QueueEntry.Status.WAITING,
+                ticket_code=f"{service.code[:1].upper()}-{index:03d}",
+            )
+
+    snapshot = wait_snapshot([facility], now=now)[facility.id]
+
+    # general: 4 x 10 = 40. maternity: 2 x 5 = 10. Longest real wait is 40.
+    # The old code did (4 + 2) x 10 = 60 - a queue of six that never existed.
+    assert snapshot["minutes"] == 40
+    # The head count is still everyone on site.
+    assert snapshot["people_waiting"] == 6

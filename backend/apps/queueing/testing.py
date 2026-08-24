@@ -37,7 +37,7 @@ def make_service_time_stat(
             facility=facility,
             service_type=service_type,
             hour_of_day=hour,
-            median_minutes=median,
+            median_minutes_per_patient=median,
             sample_size=samples,
         )
 
@@ -47,7 +47,7 @@ def make_service_time_stat(
             facility=facility,
             service_type=service_type,
             hour_of_day=h,
-            median_minutes=median,
+            median_minutes_per_patient=median,
             sample_size=samples,
         )
         for h in (now_hour, (now_hour + 1) % 24)

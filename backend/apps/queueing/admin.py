@@ -26,7 +26,7 @@ class ServiceTimeStatAdmin(admin.ModelAdmin):
         "facility",
         "service_type",
         "hour_of_day",
-        "median_minutes",
+        "median_minutes_per_patient",
         "sample_size",
         "publishable",
         "updated_at",

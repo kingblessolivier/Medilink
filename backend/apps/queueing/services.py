@@ -36,6 +36,11 @@ CONFIDENCE_MEDIUM_SAMPLES = 40
 
 STATS_WINDOW_DAYS = 30
 
+# A gap this long is a data-entry error, not a consultation - a receptionist
+# clearing yesterday's queue this morning. The original code carried the same
+# guard for the same reason.
+MAX_PLAUSIBLE_GAP_MINUTES = 8 * 60
+
 
 class QueueError(Exception):
     """Domain rule violation - mapped to HTTP 409 by the view layer."""
@@ -200,8 +205,8 @@ TRANSITIONS = {"call": call, "serve": serve, "skip": skip, "cancel": cancel}
 # --------------------------------------------------------------------------
 
 
-def median_service_minutes(facility_id, service_type_id, hour, stats=None):
-    """Median minutes per patient, with the sample size behind it."""
+def median_minutes_per_patient(facility_id, service_type_id, hour, stats=None):
+    """The per-patient rate for this hour, with the sample size behind it."""
     if stats is None:
         stat = ServiceTimeStat.objects.filter(
             facility_id=facility_id,
@@ -213,7 +218,7 @@ def median_service_minutes(facility_id, service_type_id, hour, stats=None):
 
     if stat is None:
         return FALLBACK_SERVICE_MINUTES, 0
-    return stat.median_minutes, stat.sample_size
+    return stat.median_minutes_per_patient, stat.sample_size
 
 
 def confidence_for(sample_size: int) -> str:
@@ -228,7 +233,7 @@ def eta_for(entry: QueueEntry, now=None) -> dict:
     """Minutes until this entry is likely to be called."""
     now = now or timezone.localtime()
     position = entry.position()
-    minutes, samples = median_service_minutes(
+    minutes, samples = median_minutes_per_patient(
         entry.facility_id, entry.service_type_id, now.hour
     )
 
@@ -251,30 +256,67 @@ def eta_for(entry: QueueEntry, now=None) -> dict:
 
 
 def refresh_service_time_stats(facility=None, window_days=STATS_WINDOW_DAYS) -> int:
-    """Recompute medians from served entries. Returns rows written.
+    """Recompute the per-patient rate from served entries. Returns rows written.
+
+    **Measures the gap between consecutive patients being served**, not how
+    long any one patient waited. `eta = people_ahead x rate` needs a rate, and
+    the two are not interchangeable: a patient's total wait already contains
+    the queue ahead of them, so feeding it back in as a per-patient cost
+    multiplies the queue by itself. That is what this used to do, and it ran
+    about nine times high on a clinic with five people waiting.
+
+    **Idle time is not slowness, and the join time is what tells them apart.**
+    A three-hour gap because nobody came is a quiet clinic; a three-hour gap
+    with someone sitting in the waiting room is a slow one, and they look
+    identical if you only measure the clock. So an interval counts only when
+    the next patient had ALREADY joined when the previous one was served - if
+    they arrived afterwards, the clinic was waiting for them, not the other way
+    round.
+
+    That distinction is why there is no arbitrary "gap too long to be real"
+    threshold here. A genuine ninety-minute consultation is counted, because
+    somebody was genuinely waiting through it.
+
+    Bucketed by the hour the interval STARTED, so a long consultation is
+    attributed to the hour it began rather than the one it spilled into.
 
     Run this on a schedule (management command, then Celery beat in Phase 2).
     Computing it per request would put a full aggregation on the hottest
     endpoint in the system.
     """
     since = timezone.now() - timedelta(days=window_days)
-    served = QueueEntry.objects.filter(
-        status=QueueEntry.Status.SERVED,
-        served_at__gte=since,
-        served_at__isnull=False,
-    ).select_related("facility", "service_type")
+    served = (
+        QueueEntry.objects.filter(
+            status=QueueEntry.Status.SERVED,
+            served_at__gte=since,
+            served_at__isnull=False,
+        )
+        .only("facility_id", "service_type_id", "served_at", "joined_at")
+        # Consecutive within one facility+service, oldest first: the ordering
+        # IS the computation here, not a presentation detail.
+        .order_by("facility_id", "service_type_id", "served_at")
+    )
     if facility is not None:
         served = served.filter(facility=facility)
 
     buckets: dict[tuple, list[float]] = {}
+    previous_key = None
+    previous_served_at = None
+
     for entry in served.iterator():
-        local_join = timezone.localtime(entry.joined_at)
-        minutes = (entry.served_at - entry.joined_at).total_seconds() / 60
-        if minutes <= 0 or minutes > 8 * 60:
-            # Guard against a receptionist marking yesterday's queue served.
-            continue
-        key = (entry.facility_id, entry.service_type_id, local_join.hour)
-        buckets.setdefault(key, []).append(minutes)
+        key = (entry.facility_id, entry.service_type_id)
+        if (
+            key == previous_key
+            and previous_served_at is not None
+            # Somebody was actually waiting for this slot.
+            and entry.joined_at <= previous_served_at
+        ):
+            minutes = (entry.served_at - previous_served_at).total_seconds() / 60
+            if 0 < minutes <= MAX_PLAUSIBLE_GAP_MINUTES:
+                hour = timezone.localtime(previous_served_at).hour
+                buckets.setdefault((*key, hour), []).append(minutes)
+        previous_key = key
+        previous_served_at = entry.served_at
 
     written = 0
     for (facility_id, service_type_id, hour), samples in buckets.items():
@@ -283,7 +325,7 @@ def refresh_service_time_stats(facility=None, window_days=STATS_WINDOW_DAYS) -> 
             service_type_id=service_type_id,
             hour_of_day=hour,
             defaults={
-                "median_minutes": statistics.median(samples),
+                "median_minutes_per_patient": statistics.median(samples),
                 "sample_size": len(samples),
             },
         )
@@ -324,10 +366,18 @@ def wait_snapshot(facilities, service_code=None, now=None) -> dict:
     if service_code:
         waiting_qs = waiting_qs.filter(service_type__code=service_code)
 
-    counts = {
-        row["facility_id"]: row["n"]
-        for row in waiting_qs.values("facility_id").annotate(n=Count("id"))
-    }
+    # Per service, not just per facility. Services at one site are parallel
+    # queues, so the totals are only ever summed for display - never fed into
+    # a multiplication. See the estimate below.
+    per_service: dict[int, dict[int, int]] = {}
+    counts: dict[int, int] = {}
+    for row in (
+        waiting_qs.values("facility_id", "service_type_id")
+        .annotate(n=Count("id"))
+    ):
+        fid, sid, n = row["facility_id"], row["service_type_id"], row["n"]
+        per_service.setdefault(fid, {})[sid] = n
+        counts[fid] = counts.get(fid, 0) + n
 
     stats = {
         (s.facility_id, s.service_type_id, s.hour_of_day): s
@@ -375,19 +425,25 @@ def wait_snapshot(facilities, service_code=None, now=None) -> dict:
         waiting = counts.get(facility.id, 0)
         service_type_id = service_ids.get(facility.id)
 
+        # Estimate each service on its OWN queue and its OWN rate, then take
+        # the longest. The queues run in parallel, so multiplying the whole
+        # building's waiting count by one service's rate describes a wait
+        # nobody experiences - at a referral hospital with a dozen services it
+        # was out by close to an order of magnitude. The longest of the real
+        # per-service waits is a number a patient can actually act on.
         if service_type_id is None:
-            # No service filter: use the busiest service this facility has
-            # statistics for, which is the honest worst case.
-            candidates = [
-                s
-                for (fid, _sid, _h), s in stats.items()
-                if fid == facility.id
-            ]
-            stat = max(candidates, key=lambda s: s.sample_size, default=None)
+            queues = per_service.get(facility.id, {})
         else:
-            stat = stats.get((facility.id, service_type_id, now.hour))
+            queues = {service_type_id: waiting}
 
-        if stat is None or stat.sample_size < settings.MIN_SERVICE_TIME_SAMPLES:
+        estimates = [
+            n * stat.median_minutes_per_patient
+            for sid, n in queues.items()
+            if (stat := stats.get((facility.id, sid, now.hour))) is not None
+            and stat.sample_size >= settings.MIN_SERVICE_TIME_SAMPLES
+        ]
+
+        if not estimates:
             entry = unknown(STATUS_INSUFFICIENT_DATA)
             entry["people_waiting"] = waiting
             snapshot[facility.id] = entry
@@ -395,7 +451,9 @@ def wait_snapshot(facilities, service_code=None, now=None) -> dict:
 
         snapshot[facility.id] = {
             "status": STATUS_AVAILABLE,
-            "minutes": round(waiting * stat.median_minutes),
+            "minutes": round(max(estimates)),
+            # Everyone waiting at this site, across every service. A count, not
+            # an input to the estimate above.
             "people_waiting": waiting,
             "as_of": stamp,
         }
@@ -482,7 +540,7 @@ def facility_service_waits(facility, now=None, services=None) -> dict:
 
         result[service.code] = {
             "status": STATUS_AVAILABLE,
-            "minutes": round(waiting * stat.median_minutes),
+            "minutes": round(waiting * stat.median_minutes_per_patient),
             "people_waiting": waiting,
             "as_of": stamp,
         }
