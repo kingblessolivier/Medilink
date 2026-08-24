@@ -31,6 +31,20 @@ OVERVIEW = "/api/v1/platform/overview"
 PASSWORD = "correct-horse-battery"
 
 
+def code_for(phone: str) -> str:
+    """Issue a real one-time code for `phone` and return the plaintext.
+
+    Registration now requires proof of the number, so every registration test
+    has to hold a code. Going through `issue_otp` rather than stubbing the
+    check keeps these tests honest: if the verification is ever weakened, they
+    keep passing for the right reason, and a test that forgets the code fails.
+    """
+    from apps.patients.auth import issue_otp
+    from apps.patients.models import normalise_phone
+
+    return issue_otp(normalise_phone(phone)).plaintext
+
+
 @pytest.fixture
 def api():
     return APIClient()
@@ -250,7 +264,7 @@ def test_registering_creates_a_patient_and_signs_them_in(api, db):
         {
             "username": "bosco",
             "password": PASSWORD,
-            "phone": "0788444555",
+            "phone": "0788444555", "code": code_for("0788444555"),
             "full_name": "B. Habimana",
             "consent": True,
         },
@@ -267,9 +281,80 @@ def test_registering_creates_a_patient_and_signs_them_in(api, db):
 
 
 @pytest.mark.django_db
+def test_claiming_a_ussd_account_without_a_code_is_refused(api, db):
+    """The other half of the rule below.
+
+    Every USSD, WhatsApp and reception-desk patient has a blank password, so
+    before this check existed anyone who knew the number could register over
+    the top of their record and inherit their visit history, appointments and
+    home location. "The same person" is an assumption, and an unverified one
+    is the attacker's assumption too.
+    """
+    Patient.objects.create(phone="+250788777888", district="Gasabo")
+
+    response = api.post(
+        REGISTER,
+        {
+            "username": "attacker",
+            "password": PASSWORD,
+            "phone": "0788777888",
+            "code": "000000",
+            "consent": True,
+        },
+        format="json",
+    )
+
+    assert response.status_code == 401
+    victim = Patient.objects.get(phone="+250788777888")
+    assert victim.username is None
+    assert not victim.password
+    assert victim.district == "Gasabo"
+
+
+@pytest.mark.django_db
+def test_registration_requires_a_code_at_all(api, db):
+    """Not merely a wrong code - an absent one must not be optional."""
+    response = api.post(
+        REGISTER,
+        {
+            "username": "bosco",
+            "password": PASSWORD,
+            "phone": "0788444555",
+            "consent": True,
+        },
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert response.json()["field"] == "code"
+
+
+@pytest.mark.django_db
+def test_a_code_cannot_be_used_twice(api, db):
+    """Otherwise one intercepted code is a permanent key to the number."""
+    code = code_for("0788777888")
+    payload = {
+        "username": "first",
+        "password": PASSWORD,
+        "phone": "0788777888",
+        "code": code,
+        "consent": True,
+    }
+    assert api.post(REGISTER, payload, format="json").status_code == 201
+
+    second = api.post(
+        REGISTER, {**payload, "username": "second"}, format="json"
+    )
+    assert second.status_code in (401, 409)
+
+
+@pytest.mark.django_db
 def test_a_ussd_patient_can_claim_web_credentials(api, db):
     """Somebody who has used USSD for a year and now opens the website is the
-    same person. Refusing them would force a second account on one number."""
+    same person. Refusing them would force a second account on one number.
+
+    Still supported - but only once they have proved the number is theirs.
+    """
     Patient.objects.create(phone="+250788777888", district="Gasabo")
 
     response = api.post(
@@ -277,7 +362,7 @@ def test_a_ussd_patient_can_claim_web_credentials(api, db):
         {
             "username": "claire",
             "password": PASSWORD,
-            "phone": "0788777888",
+            "phone": "0788777888", "code": code_for("0788777888"),
             "consent": True,
         },
         format="json",
@@ -298,7 +383,7 @@ def test_registering_an_existing_account_cannot_reset_its_password(api, patient)
         {
             "username": "someone-else",
             "password": "attacker-chosen",
-            "phone": "0788111222",
+            "phone": "0788111222", "code": code_for("0788111222"),
             "consent": True,
         },
         format="json",
@@ -316,7 +401,7 @@ def test_a_patient_cannot_take_a_staff_username(api, receptionist):
     could never sign in again."""
     response = api.post(
         REGISTER,
-        {"username": "desk", "password": PASSWORD, "phone": "0788444555", "consent": True},
+        {"username": "desk", "password": PASSWORD, "phone": "0788444555", "code": code_for("0788444555"), "consent": True},
         format="json",
     )
 
@@ -328,7 +413,7 @@ def test_a_patient_cannot_take_a_staff_username(api, receptionist):
 def test_username_uniqueness_ignores_case(api, receptionist, db):
     response = api.post(
         REGISTER,
-        {"username": "DESK", "password": PASSWORD, "phone": "0788444555", "consent": True},
+        {"username": "DESK", "password": PASSWORD, "phone": "0788444555", "code": code_for("0788444555"), "consent": True},
         format="json",
     )
 
@@ -339,7 +424,7 @@ def test_username_uniqueness_ignores_case(api, receptionist, db):
 def test_two_patients_cannot_share_a_username(api, patient):
     response = api.post(
         REGISTER,
-        {"username": "alice", "password": PASSWORD, "phone": "0788444555", "consent": True},
+        {"username": "alice", "password": PASSWORD, "phone": "0788444555", "code": code_for("0788444555"), "consent": True},
         format="json",
     )
 
@@ -351,7 +436,7 @@ def test_a_username_that_looks_like_a_phone_number_is_refused(api, db):
     """It would be ambiguous at sign-in, where the same field accepts both."""
     response = api.post(
         REGISTER,
-        {"username": "+250788444555", "password": PASSWORD, "phone": "0788444555", "consent": True},
+        {"username": "+250788444555", "password": PASSWORD, "phone": "0788444555", "code": code_for("0788444555"), "consent": True},
         format="json",
     )
 
@@ -362,7 +447,7 @@ def test_a_username_that_looks_like_a_phone_number_is_refused(api, db):
 def test_a_short_password_is_refused(api, db):
     response = api.post(
         REGISTER,
-        {"username": "shorty", "password": "abc", "phone": "0788444555", "consent": True},
+        {"username": "shorty", "password": "abc", "phone": "0788444555", "code": code_for("0788444555"), "consent": True},
         format="json",
     )
 
@@ -373,7 +458,7 @@ def test_a_short_password_is_refused(api, db):
 def test_a_bad_phone_number_is_refused(api, db):
     response = api.post(
         REGISTER,
-        {"username": "bosco", "password": PASSWORD, "phone": "12", "consent": True},
+        {"username": "bosco", "password": PASSWORD, "phone": "12", "code": "123456", "consent": True},
         format="json",
     )
 
@@ -479,7 +564,7 @@ def test_registering_records_consent_with_a_timestamp_and_version(api, db):
         {
             "username": "bosco",
             "password": PASSWORD,
-            "phone": "0788444555",
+            "phone": "0788444555", "code": code_for("0788444555"),
             "consent": True,
         },
         format="json",
@@ -499,7 +584,7 @@ def test_registration_without_consent_is_refused(api, db):
             {
                 "username": "bosco",
                 "password": PASSWORD,
-                "phone": "0788444555",
+                "phone": "0788444555", "code": code_for("0788444555"),
                 **payload,
             },
             format="json",

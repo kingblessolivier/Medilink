@@ -4,6 +4,11 @@ One entry point for three kinds of principal. The rules that matter:
 
 - **Staff are tried before patients.** Both failures return the identical
   message, so this cannot be used to discover which usernames exist.
+- **Registration proves the phone number before it writes anything.** A
+  verified one-time code is required, always. Attaching credentials to a
+  number you have not proved you hold is account takeover of every patient
+  who reached MediLink through USSD, WhatsApp or a reception desk, because
+  all of them have a blank password.
 - **Registration enforces uniqueness across BOTH tables.** Because staff win
   the lookup, a patient allowed to take an existing staff username would be
   locked out permanently - and a staff member who later took a patient's
@@ -20,7 +25,7 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from apps.patients.auth import tokens_for_patient
+from apps.patients.auth import tokens_for_patient, verify_otp
 from apps.patients.models import Patient, normalise_phone
 
 
@@ -88,6 +93,7 @@ def register_patient(
     username: str,
     password: str,
     phone: str,
+    code: str,
     full_name: str = "",
     consent: bool = False,
 ) -> Patient:
@@ -96,9 +102,26 @@ def register_patient(
     A phone that already exists is NOT an error: somebody who has been using
     USSD for a year and now opens the website is the same person, and refusing
     them would force a second account against the same number.
+
+    **That is exactly why a verified code is required.** "The same person" is
+    an assumption, and until it is checked it is the attacker's assumption too:
+    every patient created by a USSD session, a WhatsApp message or a reception
+    check-in has a blank password, so without proof of the number anyone who
+    knew it could claim that record - its visit history, its appointments, its
+    home location - by registering over the top of it.
+
+    `verify_otp` consumes the code and raises on a bad or expired one, so this
+    runs before anything is written. It is required for a NEW number too: that
+    also stops somebody registering a number they do not hold and receiving the
+    SMS traffic meant for whoever eventually uses it.
     """
     username = username.strip()
     phone = normalise_phone(phone)
+
+    # Raises OTPError (401) on a wrong, expired or already-used code.
+    # Also creates the Patient row for a number we have never seen, so
+    # `existing` below is always present by this point.
+    verify_otp(phone, code)
 
     existing = Patient.objects.filter(phone=phone).first()
 

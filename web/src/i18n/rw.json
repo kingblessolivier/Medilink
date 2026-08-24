@@ -65,8 +65,8 @@
   "auth_title": "Injira",
   "auth_subtitle": "Injira ukoresheje izina n'ijambo ry'ibanga.",
   "auth_phone": "Nomero ya telefoni",
-  "auth_code": "Kode",
-  "auth_send_code": "Ohereza kode",
+  "auth_code": "Kode yo muri SMS",
+  "auth_send_code": "Nyoherereza kode",
   "auth_verify": "Emeza",
   "auth_code_sent": "Twohereje kode kuri {phone}",
   "auth_change_number": "Hindura nomero",
@@ -333,5 +333,8 @@
   "profile_no_name": "Ntacyo wanditse",
   "book_title": "Gutegura igihe",
   "nav_sections": "Ibice",
-  "cached_results": "Ibi byabitswe {ago}. Bishobora kuba byarahindutse."
+  "cached_results": "Ibi byabitswe {ago}. Bishobora kuba byarahindutse.",
+  "auth_code_sent_to": "Twoherereje kode y'imibare 6 kuri SMS kuri",
+  "auth_code_hint": "Irangira mu minota 5.",
+  "auth_resend_code": "Ongera uyohereze"
 }

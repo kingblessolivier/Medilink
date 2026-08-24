@@ -25,6 +25,12 @@ class RegisterSerializer(serializers.Serializer):
     )
     password = serializers.CharField(min_length=8, max_length=128, trim_whitespace=False)
     phone = serializers.CharField(max_length=20)
+    # Proof that the caller actually holds the number they are registering.
+    # Without it, registration attaches credentials to whatever patient record
+    # already has that phone - and every USSD caller, WhatsApp user and
+    # reception-desk walk-in has a record with no password, so anyone who knew
+    # the number could claim their visit history. See services.register_patient.
+    code = serializers.CharField(min_length=6, max_length=6, trim_whitespace=True)
     full_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
     # Required, and required to be TRUE. A checkbox that can be sent as false
     # and still register somebody is not consent, it is decoration.
