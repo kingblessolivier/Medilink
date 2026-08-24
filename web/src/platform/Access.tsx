@@ -141,7 +141,7 @@ export function PlatformAccess() {
         )}
 
         {rows.length > 0 && (
-          <div className="overflow-x-auto rounded-xl border border-line bg-surface">
+          <div className="ml-scroll-x rounded-xl border border-line bg-surface">
             <table className="ml-table">
               <thead>
                 <tr>
@@ -234,7 +234,7 @@ export function PlatformAccess() {
             events in this period. The grouped totals above are where a spike
             shows up; this is for checking what one was made of.
           </p>
-          <div className="overflow-x-auto rounded-xl border border-line bg-surface">
+          <div className="ml-scroll-x rounded-xl border border-line bg-surface">
             <table className="ml-table">
               <thead>
                 <tr>

@@ -75,7 +75,7 @@ export function PlatformProviders() {
         )}
 
         {rows.length > 0 && (
-          <div className="overflow-x-auto rounded-xl border border-line bg-surface">
+          <div className="ml-scroll-x rounded-xl border border-line bg-surface">
             <table className="ml-table">
               <thead>
                 <tr>

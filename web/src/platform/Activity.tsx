@@ -166,7 +166,7 @@ export function PlatformActivity() {
         )}
 
         {facilities.length > 0 && (
-          <div className="overflow-x-auto rounded-xl border border-line bg-surface">
+          <div className="ml-scroll-x rounded-xl border border-line bg-surface">
             <table className="ml-table">
               <thead>
                 <tr>
@@ -248,7 +248,7 @@ export function PlatformActivity() {
         </div>
 
         {(delivery.data?.by_kind.length ?? 0) > 0 && (
-          <div className="mt-4 overflow-x-auto rounded-xl border border-line bg-surface">
+          <div className="mt-4 ml-scroll-x rounded-xl border border-line bg-surface">
             <table className="ml-table">
               <thead>
                 <tr>

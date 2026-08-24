@@ -167,6 +167,20 @@
   .ml-table tbody tr:last-child td { @apply border-b-0; }
   .ml-table tbody tr[data-selected="true"] { @apply bg-primary-subtle; }
 
+  /* A container that scrolls sideways, and contains what is inside it.
+
+     `position: relative` is the whole point. Without it, an absolutely
+     positioned descendant resolves against the page instead of this box - so
+     a `.sr-only` label inside a `min-w-[38rem]` table landed at x=478 on a
+     360px phone and dragged the whole document 118px wide. The table itself
+     was clipped correctly; the invisible one-pixel span was not.
+
+     That is a nasty one to find: nothing is visible past the edge, so the
+     page just feels loose, and the usual "which element is too wide" check
+     reports nothing because `body.scrollWidth` is fine. Use this class for
+     every horizontally scrolling region rather than bare `overflow-x-auto`. */
+  .ml-scroll-x { @apply relative overflow-x-auto; }
+
   /* ------------------------------------------------------------------ map */
 
   /* Map markers are real buttons - keyboard reachable and announced. The
