@@ -7,12 +7,16 @@ import {
   IconGlobe,
   IconHeart,
   IconHospital,
+  IconShield,
   IconShieldCheck,
+  IconInfo,
   IconStethoscope,
 } from "../ui/icons"
 import { Overview } from "./Overview"
 import { Verification } from "./Verification"
 import { TriageMonitor } from "./TriageMonitor"
+import { PlatformInsurers } from "./Insurers"
+import { PlatformSettings } from "./Settings"
 import { PlatformFacilities } from "./Facilities"
 import { PlatformProviders } from "./Providers"
 import { PlatformAccess } from "./Access"
@@ -45,6 +49,7 @@ const SECTIONS: NavSection[] = [
     items: [
       { to: "/platform/facilities", label: "Facilities", icon: <IconHospital size={17} /> },
       { to: "/platform/providers", label: "Doctors", icon: <IconStethoscope size={17} /> },
+      { to: "/platform/insurers", label: "Insurers", icon: <IconShield size={17} /> },
     ],
   },
   {
@@ -53,6 +58,7 @@ const SECTIONS: NavSection[] = [
       { to: "/platform/verification", label: "Verification", icon: <IconShieldCheck size={17} /> },
       { to: "/platform/access", label: "Access", icon: <IconAlert size={17} /> },
       { to: "/platform/triage", label: "Care Guide", icon: <IconHeart size={17} /> },
+      { to: "/platform/settings", label: "Settings", icon: <IconInfo size={17} /> },
     ],
   },
 ]
@@ -70,6 +76,8 @@ export function PlatformRoutes() {
         <Route path="/providers" element={<PlatformProviders />} />
         <Route path="/verification" element={<Verification />} />
         <Route path="/access" element={<PlatformAccess />} />
+        <Route path="/insurers" element={<PlatformInsurers />} />
+        <Route path="/settings" element={<PlatformSettings />} />
         <Route path="/triage" element={<TriageMonitor />} />
         <Route path="*" element={<Navigate to="/platform" replace />} />
       </Routes>

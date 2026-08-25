@@ -450,3 +450,157 @@ def test_monitoring_exposes_no_answers_and_no_session_identifiers(
             "session_id", "patient", "patient_id", "phone",
             "answers", "answer", "question", "question_code",
         }, key
+
+
+# --------------------------------------------------------------------------
+# Insurers and platform configuration
+# --------------------------------------------------------------------------
+
+INSURERS = "/api/v1/platform/insurers"
+SETTINGS = "/api/v1/platform/settings"
+
+
+@pytest.mark.django_db
+def test_an_admin_can_add_an_insurer(client_as, admin):
+    """Insurers were a fixture file, so adding one was a deploy."""
+    from apps.insurance.models import Insurer
+
+    response = client_as(admin).post(
+        f"{INSURERS}/new",
+        {"code": "britam", "name": "Britam", "is_public": False},
+        format="json",
+    )
+
+    assert response.status_code == 201
+    assert Insurer.objects.filter(code="britam").exists()
+
+
+@pytest.mark.django_db
+def test_an_insurer_code_cannot_be_reused(client_as, admin):
+    client_as(admin).post(
+        f"{INSURERS}/new", {"code": "britam", "name": "Britam"}, format="json"
+    )
+
+    response = client_as(admin).post(
+        f"{INSURERS}/new", {"code": "britam", "name": "Britam Two"}, format="json"
+    )
+
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_renaming_an_insurer_does_not_change_its_code(client_as, admin):
+    """Facilities, fixtures and the search aliases all key on the code.
+    Renaming it would silently detach every acceptance record."""
+    from apps.insurance.models import Insurer
+
+    Insurer.objects.create(code="rssb", name="RSSB")
+
+    client_as(admin).patch(
+        f"{INSURERS}/rssb",
+        {"name": "RSSB (formerly RAMA)", "code": "something-else"},
+        format="json",
+    )
+
+    row = Insurer.objects.get(code="rssb")
+    assert row.name == "RSSB (formerly RAMA)"
+    assert not Insurer.objects.filter(code="something-else").exists()
+
+
+@pytest.mark.django_db
+def test_the_insurer_list_says_how_many_facilities_accept_each(
+    client_as, admin, verified_facility
+):
+    """The number to look at before touching an insurer: how many patients a
+    mistake would misdirect."""
+    from apps.insurance.models import FacilityInsurer, Insurer
+
+    insurer = Insurer.objects.create(code="mutuelle", name="Mutuelle")
+    FacilityInsurer.objects.create(facility=verified_facility, insurer=insurer)
+
+    body = client_as(admin).get(INSURERS).json()
+    row = next(r for r in body["results"] if r["code"] == "mutuelle")
+
+    assert row["facilities"] == 1
+
+
+@pytest.mark.django_db
+def test_a_facility_admin_cannot_reach_the_insurer_list(
+    client_as, verified_facility
+):
+    """Platform endpoints cross every facility, so the bar is superuser -
+    `is_staff` is routinely granted to somebody who edits one lookup table."""
+    from apps.staff.models import StaffMember
+
+    user = User.objects.create_user(username="desk-x", password="pw-for-tests")
+    StaffMember.objects.create(
+        user=user, facility=verified_facility, role="admin", active=True
+    )
+
+    assert client_as(user).get(INSURERS).status_code == 403
+
+
+@pytest.mark.django_db
+def test_the_search_radius_can_be_changed_without_a_deploy(client_as, admin):
+    from apps.platform_admin.settings_store import search_radius_m
+
+    response = client_as(admin).patch(
+        f"{SETTINGS}/update", {"default_search_radius_m": 8000}, format="json"
+    )
+
+    assert response.status_code == 200
+    assert response.json()["default_search_radius_m"] == 8000
+    # And the value the search actually reads follows it.
+    assert search_radius_m() == 8000
+
+
+@pytest.mark.django_db
+def test_an_absurd_radius_is_refused(client_as, admin):
+    """500 m is smaller than most Kigali sectors and 50 km already reaches the
+    next province. Outside that it is a typo, not an intention."""
+    assert (
+        client_as(admin)
+        .patch(f"{SETTINGS}/update", {"default_search_radius_m": 5}, format="json")
+        .status_code
+        == 400
+    )
+    assert (
+        client_as(admin)
+        .patch(
+            f"{SETTINGS}/update", {"default_search_radius_m": 900000}, format="json"
+        )
+        .status_code
+        == 400
+    )
+
+
+@pytest.mark.django_db
+def test_the_honesty_gate_is_shown_but_not_editable(client_as, admin):
+    """MIN_SERVICE_TIME_SAMPLES is visible so an admin can answer "why does
+    this facility show no wait time" - and fixed, so it cannot be argued down
+    when a facility complains."""
+    body = client_as(admin).get(SETTINGS).json()
+
+    keys = {row["key"] for row in body["fixed"]}
+    assert "MIN_SERVICE_TIME_SAMPLES" in keys
+    assert "PRIVACY_NOTICE_VERSION" in keys
+    assert "TRIAGE_PROTOCOL_VERSION" in keys
+    # It is not among the writable fields.
+    assert "min_service_time_samples" not in body
+
+
+@pytest.mark.django_db
+def test_the_gate_cannot_be_lowered_through_the_settings_endpoint(
+    client_as, admin, settings
+):
+    """The whole value of the rule is that it cannot be changed in the
+    moment."""
+    before = settings.MIN_SERVICE_TIME_SAMPLES
+
+    client_as(admin).patch(
+        f"{SETTINGS}/update",
+        {"min_service_time_samples": 1, "MIN_SERVICE_TIME_SAMPLES": 1},
+        format="json",
+    )
+
+    assert settings.MIN_SERVICE_TIME_SAMPLES == before

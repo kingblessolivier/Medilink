@@ -31,11 +31,16 @@ from .permissions import IsPlatformAdmin
 from .serializers import (
     AccessLogSerializer,
     AdminFacilityListSerializer,
+    AdminInsurerListSerializer,
+    AdminInsurerSerializer,
+    AdminInsurerWriteSerializer,
     AdminOverviewSerializer,
     AdminProviderListSerializer,
     AdminStaffListSerializer,
     DeliveryReportSerializer,
     PlatformActivitySerializer,
+    PlatformSettingsSerializer,
+    PlatformSettingsWriteSerializer,
     TriageMonitoringSerializer,
     VerificationQueueSerializer,
     VerifiedSerializer,
@@ -244,3 +249,228 @@ def admin_access_log(request):
 @permission_classes(ADMIN_ONLY)
 def admin_delivery(request):
     return Response(delivery_report(days=_window(request, default=7, maximum=90)))
+
+
+# --------------------------------------------------------------------------
+# Insurers
+# --------------------------------------------------------------------------
+#
+# Insurers were a fixture file, so adding one was a deploy. There are a
+# handful in Rwanda and the list changes rarely - but "rarely" is not "never",
+# and a scheme launching mid-year should not wait for a release.
+#
+# Deactivating rather than deleting: an insurer with facilities pointing at it
+# cannot be removed without silently dropping their acceptance records, and a
+# facility that stops appearing under Mutuelle because somebody tidied a list
+# is a patient sent to the wrong place.
+
+
+@extend_schema(
+    summary="Every insurer on the platform",
+    responses=AdminInsurerListSerializer,
+)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsPlatformAdmin])
+def admin_insurers(request):
+    from django.db.models import Count
+
+    from apps.insurance.models import Insurer
+
+    rows = Insurer.objects.annotate(
+        facilities=Count("facilityinsurer", distinct=True)
+    ).order_by("sort_order", "name")
+
+    return Response(
+        {
+            "count": rows.count(),
+            "results": [
+                {
+                    "code": row.code,
+                    "name": row.name,
+                    "is_public": row.is_public,
+                    "sort_order": row.sort_order,
+                    "facilities": row.facilities,
+                }
+                for row in rows
+            ],
+        }
+    )
+
+
+@extend_schema(
+    summary="Add an insurer",
+    request=AdminInsurerWriteSerializer,
+    responses=AdminInsurerSerializer,
+)
+@api_view(["POST"])
+@permission_classes([IsAuthenticated, IsPlatformAdmin])
+def create_insurer(request):
+    from apps.insurance.models import Insurer
+
+    payload = AdminInsurerWriteSerializer(data=request.data)
+    payload.is_valid(raise_exception=True)
+    data = payload.validated_data
+
+    if Insurer.objects.filter(code=data["code"]).exists():
+        raise ValidationError({"code": "An insurer with that code exists."})
+
+    row = Insurer.objects.create(
+        code=data["code"],
+        name=data["name"],
+        is_public=data.get("is_public", True),
+        sort_order=data.get("sort_order", 100),
+    )
+    return Response(
+        {
+            "code": row.code,
+            "name": row.name,
+            "is_public": row.is_public,
+            "sort_order": row.sort_order,
+            "facilities": 0,
+        },
+        status=201,
+    )
+
+
+@extend_schema(
+    summary="Rename or reorder an insurer",
+    request=AdminInsurerWriteSerializer,
+    responses=AdminInsurerSerializer,
+)
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated, IsPlatformAdmin])
+def update_insurer(request, code):
+    from django.db.models import Count
+
+    from apps.insurance.models import Insurer
+
+    row = Insurer.objects.filter(code=code).first()
+    if row is None:
+        raise NotFound("No such insurer.")
+
+    payload = AdminInsurerWriteSerializer(data=request.data, partial=True)
+    payload.is_valid(raise_exception=True)
+
+    # `code` is deliberately not editable. Facilities, fixtures and the search
+    # alias table all key on it, and renaming it would silently detach every
+    # acceptance record pointing at the old value.
+    for field in ("name", "is_public", "sort_order"):
+        if field in payload.validated_data:
+            setattr(row, field, payload.validated_data[field])
+    row.save()
+
+    facilities = (
+        Insurer.objects.filter(pk=row.pk)
+        .annotate(n=Count("facilityinsurer", distinct=True))
+        .values_list("n", flat=True)
+        .first()
+    )
+    return Response(
+        {
+            "code": row.code,
+            "name": row.name,
+            "is_public": row.is_public,
+            "sort_order": row.sort_order,
+            "facilities": facilities or 0,
+        }
+    )
+
+
+# --------------------------------------------------------------------------
+# Platform settings
+# --------------------------------------------------------------------------
+
+
+def _settings_payload() -> dict:
+    """What can be changed while running, and what deliberately cannot.
+
+    The fixed values are returned alongside the editable one on purpose. An
+    administrator asking "why does this facility show no wait time" needs to
+    see that the gate is 20 - especially because they cannot move it from
+    here.
+
+    A plain builder rather than one DRF view calling another, which loses the
+    request context and breaks the moment either signature changes.
+    """
+    from django.conf import settings as django_settings
+
+    from apps.platform_admin.settings_store import current
+
+    row = current()
+    return (
+        {
+            "default_search_radius_m": row.default_search_radius_m,
+            "updated_at": row.updated_at.isoformat() if row.updated_at else None,
+            "fixed": [
+                {
+                    "key": "MIN_SERVICE_TIME_SAMPLES",
+                    "value": str(
+                        getattr(django_settings, "MIN_SERVICE_TIME_SAMPLES", "")
+                    ),
+                    "why": (
+                        "The gate that stops a wait estimate being published "
+                        "from too few visits. Changing it is a deploy-time "
+                        "decision so it cannot be argued down when a facility "
+                        "complains its waits show as unavailable."
+                    ),
+                },
+                {
+                    "key": "PRIVACY_NOTICE_VERSION",
+                    "value": str(
+                        getattr(django_settings, "PRIVACY_NOTICE_VERSION", "")
+                    ),
+                    "why": (
+                        "Only meaningful next to the notice text it names, "
+                        "which ships with the code. Bumping it here would "
+                        "produce consent records pointing at a revision that "
+                        "never existed."
+                    ),
+                },
+                {
+                    "key": "TRIAGE_PROTOCOL_VERSION",
+                    "value": (
+                        getattr(django_settings, "TRIAGE_PROTOCOL_VERSION", "")
+                        or "not configured"
+                    ),
+                    "why": (
+                        "A record that a named clinician signed off a specific "
+                        "protocol. It is evidence, not a preference."
+                    ),
+                },
+            ],
+        }
+    )
+
+
+@extend_schema(
+    summary="Platform configuration",
+    responses=PlatformSettingsSerializer,
+)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsPlatformAdmin])
+def platform_settings(request):
+    return Response(_settings_payload())
+
+
+@extend_schema(
+    summary="Change platform configuration",
+    request=PlatformSettingsWriteSerializer,
+    responses=PlatformSettingsSerializer,
+)
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated, IsPlatformAdmin])
+def update_platform_settings(request):
+    from apps.platform_admin.settings_store import current
+
+    payload = PlatformSettingsWriteSerializer(data=request.data, partial=True)
+    payload.is_valid(raise_exception=True)
+
+    row = current()
+    if "default_search_radius_m" in payload.validated_data:
+        row.default_search_radius_m = payload.validated_data[
+            "default_search_radius_m"
+        ]
+    row.updated_by = request.user
+    row.save()
+
+    return Response(_settings_payload())
