@@ -251,3 +251,95 @@ class StaffServiceCoverageWriteSerializer(serializers.Serializer):
     note = serializers.CharField(
         required=False, allow_blank=True, max_length=200, default=""
     )
+
+
+# --------------------------------------------------------------------------
+# Facility settings
+# --------------------------------------------------------------------------
+
+
+class OpeningHoursRowSerializer(serializers.Serializer):
+    weekday = serializers.IntegerField(min_value=0, max_value=6)
+    opens_at = serializers.CharField()
+    closes_at = serializers.CharField()
+
+
+class FacilitySettingsSerializer(serializers.Serializer):
+    # Read-only identity. Shown so a manager can see what MediLink verified,
+    # and NOT editable here - see the note in views.py.
+    name = serializers.CharField()
+    level = serializers.CharField()
+    ownership = serializers.CharField()
+    district = serializers.CharField()
+    verified = serializers.BooleanField()
+
+    phone = serializers.CharField(allow_blank=True)
+    email = serializers.CharField(allow_blank=True)
+    address = serializers.CharField(allow_blank=True)
+    sector = serializers.CharField(allow_blank=True)
+    hours = OpeningHoursRowSerializer(many=True)
+
+
+class FacilityContactWriteSerializer(serializers.Serializer):
+    phone = serializers.CharField(required=False, allow_blank=True, max_length=20)
+    email = serializers.EmailField(required=False, allow_blank=True)
+    address = serializers.CharField(required=False, allow_blank=True, max_length=255)
+    sector = serializers.CharField(required=False, allow_blank=True, max_length=50)
+
+
+class OpeningHoursWriteRowSerializer(serializers.Serializer):
+    weekday = serializers.IntegerField(min_value=0, max_value=6)
+    opens_at = serializers.TimeField()
+    closes_at = serializers.TimeField()
+
+    def validate(self, attrs):
+        if attrs["opens_at"] >= attrs["closes_at"]:
+            raise serializers.ValidationError(
+                {"closes_at": "A facility must close after it opens."}
+            )
+        return attrs
+
+
+class OpeningHoursWriteSerializer(serializers.Serializer):
+    """The whole week at once.
+
+    Two rows on one weekday model a lunch break, which is how a Rwandan health
+    centre actually runs, so there is no stable "the Tuesday row" to PATCH.
+    """
+
+    hours = OpeningHoursWriteRowSerializer(many=True)
+
+    def validate_hours(self, rows):
+        # The model enforces (facility, weekday, opens_at) uniqueness. Catching
+        # it here gives a sentence rather than a database error.
+        seen = set()
+        for row in rows:
+            key = (row["weekday"], row["opens_at"])
+            if key in seen:
+                raise serializers.ValidationError(
+                    "Two periods on the same day cannot start at the same time."
+                )
+            seen.add(key)
+        return rows
+
+
+# --------------------------------------------------------------------------
+# Patient lookup
+# --------------------------------------------------------------------------
+
+
+class PatientMatchSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    display_name = serializers.CharField(allow_blank=True)
+    # Masked. A lookup screen is read across a reception desk.
+    phone = serializers.CharField()
+    visits_here = serializers.IntegerField()
+    last_seen = serializers.CharField(allow_null=True)
+    in_queue_now = serializers.BooleanField()
+    ticket_code = serializers.CharField(allow_null=True)
+
+
+class PatientLookupSerializer(serializers.Serializer):
+    count = serializers.IntegerField()
+    query = serializers.CharField(allow_blank=True)
+    results = PatientMatchSerializer(many=True)

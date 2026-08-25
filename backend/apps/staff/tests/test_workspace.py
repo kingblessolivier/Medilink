@@ -945,3 +945,210 @@ def test_one_facilitys_insurance_is_not_anothers(
     client_as(desk).patch(f"{INSURANCE}/mutuelle", {"accepted": True}, format="json")
 
     assert FacilityInsurer.objects.filter(facility=other_facility).count() == 0
+
+
+# --------------------------------------------------------------------------
+# Facility settings
+# --------------------------------------------------------------------------
+
+FACILITY = "/api/v1/staff/facility"
+LOOKUP = "/api/v1/staff/patients"
+
+
+@pytest.mark.django_db
+def test_a_facility_can_fix_its_own_contact_details(client_as, desk, facility):
+    response = client_as(desk).patch(
+        f"{FACILITY}/contact",
+        {"phone": "+250788112233", "address": "KG 11 Ave"},
+        format="json",
+    )
+
+    assert response.status_code == 200
+    facility.refresh_from_db()
+    assert facility.phone == "+250788112233"
+    assert facility.address == "KG 11 Ave"
+
+
+@pytest.mark.django_db
+def test_the_verified_identity_is_not_editable_here(client_as, desk, facility):
+    """Name, level and district are what `verified_at` attests to. A facility
+    that could rename itself would be editing the thing MediLink checked."""
+    original = facility.name
+
+    client_as(desk).patch(
+        f"{FACILITY}/contact",
+        {"name": "Somewhere Else", "district": "Musanze", "phone": "+250788000111"},
+        format="json",
+    )
+
+    facility.refresh_from_db()
+    assert facility.name == original
+    assert facility.district != "Musanze"
+    # The field that IS editable still went through.
+    assert facility.phone == "+250788000111"
+
+
+@pytest.mark.django_db
+def test_opening_hours_can_hold_a_lunch_break(client_as, desk, facility):
+    """Two rows on one weekday. It is how a health centre actually runs, and
+    the reason hours are replaced as a set rather than patched row by row."""
+    from apps.facilities.models import OpeningHours
+
+    response = client_as(desk).put(
+        f"{FACILITY}/hours",
+        {
+            "hours": [
+                {"weekday": 1, "opens_at": "08:00", "closes_at": "12:00"},
+                {"weekday": 1, "opens_at": "14:00", "closes_at": "17:00"},
+            ]
+        },
+        format="json",
+    )
+
+    assert response.status_code == 200
+    tuesday = OpeningHours.objects.filter(facility=facility, weekday=1)
+    assert tuesday.count() == 2
+
+
+@pytest.mark.django_db
+def test_a_facility_cannot_close_before_it_opens(client_as, desk):
+    response = client_as(desk).put(
+        f"{FACILITY}/hours",
+        {"hours": [{"weekday": 1, "opens_at": "17:00", "closes_at": "08:00"}]},
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert "close after it opens" in str(response.json())
+
+
+@pytest.mark.django_db
+def test_replacing_hours_replaces_all_of_them(client_as, desk, facility):
+    """The fixture opens every day. Sending one row must leave exactly one."""
+    from apps.facilities.models import OpeningHours
+
+    client_as(desk).put(
+        f"{FACILITY}/hours",
+        {"hours": [{"weekday": 3, "opens_at": "09:00", "closes_at": "16:00"}]},
+        format="json",
+    )
+
+    assert OpeningHours.objects.filter(facility=facility).count() == 1
+
+
+@pytest.mark.django_db
+def test_a_clinician_cannot_change_facility_settings(client_as, clinician):
+    response = client_as(clinician).patch(
+        f"{FACILITY}/contact", {"phone": "+250788999888"}, format="json"
+    )
+
+    assert response.status_code == 403
+
+
+# --------------------------------------------------------------------------
+# Patient lookup - scoped, logged, throttled
+# --------------------------------------------------------------------------
+
+
+@pytest.fixture
+def seen_here(db, facility, general):
+    """A patient this facility has actually seen."""
+    from apps.queueing.models import QueueEntry
+
+    person = Patient.objects.create(
+        phone="+250788121212", full_name="Uwase Alice"
+    )
+    QueueEntry.objects.create(
+        facility=facility,
+        service_type=general,
+        patient=person,
+        ticket_code="G-900",
+        ticket_day=timezone.localtime().date(),
+    )
+    return person
+
+
+@pytest.mark.django_db
+def test_a_returning_patient_can_be_found_by_name(client_as, desk, seen_here):
+    body = client_as(desk).get(LOOKUP, {"q": "Uwase"}).json()
+
+    assert body["count"] == 1
+    assert body["results"][0]["display_name"] == "Uwase Alice"
+    assert body["results"][0]["visits_here"] == 1
+
+
+@pytest.mark.django_db
+def test_a_local_phone_format_finds_the_stored_one(client_as, desk, seen_here):
+    """Typed as 0788…, stored as +250788…."""
+    body = client_as(desk).get(LOOKUP, {"q": "0788121212"}).json()
+
+    assert body["count"] == 1
+
+
+@pytest.mark.django_db
+def test_the_phone_is_masked_in_results(client_as, desk, seen_here):
+    """A lookup screen is read across a reception desk like the queue board."""
+    body = client_as(desk).get(LOOKUP, {"q": "Uwase"}).json()
+
+    assert body["results"][0]["phone"] != "+250788121212"
+    assert "..." in body["results"][0]["phone"]
+
+
+@pytest.mark.django_db
+def test_a_patient_seen_only_elsewhere_is_not_found(
+    client_as, desk, other_facility, general
+):
+    """The breach that ends the project. A receptionist at one clinic must
+    never be able to look up somebody who has only attended another."""
+    from apps.queueing.models import QueueEntry
+
+    stranger = Patient.objects.create(
+        phone="+250788343434", full_name="Mukamana Grace"
+    )
+    QueueEntry.objects.create(
+        facility=other_facility,
+        service_type=general,
+        patient=stranger,
+        ticket_code="G-901",
+        ticket_day=timezone.localtime().date(),
+    )
+
+    body = client_as(desk).get(LOOKUP, {"q": "Mukamana"}).json()
+
+    assert body["count"] == 0
+
+
+@pytest.mark.django_db
+def test_a_short_query_returns_nothing_rather_than_everybody(
+    client_as, desk, seen_here
+):
+    """Two characters matches most of the register, and a list of patients is
+    exactly what this endpoint must not hand out."""
+    body = client_as(desk).get(LOOKUP, {"q": "Uw"}).json()
+
+    assert body["count"] == 0
+
+
+@pytest.mark.django_db
+def test_every_lookup_is_written_to_the_access_log(client_as, desk, seen_here):
+    """A search that returns a patient is a read of a patient record.
+    docs/08 s6 requires it to be attributable."""
+    PatientAccessLog.objects.all().delete()
+
+    client_as(desk).get(LOOKUP, {"q": "Uwase"})
+
+    entry = PatientAccessLog.objects.get()
+    assert entry.action == PatientAccessLog.Action.VIEW
+    assert entry.record_count == 1
+
+
+@pytest.mark.django_db
+def test_a_lookup_shows_whether_they_are_already_in_the_queue(
+    client_as, desk, seen_here
+):
+    """The reason reception is searching at all: is this person already
+    checked in, or do I need to add them?"""
+    body = client_as(desk).get(LOOKUP, {"q": "Uwase"}).json()
+
+    assert body["results"][0]["in_queue_now"] is True
+    assert body["results"][0]["ticket_code"] == "G-900"

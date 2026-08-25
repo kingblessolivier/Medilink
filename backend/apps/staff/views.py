@@ -4,10 +4,15 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    throttle_classes,
+)
 from rest_framework.exceptions import APIException, NotFound, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 
 from apps.patients.audit import record as log_access
 from apps.patients.models import PatientAccessLog
@@ -17,10 +22,14 @@ from .permissions import IsFacilityStaff, IsQueueManager, active_staff
 from .reports import facility_report
 from .serializers import (
     AppointmentStatusSerializer,
+    FacilityContactWriteSerializer,
     FacilityInsuranceSerializer,
     FacilityInsurerSerializer,
     FacilityInsurerWriteSerializer,
     FacilityReportSerializer,
+    FacilitySettingsSerializer,
+    OpeningHoursWriteSerializer,
+    PatientLookupSerializer,
     ScheduleTemplateListSerializer,
     ScheduleTemplateSerializer,
     ScheduleTemplateWriteSerializer,
@@ -724,3 +733,256 @@ def set_coverage(request, code, service):
             "note": row.note,
         }
     )
+
+
+# --------------------------------------------------------------------------
+# Facility settings
+# --------------------------------------------------------------------------
+#
+# What a facility may change about itself, and - just as importantly - what it
+# may not.
+#
+# Editable: how to reach it and when it is open. Those change often, the
+# facility is the only one who knows, and a wrong phone number is a patient
+# who cannot ring ahead.
+#
+# NOT editable here: name, level, ownership, district and coordinates. Those
+# are what `verified_at` attests to. A facility that could rename itself or
+# move its own pin would be editing the thing MediLink verified, and the
+# verification would no longer mean anything. They change through the platform
+# verification flow, with a human on the other side.
+
+
+def _settings_payload(facility) -> dict:
+    """Plain dict, so the write views can return the new state without one
+    DRF view calling another - which loses the request context and breaks the
+    moment either signature changes."""
+    return (
+        {
+            "name": facility.name,
+            "level": facility.get_level_display(),
+            "ownership": facility.get_ownership_display(),
+            "district": facility.district,
+            "verified": facility.verified_at is not None,
+            "phone": facility.phone,
+            "email": facility.email,
+            "address": facility.address,
+            "sector": facility.sector,
+            "hours": [
+                {
+                    "weekday": row.weekday,
+                    "opens_at": row.opens_at.strftime("%H:%M"),
+                    "closes_at": row.closes_at.strftime("%H:%M"),
+                }
+                for row in facility.opening_hours.all()
+            ],
+        }
+    )
+
+
+@extend_schema(
+    summary="The facility's own contact details and opening hours",
+    responses=FacilitySettingsSerializer,
+)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsFacilityStaff])
+def facility_settings(request):
+    staff = active_staff(request)
+    return Response(_settings_payload(staff.facility))
+
+
+@extend_schema(
+    summary="Update contact details",
+    request=FacilityContactWriteSerializer,
+    responses=FacilitySettingsSerializer,
+)
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated, IsQueueManager])
+def update_facility_contact(request):
+    staff = active_staff(request)
+    payload = FacilityContactWriteSerializer(data=request.data, partial=True)
+    payload.is_valid(raise_exception=True)
+
+    facility = staff.facility
+    for field in ("phone", "email", "address", "sector"):
+        if field in payload.validated_data:
+            setattr(facility, field, payload.validated_data[field])
+    facility.save(update_fields=["phone", "email", "address", "sector"])
+
+    return Response(_settings_payload(facility))
+
+
+@extend_schema(
+    summary="Replace the facility's opening hours",
+    request=OpeningHoursWriteSerializer,
+    responses=FacilitySettingsSerializer,
+)
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated, IsQueueManager])
+def replace_opening_hours(request):
+    """The whole week at once, not row by row.
+
+    A weekday can hold two rows - that is how a lunch break is modelled, and it
+    is how a Rwandan health centre actually runs - so there is no stable "the
+    Tuesday row" to PATCH. Replacing the set keeps the client simple and makes
+    a half-applied edit impossible.
+
+    Opening hours decide whether a facility reads as open, which decides
+    whether it appears in "open now" and whether its wait shows as `closed`.
+    Getting this wrong makes a facility invisible, so the whole replacement is
+    one transaction.
+    """
+    from apps.facilities.models import OpeningHours
+
+    staff = active_staff(request)
+    payload = OpeningHoursWriteSerializer(data=request.data)
+    payload.is_valid(raise_exception=True)
+    rows = payload.validated_data["hours"]
+
+    with transaction.atomic():
+        OpeningHours.objects.filter(facility=staff.facility).delete()
+        OpeningHours.objects.bulk_create(
+            [
+                OpeningHours(
+                    facility=staff.facility,
+                    weekday=row["weekday"],
+                    opens_at=row["opens_at"],
+                    closes_at=row["closes_at"],
+                )
+                for row in rows
+            ]
+        )
+
+    staff.facility.refresh_from_db()
+    return Response(_settings_payload(staff.facility))
+
+
+# --------------------------------------------------------------------------
+# Patient lookup
+# --------------------------------------------------------------------------
+#
+# The first feature that lets a staff member search FOR a person rather than
+# act on one standing in front of them. That difference is the whole reason
+# for the three constraints below, and none of them is optional.
+#
+# **Scoped to this facility's own patients.** Not the platform table. A
+# receptionist at one clinic must never be able to look up somebody who has
+# only ever attended another - that is the breach that ends the project, and
+# docs/08 is explicit about it. "Their own" means: has a queue entry or an
+# appointment here.
+#
+# **Every hit is logged.** A search that returns a patient is a read of a
+# patient record, and docs/08 s6 requires it to be attributable. Logged once
+# per search with the count, not once per result, so a wide search does not
+# drown the signal the log exists to carry.
+#
+# **Throttled.** Without a limit this is an oracle: type numbers until one
+# comes back and you have learned who is registered. The `signin` scope is
+# reused rather than inventing another - both are "guessing at an identifier"
+# and deserve the same budget.
+
+
+class PatientLookupThrottle(ScopedRateThrottle):
+    scope = "signin"
+
+
+@extend_schema(
+    summary="Find a patient this facility has seen",
+    parameters=[
+        OpenApiParameter(
+            "q",
+            OpenApiTypes.STR,
+            description=(
+                "Phone number or name. At least 3 characters - a shorter "
+                "query matches most of the register and is not a search."
+            ),
+        )
+    ],
+    responses=PatientLookupSerializer,
+)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsFacilityStaff])
+@throttle_classes([PatientLookupThrottle])
+def patient_lookup(request):
+    from django.db.models import Max, Q
+
+    from apps.patients.models import Patient, normalise_phone
+    from apps.queueing.models import QueueEntry
+
+    staff = active_staff(request)
+    term = (request.query_params.get("q") or "").strip()
+
+    # Below three characters this returns most of the register, which is a
+    # list rather than a search - and a list of patients is precisely what
+    # this endpoint must not hand out.
+    if len(term) < 3:
+        return Response({"count": 0, "results": [], "query": term})
+
+    # A phone typed as 0788… and stored as +250788… must still match, so try
+    # normalising before falling back to a substring.
+    phone_match = ""
+    try:
+        phone_match = normalise_phone(term)
+    except Exception:  # noqa: BLE001 - not a phone, which is fine
+        phone_match = ""
+
+    seen_here = Q(queue_entries__facility=staff.facility) | Q(
+        appointments__facility=staff.facility
+    )
+    matches = Q(full_name__icontains=term) | Q(phone__icontains=term)
+    if phone_match:
+        matches |= Q(phone=phone_match)
+
+    patients = (
+        Patient.objects.filter(seen_here)
+        .filter(matches)
+        .annotate(last_here=Max("queue_entries__joined_at"))
+        .distinct()
+        .order_by("-last_here")[:10]
+    )
+
+    results = []
+    for patient in patients:
+        open_entry = (
+            QueueEntry.objects.filter(
+                patient=patient,
+                facility=staff.facility,
+                status__in=QueueEntry.OPEN_STATUSES,
+            )
+            .order_by("-joined_at")
+            .first()
+        )
+        results.append(
+            {
+                "id": patient.id,
+                "display_name": patient.full_name or "",
+                # Masked, exactly as the queue board masks it. A lookup screen
+                # is read across a reception desk like any other.
+                "phone": _mask_phone(patient.phone),
+                "visits_here": QueueEntry.objects.filter(
+                    patient=patient, facility=staff.facility
+                ).count(),
+                "last_seen": (
+                    timezone.localtime(patient.last_here).date().isoformat()
+                    if patient.last_here
+                    else None
+                ),
+                "in_queue_now": open_entry is not None,
+                "ticket_code": open_entry.ticket_code if open_entry else None,
+            }
+        )
+
+    # One row for the search, with the count - not one per result. Same
+    # reasoning as the queue board: per-record rows would drown the signal.
+    log_access(
+        request,
+        action=PatientAccessLog.Action.VIEW,
+        facility=staff.facility,
+        record_count=len(results),
+    )
+
+    return Response({"count": len(results), "results": results, "query": term})
+
+
+def _mask_phone(phone: str) -> str:
+    return f"{phone[:6]}...{phone[-3:]}" if len(phone) > 9 else phone
