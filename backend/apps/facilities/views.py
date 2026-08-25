@@ -17,6 +17,25 @@ from .services import find_nearby
 from .wait import wait_snapshot
 
 
+def _bookable_ids(facilities) -> set:
+    """Which of these facilities have an open session to book into.
+
+    One query for the whole list. `bookable` used to be a hardcoded False,
+    so the Book action never appeared anywhere; resolving it per facility
+    instead would be an N+1 on the hottest endpoint in the system.
+    """
+    from apps.scheduling.models import ScheduleTemplate
+
+    ids = [f.id for f in facilities]
+    if not ids:
+        return set()
+    return set(
+        ScheduleTemplate.objects.filter(
+            facility_id__in=ids, active=True
+        ).values_list("facility_id", flat=True)
+    )
+
+
 @extend_schema(
     summary="Nearby facilities",
     description=(
@@ -88,7 +107,12 @@ def nearby(request):
             },
             "count": len(facilities),
             "results": FacilityNearbySerializer(
-                facilities, many=True, context={"waits": waits}
+                facilities,
+                many=True,
+                context={
+                    "waits": waits,
+                    "bookable_ids": _bookable_ids(facilities),
+                },
             ).data,
         }
     )
@@ -113,6 +137,7 @@ def facility_detail(request, slug):
         FacilityDetailSerializer(
             facility,
             context={
+                "bookable_ids": _bookable_ids([facility]),
                 "waits": wait_snapshot([facility]),
                 "service_waits": facility_service_waits(
                     facility,

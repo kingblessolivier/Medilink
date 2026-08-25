@@ -1420,6 +1420,8 @@ export interface components {
             readonly services: components["schemas"]["ServiceBrief"][];
             readonly wait: components["schemas"]["Wait"];
             readonly directions_url: string;
+            /** @description Has this facility opened any session to book into? */
+            readonly bookable: boolean;
             /** Format: date-time */
             verified_at?: string | null;
         };

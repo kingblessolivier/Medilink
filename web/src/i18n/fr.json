@@ -361,5 +361,14 @@
   "services_intro": "Parcourez ce que proposent les etablissements pres de vous, et trouvez ceux qui offrent ce dont vous avez besoin.",
   "services_all": "Services",
   "services_specialties": "Specialites",
-  "nav_insurance": "Assurance"
+  "nav_insurance": "Assurance",
+  "tab_appointments": "Rendez-vous",
+  "tab_queue": "File d'attente",
+  "appointments_next_free": "Prochain rendez-vous libre",
+  "appointments_none_bookable": "Cet etablissement ne prend pas encore de rendez-vous via MediLink. Vous pouvez vous y rendre ou telephoner.",
+  "appointments_no_slots": "Aucun rendez-vous libre dans les deux prochaines semaines.",
+  "queue_people_waiting": "{n} en attente",
+  "queue_none_waiting": "Personne en attente",
+  "queue_explainer": "Les temps d'attente viennent de l'etablissement lui-meme, et seulement lorsqu'il a enregistre assez de visites. Quand nous ne savons pas, nous le disons plutot que de deviner.",
+  "queue_not_reporting": "Cet etablissement ne nous envoie pas d'information sur sa file, nous ne pouvons donc pas indiquer le temps d'attente."
 }

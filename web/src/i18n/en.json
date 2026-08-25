@@ -361,5 +361,14 @@
   "services_intro": "Browse what facilities near you offer, and find the ones that provide what you need.",
   "services_all": "Services",
   "services_specialties": "Specialties",
-  "nav_insurance": "Insurance"
+  "nav_insurance": "Insurance",
+  "tab_appointments": "Appointments",
+  "tab_queue": "Queue",
+  "appointments_next_free": "Next free appointment",
+  "appointments_none_bookable": "This facility does not take appointments through MediLink yet. You can still go in person, or ring ahead.",
+  "appointments_no_slots": "No free appointments in the next two weeks.",
+  "queue_people_waiting": "{n} waiting",
+  "queue_none_waiting": "Nobody waiting",
+  "queue_explainer": "Waiting times come from the facility's own reception desk, and only when it has recorded enough visits to be sure. Where we cannot say, we say so rather than guess.",
+  "queue_not_reporting": "This facility does not send us live queue information, so we cannot tell you how long the wait is."
 }

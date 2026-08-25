@@ -361,5 +361,14 @@
   "services_intro": "Reba ibyo amavuriro ari hafi yawe atanga, ubone aho ubona icyo ukeneye.",
   "services_all": "Serivisi",
   "services_specialties": "Ubuhanga",
-  "nav_insurance": "Ubwishingizi"
+  "nav_insurance": "Ubwishingizi",
+  "tab_appointments": "Gahunda",
+  "tab_queue": "Umurongo",
+  "appointments_next_free": "Gahunda ikurikira ihari",
+  "appointments_none_bookable": "Iri vuriro ntiryakira gahunda kuri MediLink. Ushobora kujyayo cyangwa ugahamagara mbere.",
+  "appointments_no_slots": "Nta gahunda ihari mu byumweru bibiri biri imbere.",
+  "queue_people_waiting": "{n} bategereje",
+  "queue_none_waiting": "Nta muntu utegereje",
+  "queue_explainer": "Igihe cyo gutegereza kiva ku ivuriro ubwaryo, kandi ari uko ryanditse abantu bahagije. Iyo tutabizi, turabikubwira aho kugikeka.",
+  "queue_not_reporting": "Iri vuriro ntiritwoherereza amakuru y'umurongo, bityo ntitwabwira igihe cyo gutegereza."
 }
