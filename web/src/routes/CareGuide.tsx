@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useMutation, useQuery } from "@tanstack/react-query"
+import { ProgressSteps } from "../components/ProgressSteps"
 import { api, ApiRequestError } from "../api/client"
 import { useI18n } from "../i18n"
 import { useTriageStatus } from "../hooks/useTriageStatus"
@@ -140,8 +141,20 @@ export function CareGuide() {
           disabled={start.isPending}
           onClick={() => start.mutate()}
         >
-          {start.isPending ? t("loading") : t("care_guide_start")}
+          {t("care_guide_start")}
         </button>
+
+        {/* Paced by the real request, not a scripted delay - see
+            ProgressSteps. On a fast connection this is one frame. */}
+        {start.isPending && (
+          <ProgressSteps
+            className="mt-4"
+            steps={[
+              t("care_guide_step_preparing"),
+              t("care_guide_step_pathways"),
+            ]}
+          />
+        )}
 
         {start.isError && <StartError error={start.error} />}
 
@@ -207,6 +220,19 @@ export function CareGuide() {
           </li>
         ))}
       </ul>
+
+      {/* Same rule as the start button: the steps are paced by the request,
+          so a fast answer shows one line and a slow one explains itself. */}
+      {answer.isPending && (
+        <ProgressSteps
+          className="mt-4"
+          steps={[
+            t("care_guide_step_reviewing"),
+            t("care_guide_step_pathways"),
+            t("care_guide_step_specialists"),
+          ]}
+        />
+      )}
 
       {answer.isError && (
         <div className="mt-4">
