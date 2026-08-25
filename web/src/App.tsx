@@ -79,6 +79,12 @@ const Insurance = lazy(() =>
 const Services = lazy(() =>
   import("./routes/Services").then((m) => ({ default: m.Services })),
 )
+const About = lazy(() =>
+  import("./routes/About").then((m) => ({ default: m.About })),
+)
+const Help = lazy(() =>
+  import("./routes/Help").then((m) => ({ default: m.Help })),
+)
 
 // A developer tool. 2.7 KB of it has no business in the bundle somebody
 // downloads on a 2G connection, so it is split out and left out of the
@@ -243,6 +249,8 @@ function Shell() {
         {/* Linked from the consent checkbox. Consenting to a notice that
             does not exist is not consent. */}
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/help" element={<Help />} />
 
         {/* -------------------------------------------------- workspace */}
         <Route

@@ -91,6 +91,8 @@ export function SiteFooter() {
               <FooterLink to="/visits">{t("nav_visits")}</FooterLink>
               <FooterLink to="/profile">{t("nav_profile")}</FooterLink>
               <FooterLink to="/privacy">{t("footer_privacy_link")}</FooterLink>
+              <FooterLink to="/about">{t("about_title")}</FooterLink>
+              <FooterLink to="/help">{t("help_title")}</FooterLink>
             </ul>
           </nav>
         </div>
