@@ -395,5 +395,9 @@
   "help_data_title": "Recuperer ou effacer vos donnees",
   "help_data_body": "Votre profil propose les deux. L'effacement retire votre nom, votre numero et votre localisation; l'etablissement conserve ses propres comptages, sans rien qui vous identifie.",
   "help_contact_title": "Toujours bloque",
-  "help_contact_body": "Demandez au guichet de n'importe quel etablissement utilisant MediLink — ils voient votre rendez-vous et votre place dans la file."
+  "help_contact_body": "Demandez au guichet de n'importe quel etablissement utilisant MediLink — ils voient votre rendez-vous et votre place dans la file.",
+  "care_guide_step_preparing": "Preparation de vos questions",
+  "care_guide_step_reviewing": "Examen de vos reponses",
+  "care_guide_step_pathways": "Verification des parcours de soins",
+  "care_guide_step_specialists": "Recherche du type de soins adapte"
 }

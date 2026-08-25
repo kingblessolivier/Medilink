@@ -395,5 +395,9 @@
   "help_data_title": "Getting your data, or removing it",
   "help_data_body": "Your profile has both. Erasing removes your name, phone number and location from our records; the facility keeps its own attendance counts, with nothing in them that identifies you.",
   "help_contact_title": "Still stuck",
-  "help_contact_body": "Ask at the reception desk of any facility using MediLink — they can see your booking and your place in the queue."
+  "help_contact_body": "Ask at the reception desk of any facility using MediLink — they can see your booking and your place in the queue.",
+  "care_guide_step_preparing": "Preparing your questions",
+  "care_guide_step_reviewing": "Reviewing your answers",
+  "care_guide_step_pathways": "Checking care pathways",
+  "care_guide_step_specialists": "Finding the right kind of care"
 }

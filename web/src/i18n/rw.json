@@ -395,5 +395,9 @@
   "help_data_title": "Gufata amakuru yawe cyangwa kuyasiba",
   "help_data_body": "Konti yawe ifite byombi. Gusiba bikuraho izina, nomero na aho uba mu byo dufite; ivuriro rigumana imibare yaryo, nta kintu kikwerekana.",
   "help_contact_title": "Uracyafite ikibazo",
-  "help_contact_body": "Baza ku biro by'ivuriro iryo ari ryo ryose rikoresha MediLink — barebera gahunda yawe n'umwanya wawe ku murongo."
+  "help_contact_body": "Baza ku biro by'ivuriro iryo ari ryo ryose rikoresha MediLink — barebera gahunda yawe n'umwanya wawe ku murongo.",
+  "care_guide_step_preparing": "Turimo gutegura ibibazo byawe",
+  "care_guide_step_reviewing": "Turimo kureba ibisubizo byawe",
+  "care_guide_step_pathways": "Turimo gusuzuma inzira z'ubuvuzi",
+  "care_guide_step_specialists": "Turimo gushaka ubwoko bw'ubuvuzi bukwiye"
 }
