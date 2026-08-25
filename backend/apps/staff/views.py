@@ -17,6 +17,9 @@ from .permissions import IsFacilityStaff, IsQueueManager, active_staff
 from .reports import facility_report
 from .serializers import (
     AppointmentStatusSerializer,
+    FacilityInsuranceSerializer,
+    FacilityInsurerSerializer,
+    FacilityInsurerWriteSerializer,
     FacilityReportSerializer,
     ScheduleTemplateListSerializer,
     ScheduleTemplateSerializer,
@@ -24,6 +27,8 @@ from .serializers import (
     StaffAppointmentListSerializer,
     StaffAppointmentSerializer,
     StaffMeSerializer,
+    StaffServiceCoverageSerializer,
+    StaffServiceCoverageWriteSerializer,
 )
 
 
@@ -495,3 +500,227 @@ def update_schedule(request, pk):
         (template.service_type_id, template.provider_id, template.weekday), 0
     )
     return Response(_template_payload(template, upcoming))
+
+
+# --------------------------------------------------------------------------
+# Insurance
+# --------------------------------------------------------------------------
+#
+# A facility maintains its own accepted insurers and per-service coverage, and
+# its save counts as confirmation.
+#
+# This screen used to be read-only, on the reasoning that a facility editing
+# its own coverage would be publishing an unchecked claim. The decision was
+# reversed deliberately: the facility runs the counter that takes the card, so
+# nobody is better placed to say what it accepts, and routing every change
+# through MediLink is the bottleneck that stops a second pilot site.
+#
+# Rule 6 of docs/11 section 7 still holds and is unaffected by this. It governs
+# the WORDS - "Accepts Mutuelle", never "You are covered" - not who edits them.
+# What is stored is still facility-declared acceptance, not a patient's
+# eligibility, and no screen anywhere claims otherwise.
+
+
+def _coverage_rows(facility):
+    """Per-service coverage for this facility, keyed by (insurer, service)."""
+    from apps.insurance.models import FacilityServiceInsurer
+
+    rows = FacilityServiceInsurer.objects.filter(
+        facility_service__facility=facility
+    ).select_related("insurer", "facility_service__service_type")
+    return {
+        (row.insurer.code, row.facility_service.service_type.code): row
+        for row in rows
+    }
+
+
+@extend_schema(
+    summary="What this facility accepts, and what each insurer covers",
+    responses=FacilityInsuranceSerializer,
+)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsFacilityStaff])
+def insurance(request):
+    """Every insurer on the platform, with this facility's position on each.
+
+    Insurers this facility does NOT accept are returned too, with
+    `accepted: false`. A list of only the accepted ones would give somebody no
+    way to add one, and the set is small enough to show in full.
+    """
+    from apps.insurance.models import FacilityInsurer, Insurer
+
+    staff = active_staff(request)
+    facility = staff.facility
+
+    accepted = {
+        row.insurer_id: row
+        for row in FacilityInsurer.objects.filter(facility=facility)
+    }
+    coverage = _coverage_rows(facility)
+    services = [
+        fs.service_type
+        for fs in facility.services.select_related("service_type")
+        if fs.available
+    ]
+
+    results = []
+    for insurer in Insurer.objects.all():
+        link = accepted.get(insurer.id)
+        results.append(
+            {
+                "code": insurer.code,
+                "name": insurer.name,
+                "accepted": link is not None,
+                "note": link.note if link else "",
+                "confirmed_at": (
+                    link.confirmed_at.isoformat()
+                    if link and link.confirmed_at
+                    else None
+                ),
+                "services": [
+                    {
+                        "code": service.code,
+                        "name_en": service.name_en,
+                        "coverage": (
+                            coverage[(insurer.code, service.code)].coverage
+                            if (insurer.code, service.code) in coverage
+                            else "unknown"
+                        ),
+                        "note": (
+                            coverage[(insurer.code, service.code)].note
+                            if (insurer.code, service.code) in coverage
+                            else ""
+                        ),
+                    }
+                    for service in services
+                ],
+            }
+        )
+
+    return Response({"count": len(results), "results": results})
+
+
+@extend_schema(
+    summary="Accept or stop accepting an insurer",
+    request=FacilityInsurerWriteSerializer,
+    responses=FacilityInsurerSerializer,
+)
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated, IsQueueManager])
+def set_insurer(request, code):
+    from apps.insurance.models import FacilityInsurer, Insurer
+
+    staff = active_staff(request)
+    insurer = Insurer.objects.filter(code=code).first()
+    if insurer is None:
+        raise NotFound("No such insurer.")
+
+    payload = FacilityInsurerWriteSerializer(data=request.data)
+    payload.is_valid(raise_exception=True)
+    data = payload.validated_data
+
+    if data["accepted"]:
+        link, _ = FacilityInsurer.objects.update_or_create(
+            facility=staff.facility,
+            insurer=insurer,
+            defaults={
+                "note": data.get("note", ""),
+                # The facility saying so IS the confirmation. See the module
+                # note above for why that changed.
+                "confirmed_at": timezone.now(),
+            },
+        )
+        confirmed = link.confirmed_at
+    else:
+        # Stopping acceptance takes the per-service coverage with it. Leaving
+        # "Mutuelle covers dental here" behind after "we no longer take
+        # Mutuelle" is a contradiction a patient would act on.
+        from apps.insurance.models import FacilityServiceInsurer
+
+        FacilityServiceInsurer.objects.filter(
+            facility_service__facility=staff.facility, insurer=insurer
+        ).delete()
+        FacilityInsurer.objects.filter(
+            facility=staff.facility, insurer=insurer
+        ).delete()
+        confirmed = None
+
+    return Response(
+        {
+            "code": insurer.code,
+            "name": insurer.name,
+            "accepted": data["accepted"],
+            "note": data.get("note", ""),
+            "confirmed_at": confirmed.isoformat() if confirmed else None,
+        }
+    )
+
+
+@extend_schema(
+    summary="Set what an insurer covers for one service here",
+    request=StaffServiceCoverageWriteSerializer,
+    responses=StaffServiceCoverageSerializer,
+)
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated, IsQueueManager])
+def set_coverage(request, code, service):
+    from apps.facilities.models import FacilityService
+    from apps.insurance.models import (
+        FacilityInsurer,
+        FacilityServiceInsurer,
+        Insurer,
+    )
+
+    staff = active_staff(request)
+
+    insurer = Insurer.objects.filter(code=code).first()
+    if insurer is None:
+        raise NotFound("No such insurer.")
+
+    # Coverage only means something for an insurer the facility takes at all.
+    # Without this a facility could publish "Mutuelle covers dental" while
+    # telling patients at the door that it does not accept Mutuelle.
+    if not FacilityInsurer.objects.filter(
+        facility=staff.facility, insurer=insurer
+    ).exists():
+        raise ValidationError(
+            {"insurer": "Accept this insurer before setting what it covers."}
+        )
+
+    facility_service = (
+        FacilityService.objects.filter(
+            facility=staff.facility, service_type__code=service, available=True
+        )
+        .select_related("service_type")
+        .first()
+    )
+    if facility_service is None:
+        raise NotFound("This facility does not offer that service.")
+
+    payload = StaffServiceCoverageWriteSerializer(data=request.data)
+    payload.is_valid(raise_exception=True)
+    data = payload.validated_data
+
+    row, _ = FacilityServiceInsurer.objects.update_or_create(
+        facility_service=facility_service,
+        insurer=insurer,
+        defaults={
+            "coverage": data["coverage"],
+            "note": data.get("note", ""),
+            # `unknown` is the absence of an answer, not an answer - leaving it
+            # confirmed would publish "we checked, and we do not know", which
+            # is not what anybody means by selecting it.
+            "confirmed_at": (
+                None if data["coverage"] == "unknown" else timezone.now()
+            ),
+        },
+    )
+
+    return Response(
+        {
+            "code": facility_service.service_type.code,
+            "name_en": facility_service.service_type.name_en,
+            "coverage": row.coverage,
+            "note": row.note,
+        }
+    )

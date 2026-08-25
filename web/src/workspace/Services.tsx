@@ -12,9 +12,17 @@ import { Chip, EmptyState, ErrorState, Notice, TableSkeleton } from "../ui"
  * unknown coverage shows as unknown here, in the same quiet grey, rather than
  * being tidied away. That is what prompts somebody to go and confirm it.
  *
- * Read-only for the same reason as Doctors: a facility that could edit its own
- * coverage claims would be publishing "you are covered" without anyone
- * checking. See docs/11 section 7.
+ * Read-only, and no longer for the reason this comment used to give. It said
+ * a facility editing its own coverage would be publishing "you are covered"
+ * without anyone checking - and that reasoning has been reversed: the facility
+ * runs the counter that takes the card, so it maintains its own insurance on
+ * the Insurance screen next door.
+ *
+ * This screen stays read-only because it is a MIRROR, not an editor. Its job
+ * is to show a manager what a patient sees, gaps included, which is what
+ * prompts somebody to go and fix a gap. Rule 6 of docs/11 section 7 is
+ * untouched throughout: the copy says what the facility accepts, never that a
+ * patient is covered.
  */
 
 /**

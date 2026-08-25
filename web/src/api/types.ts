@@ -96,6 +96,12 @@ export type ScheduleTemplate = Schemas["ScheduleTemplate"]
 export type ScheduleTemplateList = Schemas["ScheduleTemplateList"]
 /** Create or update one bookable session. Snake_case: this is the wire. */
 export type ScheduleTemplateWrite = Schemas["ScheduleTemplateWrite"]
+export type FacilityInsurance = Schemas["FacilityInsurance"]
+export type FacilityInsurer = Schemas["FacilityInsurer"]
+export type InsurerWithCoverage = Schemas["InsurerWithCoverage"]
+export type StaffServiceCoverage = Schemas["StaffServiceCoverage"]
+/** Matches FacilityServiceInsurer.Coverage exactly. */
+export type CoverageLevel = StaffServiceCoverage["coverage"]
 
 /** Queue entry as the staff board sees it, plus a local-only flag. */
 export type QueueRow = Schemas["QueueEntry"] & {

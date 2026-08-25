@@ -1311,6 +1311,102 @@ paths:
               schema:
                 $ref: '#/components/schemas/StaffAppointment'
           description: ''
+  /api/v1/staff/insurance:
+    get:
+      operationId: staff_insurance_retrieve
+      description: |-
+        Every insurer on the platform, with this facility's position on each.
+
+        Insurers this facility does NOT accept are returned too, with
+        `accepted: false`. A list of only the accepted ones would give somebody no
+        way to add one, and the set is small enough to show in full.
+      summary: What this facility accepts, and what each insurer covers
+      tags:
+      - staff
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityInsurance'
+          description: ''
+  /api/v1/staff/insurance/{code}:
+    patch:
+      operationId: staff_insurance_partial_update
+      summary: Accept or stop accepting an insurer
+      parameters:
+      - in: path
+        name: code
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFacilityInsurerWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFacilityInsurerWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFacilityInsurerWrite'
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityInsurer'
+          description: ''
+  /api/v1/staff/insurance/{code}/services/{service}:
+    patch:
+      operationId: staff_insurance_services_partial_update
+      summary: Set what an insurer covers for one service here
+      parameters:
+      - in: path
+        name: code
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: service
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStaffServiceCoverageWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStaffServiceCoverageWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStaffServiceCoverageWrite'
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffServiceCoverage'
+          description: ''
   /api/v1/staff/me:
     get:
       operationId: staff_me_retrieve
@@ -2042,6 +2138,18 @@ components:
       - status
       - ticket_code
       - waited_minutes
+    CoverageEnum:
+      enum:
+      - full
+      - partial
+      - not_covered
+      - unknown
+      type: string
+      description: |-
+        * `full` - full
+        * `partial` - partial
+        * `not_covered` - not_covered
+        * `unknown` - unknown
     DeliveryKind:
       type: object
       properties:
@@ -2192,6 +2300,38 @@ components:
       - services
       - slug
       - wait
+    FacilityInsurance:
+      type: object
+      properties:
+        count:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/InsurerWithCoverage'
+      required:
+      - count
+      - results
+    FacilityInsurer:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        accepted:
+          type: boolean
+        note:
+          type: string
+        confirmed_at:
+          type: string
+          nullable: true
+      required:
+      - accepted
+      - code
+      - confirmed_at
+      - name
+      - note
     FacilityNearby:
       type: object
       properties:
@@ -2345,6 +2485,31 @@ components:
             $ref: '#/components/schemas/Insurer'
       required:
       - results
+    InsurerWithCoverage:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        accepted:
+          type: boolean
+        note:
+          type: string
+        confirmed_at:
+          type: string
+          nullable: true
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaffServiceCoverage'
+      required:
+      - accepted
+      - code
+      - confirmed_at
+      - name
+      - note
+      - services
     KindEnum:
       enum:
       - insurer
@@ -2562,6 +2727,15 @@ components:
         * `public` - Public
         * `private` - Private
         * `faith_based` - Faith-based
+    PatchedFacilityInsurerWrite:
+      type: object
+      properties:
+        accepted:
+          type: boolean
+        note:
+          type: string
+          default: ''
+          maxLength: 200
     PatchedPatient:
       type: object
       properties:
@@ -2629,6 +2803,15 @@ components:
         active:
           type: boolean
           default: true
+    PatchedStaffServiceCoverageWrite:
+      type: object
+      properties:
+        coverage:
+          $ref: '#/components/schemas/CoverageEnum'
+        note:
+          type: string
+          default: ''
+          maxLength: 200
     Patient:
       type: object
       properties:
@@ -3697,6 +3880,22 @@ components:
       - code
       - name_en
       - name_rw
+    StaffServiceCoverage:
+      type: object
+      properties:
+        code:
+          type: string
+        name_en:
+          type: string
+        coverage:
+          $ref: '#/components/schemas/CoverageEnum'
+        note:
+          type: string
+      required:
+      - code
+      - coverage
+      - name_en
+      - note
     Sync:
       type: object
       properties:

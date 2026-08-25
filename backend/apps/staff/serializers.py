@@ -200,3 +200,54 @@ class ScheduleTemplateWriteSerializer(serializers.Serializer):
                     }
                 )
         return attrs
+
+
+# --------------------------------------------------------------------------
+# Insurance - what this facility accepts, maintained by the facility
+# --------------------------------------------------------------------------
+
+
+class StaffServiceCoverageSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    name_en = serializers.CharField()
+    # Matches apps.insurance.models.FacilityServiceInsurer.Coverage.
+    coverage = serializers.ChoiceField(
+        choices=["full", "partial", "not_covered", "unknown"]
+    )
+    note = serializers.CharField(allow_blank=True)
+
+
+class FacilityInsurerSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    name = serializers.CharField()
+    accepted = serializers.BooleanField()
+    note = serializers.CharField(allow_blank=True)
+    confirmed_at = serializers.CharField(allow_null=True)
+
+
+class InsurerWithCoverageSerializer(FacilityInsurerSerializer):
+    services = StaffServiceCoverageSerializer(many=True)
+
+
+class FacilityInsuranceSerializer(serializers.Serializer):
+    count = serializers.IntegerField()
+    results = InsurerWithCoverageSerializer(many=True)
+
+
+class FacilityInsurerWriteSerializer(serializers.Serializer):
+    accepted = serializers.BooleanField()
+    # Any condition the facility states, e.g. "referral required". Never a
+    # price: we hold no verified cost data and a wrong number would be worse
+    # than none.
+    note = serializers.CharField(
+        required=False, allow_blank=True, max_length=200, default=""
+    )
+
+
+class StaffServiceCoverageWriteSerializer(serializers.Serializer):
+    coverage = serializers.ChoiceField(
+        choices=["full", "partial", "not_covered", "unknown"]
+    )
+    note = serializers.CharField(
+        required=False, allow_blank=True, max_length=200, default=""
+    )
