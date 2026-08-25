@@ -224,9 +224,17 @@ class FacilityNearbySerializer(serializers.ModelSerializer):
         return self.context["waits"][obj.id]
 
     def get_bookable(self, obj) -> bool:
-        # Booking arrives in Phase 2. Until a facility runs the reception tool
-        # there is nothing to book against.
-        return False
+        # True when the facility has at least one open session to book into.
+        #
+        # This returned a hardcoded False with a note saying booking arrived
+        # in Phase 2 - which it did, and the note was never revisited. The
+        # effect was that `bookable` was false for every facility in the
+        # country, so the Book action never rendered anywhere in the product
+        # even once a facility had opened its hours.
+        #
+        # Resolved from a set the view builds in ONE query. Asking per
+        # facility would be an N+1 on the hottest endpoint in the system.
+        return obj.id in self.context.get("bookable_ids", set())
 
 
 class OpeningHoursSerializer(serializers.Serializer):
@@ -243,6 +251,7 @@ class FacilityDetailSerializer(serializers.ModelSerializer):
     services = serializers.SerializerMethodField()
     wait = serializers.SerializerMethodField()
     directions_url = serializers.SerializerMethodField()
+    bookable = serializers.SerializerMethodField()
 
     class Meta:
         model = Facility
@@ -265,8 +274,13 @@ class FacilityDetailSerializer(serializers.ModelSerializer):
             "services",
             "wait",
             "directions_url",
+            "bookable",
             "verified_at",
         ]
+
+    def get_bookable(self, obj) -> bool:
+        """Has this facility opened any session to book into?"""
+        return obj.id in self.context.get("bookable_ids", set())
 
     @extend_schema_field(LocationField)
     def get_location(self, obj) -> dict:

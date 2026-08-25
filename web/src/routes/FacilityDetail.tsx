@@ -1,6 +1,6 @@
 import { Link, useParams } from "react-router-dom"
 import { IconHospital } from "../ui/icons"
-import { useQuery } from "@tanstack/react-query"
+import { useQueries, useQuery } from "@tanstack/react-query"
 import { api } from "../api/client"
 import { useI18n } from "../i18n"
 import { useProviders } from "../hooks/useProviders"
@@ -13,6 +13,7 @@ import {
   ErrorState,
   ListSkeleton,
   Notice,
+  Skeleton,
   Tab,
   TabList,
   TabPanel,
@@ -79,6 +80,8 @@ export function FacilityDetail() {
             <Tab value="services">{t("tab_services")}</Tab>
             <Tab value="doctors">{t("tab_doctors")}</Tab>
             <Tab value="insurance">{t("tab_insurance")}</Tab>
+            <Tab value="appointments">{t("tab_appointments")}</Tab>
+            <Tab value="queue">{t("tab_queue")}</Tab>
             <Tab value="hours">{t("opening_hours")}</Tab>
           </TabList>
 
@@ -227,6 +230,20 @@ export function FacilityDetail() {
           </TabPanel>
 
           {/* ----------------------------------------------------- hours */}
+          {/* ---------------------------------------------- appointments */}
+          <TabPanel value="appointments">
+            {data.bookable ? (
+              <AppointmentsPanel facility={data} label={label} />
+            ) : (
+              <Notice tone="info">{t("appointments_none_bookable")}</Notice>
+            )}
+          </TabPanel>
+
+          {/* ----------------------------------------------------- queue */}
+          <TabPanel value="queue">
+            <QueuePanel facility={data} label={label} />
+          </TabPanel>
+
           <TabPanel value="hours">
             <dl className="divide-y divide-line rounded-xl border border-line bg-surface">
               {WEEKDAYS.map((weekday) => {
@@ -383,4 +400,140 @@ function placeLabel(sector: string | undefined, district: string): string {
     return district
   }
   return `${sector}, ${district}`
+}
+
+
+/**
+ * When can I be seen here?
+ *
+ * One query per bookable service, run in parallel. A facility offers a
+ * handful, and the alternative - making a patient pick a service before
+ * seeing whether ANY of them has a free slot - is the question backwards.
+ */
+function AppointmentsPanel({
+  facility,
+  label,
+}: {
+  facility: Detail
+  label: (s: { name_rw: string; name_en: string; name_fr: string }) => string
+}) {
+  const { t } = useI18n()
+  const services = facility.services ?? []
+
+  const queries = useQueries({
+    queries: services.map((service) => ({
+      queryKey: ["slots", facility.slug, service.code],
+      queryFn: () => api.slots(facility.slug, { service: service.code }),
+      staleTime: 60_000,
+    })),
+  })
+
+  return (
+    <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+      {services.map((service, index) => {
+        const query = queries[index]
+        const firstDay = query.data?.days?.find((day) =>
+          day.slots.some((slot) => slot.remaining > 0),
+        )
+        const firstSlot = firstDay?.slots.find((slot) => slot.remaining > 0)
+
+        return (
+          <li
+            key={service.code}
+            className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <span className="min-w-0 text-body">{label(service)}</span>
+            <span className="flex items-center gap-3">
+              {query.isLoading && <Skeleton className="h-4 w-32" />}
+              {!query.isLoading && !firstSlot && (
+                <span className="text-small text-ink-muted">
+                  {t("appointments_no_slots")}
+                </span>
+              )}
+              {firstSlot && (
+                <>
+                  <span className="text-small tabular-nums text-ink">
+                    {new Date(firstSlot.start).toLocaleString(undefined, {
+                      weekday: "short",
+                      day: "numeric",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                  <Link
+                    to={`/facility/${facility.slug}/book?service=${service.code}`}
+                    className="ml-btn-primary ml-btn-sm shrink-0"
+                  >
+                    {t("book")}
+                  </Link>
+                </>
+              )}
+            </span>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+/**
+ * How busy is it, per service, right now.
+ *
+ * The overview shows the same four states as a one-line chip. This adds the
+ * thing the chip has no room for - how many people are actually waiting -
+ * and says where the numbers come from, because a wait time nobody can
+ * account for is a wait time nobody should trust.
+ */
+function QueuePanel({
+  facility,
+  label,
+}: {
+  facility: Detail
+  label: (s: { name_rw: string; name_en: string; name_fr: string }) => string
+}) {
+  const { t } = useI18n()
+  const services = facility.services ?? []
+  const reporting = services.some((s) => s.wait.status !== "not_reported")
+
+  return (
+    <div>
+      {!reporting && (
+        <div className="mb-4">
+          <Notice tone="info">{t("queue_not_reporting")}</Notice>
+        </div>
+      )}
+
+      <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+        {services.map((service) => (
+          <li
+            key={service.code}
+            className="flex flex-col gap-1.5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+          >
+            <span className="min-w-0 text-body">{label(service)}</span>
+            <span className="flex items-center gap-3">
+              {/* People waiting is a plain count and always honest, even
+                  where the minutes are not - so it is shown whenever we have
+                  it, including under `insufficient_data`. */}
+              {service.wait.people_waiting !== null &&
+                service.wait.people_waiting !== undefined && (
+                  <span className="text-small tabular-nums text-ink-muted">
+                    {service.wait.people_waiting > 0
+                      ? t("queue_people_waiting", {
+                          n: service.wait.people_waiting,
+                        })
+                      : t("queue_none_waiting")}
+                  </span>
+                )}
+              <WaitLine wait={service.wait} className="shrink-0" />
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <p className="mt-3 max-w-prose text-small text-ink-muted">
+        {t("queue_explainer")}
+      </p>
+    </div>
+  )
 }

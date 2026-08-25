@@ -322,3 +322,52 @@ def test_query_count_does_not_grow_with_the_number_of_services(
 
     with django_assert_num_queries(baseline):
         api_client.get(f"/api/v1/facilities/{facility.slug}")
+
+
+@pytest.mark.django_db
+def test_a_facility_with_an_open_session_is_bookable(api_client, facility, general):
+    """`bookable` was a hardcoded False with a note saying booking arrived in
+    Phase 2 - which it did, and the note was never revisited. The Book action
+    therefore never rendered anywhere in the product."""
+    from apps.scheduling.models import ScheduleTemplate
+
+    ScheduleTemplate.objects.create(
+        facility=facility,
+        service_type=general,
+        weekday=1,
+        start_time=time(8, 0),
+        end_time=time(12, 0),
+    )
+
+    body = api_client.get(f"/api/v1/facilities/{facility.slug}").json()
+
+    assert body["bookable"] is True
+
+
+@pytest.mark.django_db
+def test_a_facility_with_no_sessions_is_not_bookable(api_client, facility):
+    body = api_client.get(f"/api/v1/facilities/{facility.slug}").json()
+
+    assert body["bookable"] is False
+
+
+@pytest.mark.django_db
+def test_a_closed_session_does_not_make_a_facility_bookable(
+    api_client, facility, general
+):
+    """Closing a session stops new bookings, so it must stop advertising them
+    too."""
+    from apps.scheduling.models import ScheduleTemplate
+
+    ScheduleTemplate.objects.create(
+        facility=facility,
+        service_type=general,
+        weekday=1,
+        start_time=time(8, 0),
+        end_time=time(12, 0),
+        active=False,
+    )
+
+    body = api_client.get(f"/api/v1/facilities/{facility.slug}").json()
+
+    assert body["bookable"] is False
