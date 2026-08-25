@@ -73,6 +73,12 @@ const Register = lazy(() =>
 const Privacy = lazy(() =>
   import("./routes/Privacy").then((m) => ({ default: m.Privacy })),
 )
+const Insurance = lazy(() =>
+  import("./routes/Insurance").then((m) => ({ default: m.Insurance })),
+)
+const Services = lazy(() =>
+  import("./routes/Services").then((m) => ({ default: m.Services })),
+)
 
 // A developer tool. 2.7 KB of it has no business in the bundle somebody
 // downloads on a 2G connection, so it is split out and left out of the
@@ -219,6 +225,8 @@ function Shell() {
         <Route path="/care-guide" element={<CareGuide />} />
         <Route path="/compare" element={<Compare />} />
         <Route path="/doctors" element={<Doctors />} />
+        <Route path="/services" element={<Services />} />
+        <Route path="/insurance" element={<Insurance />} />
         <Route path="/doctor/:slug" element={<DoctorProfile />} />
         <Route path="/service/:code" element={<ServiceDetail />} />
         <Route path="/appointment/:id" element={<AppointmentDetail />} />

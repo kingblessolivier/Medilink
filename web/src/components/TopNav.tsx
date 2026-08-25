@@ -6,6 +6,7 @@ import {
   IconCalendar,
   IconHospital,
   IconSearch,
+  IconShield,
   IconStethoscope,
   IconUser,
 } from "../ui/icons"
@@ -41,6 +42,7 @@ function itemsFor(session: Session | null, t: (k: string) => string): NavItem[] 
         { to: "/", label: t("nav_home"), icon: IconHospital, end: true },
         { to: "/search", label: t("nav_facilities"), icon: IconSearch },
         { to: "/doctors", label: t("nav_doctors"), icon: IconStethoscope },
+        { to: "/insurance", label: t("nav_insurance"), icon: IconShield },
         { to: "/visits", label: t("nav_visits"), icon: IconCalendar },
       ]
   }
