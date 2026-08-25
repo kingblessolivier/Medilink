@@ -132,7 +132,11 @@ export function Home() {
           />
 
           <div className="ml-shell relative grid gap-10 py-10 sm:py-14 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-center lg:gap-16 lg:py-20">
-            <div className="max-w-2xl">
+            {/* 42rem ran the subhead to 82 characters a line on a 1920
+                monitor - past the 45-75 that stays comfortable to read. The
+                headline is short enough not to care; the sentence under it
+                is not. */}
+            <div className="max-w-xl">
               <p className="text-small font-medium text-white/70">
                 {patient?.full_name
                   ? t("greeting_named", { name: patient.full_name })
