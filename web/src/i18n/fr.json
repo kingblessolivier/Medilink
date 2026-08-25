@@ -343,5 +343,12 @@
   "error_screen_home": "Revenir au debut",
   "nearby_needs_a_place_title": "Choisissez ou vous etes",
   "nearby_needs_a_place_body": "Choisissez votre district ci-dessus et nous afficherons les etablissements ouverts pres de vous.",
-  "group_insurers": "Assurance"
+  "group_insurers": "Assurance",
+  "footer_emergency_label": "En cas d'urgence, n'attendez pas",
+  "footer_emergency_action": "Appelez le {number} maintenant",
+  "footer_tagline": "Trouvez des etablissements verifies pres de chez vous, verifiez s'ils acceptent votre assurance, et voyez le temps d'attente avant de partir.",
+  "footer_explore": "Trouver des soins",
+  "footer_your_account": "Votre compte",
+  "footer_privacy_link": "Avis de confidentialite",
+  "footer_not_medical_advice": "MediLink vous aide a trouver et a atteindre des soins. Elle ne diagnostique pas et ne donne pas de conseils medicaux."
 }

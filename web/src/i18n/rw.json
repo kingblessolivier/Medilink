@@ -343,5 +343,12 @@
   "error_screen_home": "Subira ku ntangiriro",
   "nearby_needs_a_place_title": "Hitamo aho uri",
   "nearby_needs_a_place_body": "Hitamo akarere kawe hejuru, tukwereke amavuriro akinguye hafi yawe.",
-  "group_insurers": "Ubwishingizi"
+  "group_insurers": "Ubwishingizi",
+  "footer_emergency_label": "Niba ari ibyihutirwa, ntutegereze",
+  "footer_emergency_action": "Hamagara {number} ubu",
+  "footer_tagline": "Shakisha amavuriro yemejwe hafi yawe, urebe ko yemera ubwishingizi bwawe, kandi umenye igihe cyo gutegereza mbere yo kugenda.",
+  "footer_explore": "Shakisha ubuvuzi",
+  "footer_your_account": "Konti yawe",
+  "footer_privacy_link": "Amabwiriza y'ibanga",
+  "footer_not_medical_advice": "MediLink igufasha gushaka no kugera ku buvuzi. Ntisuzuma indwara, kandi ntitanga inama z'ubuvuzi."
 }

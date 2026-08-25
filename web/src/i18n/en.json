@@ -343,5 +343,12 @@
   "error_screen_home": "Back to the start",
   "nearby_needs_a_place_title": "Choose where you are",
   "nearby_needs_a_place_body": "Pick your district above and we will show the facilities open near you.",
-  "group_insurers": "Insurance"
+  "group_insurers": "Insurance",
+  "footer_emergency_label": "If this is an emergency, do not wait",
+  "footer_emergency_action": "Call {number} now",
+  "footer_tagline": "Find verified health facilities near you, check whether they take your insurance, and see how long the wait is before you travel.",
+  "footer_explore": "Find care",
+  "footer_your_account": "Your account",
+  "footer_privacy_link": "Privacy notice",
+  "footer_not_medical_advice": "MediLink helps you find and reach care. It does not diagnose, and it does not give medical advice."
 }

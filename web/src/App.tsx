@@ -18,6 +18,7 @@ import { Doctors } from "./routes/Doctors"
 
 
 import { ErrorBoundary } from "./components/ErrorBoundary"
+import { SiteFooter } from "./components/SiteFooter"
 import { OfflineBanner } from "./components/OfflineBanner"
 import { BottomNav } from "./components/BottomNav"
 import { TopNav, homeFor } from "./components/TopNav"
@@ -184,7 +185,15 @@ function Chrome() {
   if (session.state === "signed_in" && session.session.kind !== "patient") {
     return null
   }
-  return <BottomNav />
+  // The footer is in the flow; the bottom nav floats over it. Both are
+  // patient-surface only, and both are hidden on the auth screens so nothing
+  // competes with the form.
+  return (
+    <>
+      <SiteFooter />
+      <BottomNav />
+    </>
+  )
 }
 
 function Shell() {
