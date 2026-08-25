@@ -783,3 +783,165 @@ def test_a_clinician_cannot_change_the_schedule(client_as, clinician, general, o
     response = client_as(clinician).post(SCHEDULE_NEW, _session(), format="json")
 
     assert response.status_code == 403
+
+
+# --------------------------------------------------------------------------
+# Insurance - maintained by the facility, confirmed by the facility
+# --------------------------------------------------------------------------
+
+INSURANCE = "/api/v1/staff/insurance"
+
+
+@pytest.fixture
+def mutuelle(db):
+    from apps.insurance.models import Insurer
+
+    return Insurer.objects.create(code="mutuelle", name="Mutuelle de Sante")
+
+
+@pytest.mark.django_db
+def test_every_insurer_is_listed_including_ones_not_accepted(
+    client_as, desk, mutuelle, offered
+):
+    """A list of only the accepted ones gives nobody a way to add one."""
+    body = client_as(desk).get(INSURANCE).json()
+
+    codes = {row["code"] for row in body["results"]}
+    assert "mutuelle" in codes
+    assert body["results"][0]["accepted"] is False
+
+
+@pytest.mark.django_db
+def test_a_facility_can_accept_an_insurer_and_it_is_confirmed(
+    client_as, desk, mutuelle, facility
+):
+    """The facility saying so IS the confirmation - it runs the counter that
+    takes the card."""
+    from apps.insurance.models import FacilityInsurer
+
+    response = client_as(desk).patch(
+        f"{INSURANCE}/mutuelle", {"accepted": True}, format="json"
+    )
+
+    assert response.status_code == 200
+    assert response.json()["confirmed_at"] is not None
+    link = FacilityInsurer.objects.get(facility=facility, insurer=mutuelle)
+    assert link.confirmed_at is not None
+
+
+@pytest.mark.django_db
+def test_coverage_can_be_set_for_an_accepted_insurer(
+    client_as, desk, mutuelle, general, offered, facility
+):
+    from apps.insurance.models import FacilityServiceInsurer
+
+    client_as(desk).patch(f"{INSURANCE}/mutuelle", {"accepted": True}, format="json")
+
+    response = client_as(desk).patch(
+        f"{INSURANCE}/mutuelle/services/general_consultation",
+        {"coverage": "full"},
+        format="json",
+    )
+
+    assert response.status_code == 200
+    row = FacilityServiceInsurer.objects.get()
+    assert row.coverage == "full"
+    # Confirmed, so `effective_coverage` reports it rather than falling back.
+    assert row.effective_coverage == "full"
+
+
+@pytest.mark.django_db
+def test_coverage_needs_the_insurer_to_be_accepted_first(
+    client_as, desk, mutuelle, general, offered
+):
+    """Otherwise a facility publishes "Mutuelle covers dental" while telling
+    patients at the door that it does not take Mutuelle."""
+    response = client_as(desk).patch(
+        f"{INSURANCE}/mutuelle/services/general_consultation",
+        {"coverage": "full"},
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert "Accept this insurer" in str(response.json())
+
+
+@pytest.mark.django_db
+def test_unknown_coverage_is_never_confirmed(
+    client_as, desk, mutuelle, general, offered
+):
+    """`unknown` is the absence of an answer, not an answer. Storing it
+    confirmed would publish "we checked, and we do not know"."""
+    from apps.insurance.models import FacilityServiceInsurer
+
+    client_as(desk).patch(f"{INSURANCE}/mutuelle", {"accepted": True}, format="json")
+    client_as(desk).patch(
+        f"{INSURANCE}/mutuelle/services/general_consultation",
+        {"coverage": "unknown"},
+        format="json",
+    )
+
+    row = FacilityServiceInsurer.objects.get()
+    assert row.confirmed_at is None
+    assert row.effective_coverage == "unknown"
+
+
+@pytest.mark.django_db
+def test_dropping_an_insurer_takes_its_coverage_with_it(
+    client_as, desk, mutuelle, general, offered
+):
+    """Leaving "Mutuelle covers dental here" behind after "we no longer take
+    Mutuelle" is a contradiction a patient would act on."""
+    from apps.insurance.models import FacilityInsurer, FacilityServiceInsurer
+
+    client_as(desk).patch(f"{INSURANCE}/mutuelle", {"accepted": True}, format="json")
+    client_as(desk).patch(
+        f"{INSURANCE}/mutuelle/services/general_consultation",
+        {"coverage": "full"},
+        format="json",
+    )
+    assert FacilityServiceInsurer.objects.count() == 1
+
+    client_as(desk).patch(f"{INSURANCE}/mutuelle", {"accepted": False}, format="json")
+
+    assert FacilityInsurer.objects.count() == 0
+    assert FacilityServiceInsurer.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_coverage_cannot_be_set_for_a_service_the_facility_lacks(
+    client_as, desk, mutuelle
+):
+    client_as(desk).patch(f"{INSURANCE}/mutuelle", {"accepted": True}, format="json")
+
+    response = client_as(desk).patch(
+        f"{INSURANCE}/mutuelle/services/neurosurgery",
+        {"coverage": "full"},
+        format="json",
+    )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_a_clinician_cannot_change_what_the_facility_accepts(
+    client_as, clinician, mutuelle
+):
+    response = client_as(clinician).patch(
+        f"{INSURANCE}/mutuelle", {"accepted": True}, format="json"
+    )
+
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_one_facilitys_insurance_is_not_anothers(
+    client_as, desk, mutuelle, other_facility
+):
+    """Facility scoping, asserted here as it is on every other staff
+    endpoint."""
+    from apps.insurance.models import FacilityInsurer
+
+    client_as(desk).patch(f"{INSURANCE}/mutuelle", {"accepted": True}, format="json")
+
+    assert FacilityInsurer.objects.filter(facility=other_facility).count() == 0

@@ -866,6 +866,64 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/staff/insurance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What this facility accepts, and what each insurer covers
+         * @description Every insurer on the platform, with this facility's position on each.
+         *
+         *     Insurers this facility does NOT accept are returned too, with
+         *     `accepted: false`. A list of only the accepted ones would give somebody no
+         *     way to add one, and the set is small enough to show in full.
+         */
+        get: operations["staff_insurance_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/insurance/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Accept or stop accepting an insurer */
+        patch: operations["staff_insurance_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/staff/insurance/{code}/services/{service}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Set what an insurer covers for one service here */
+        patch: operations["staff_insurance_services_partial_update"];
+        trace?: never;
+    };
     "/api/v1/staff/me": {
         parameters: {
             query?: never;
@@ -1229,6 +1287,14 @@ export interface components {
             eta_confidence: string | null;
             people_ahead: number;
         };
+        /**
+         * @description * `full` - full
+         *     * `partial` - partial
+         *     * `not_covered` - not_covered
+         *     * `unknown` - unknown
+         * @enum {string}
+         */
+        CoverageEnum: "full" | "partial" | "not_covered" | "unknown";
         DeliveryKind: {
             kind: string;
             total: number;
@@ -1276,6 +1342,17 @@ export interface components {
             /** Format: date-time */
             verified_at?: string | null;
         };
+        FacilityInsurance: {
+            count: number;
+            results: components["schemas"]["InsurerWithCoverage"][];
+        };
+        FacilityInsurer: {
+            code: string;
+            name: string;
+            accepted: boolean;
+            note: string;
+            confirmed_at: string | null;
+        };
         FacilityNearby: {
             readonly id: number;
             slug: string;
@@ -1321,6 +1398,14 @@ export interface components {
         };
         InsurerList: {
             results: components["schemas"]["Insurer"][];
+        };
+        InsurerWithCoverage: {
+            code: string;
+            name: string;
+            accepted: boolean;
+            note: string;
+            confirmed_at: string | null;
+            services: components["schemas"]["StaffServiceCoverage"][];
         };
         /**
          * @description * `insurer` - insurer
@@ -1417,6 +1502,11 @@ export interface components {
          * @enum {string}
          */
         OwnershipEnum: "public" | "private" | "faith_based";
+        PatchedFacilityInsurerWrite: {
+            accepted?: boolean;
+            /** @default  */
+            note: string;
+        };
         PatchedPatient: {
             readonly id?: number;
             readonly phone?: string;
@@ -1450,6 +1540,11 @@ export interface components {
             capacity_per_slot?: number;
             /** @default true */
             active: boolean;
+        };
+        PatchedStaffServiceCoverageWrite: {
+            coverage?: components["schemas"]["CoverageEnum"];
+            /** @default  */
+            note: string;
         };
         Patient: {
             readonly id: number;
@@ -1851,6 +1946,12 @@ export interface components {
             code: string;
             name_rw: string;
             name_en: string;
+        };
+        StaffServiceCoverage: {
+            code: string;
+            name_en: string;
+            coverage: components["schemas"]["CoverageEnum"];
+            note: string;
         };
         Sync: {
             actions: components["schemas"]["SyncAction"][];
@@ -3087,6 +3188,80 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StaffAppointment"];
+                };
+            };
+        };
+    };
+    staff_insurance_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacilityInsurance"];
+                };
+            };
+        };
+    };
+    staff_insurance_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedFacilityInsurerWrite"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedFacilityInsurerWrite"];
+                "multipart/form-data": components["schemas"]["PatchedFacilityInsurerWrite"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacilityInsurer"];
+                };
+            };
+        };
+    };
+    staff_insurance_services_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+                service: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedStaffServiceCoverageWrite"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedStaffServiceCoverageWrite"];
+                "multipart/form-data": components["schemas"]["PatchedStaffServiceCoverageWrite"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffServiceCoverage"];
                 };
             };
         };

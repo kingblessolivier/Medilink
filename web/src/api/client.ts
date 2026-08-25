@@ -34,6 +34,10 @@ import type {
   ScheduleTemplate,
   ScheduleTemplateList,
   ScheduleTemplateWrite,
+  FacilityInsurance,
+  FacilityInsurer,
+  StaffServiceCoverage,
+  CoverageLevel,
   // Platform
   AdminOverview,
   VerificationQueue,
@@ -354,6 +358,31 @@ export const api = {
 
   updateSchedule: (id: number, body: Partial<ScheduleTemplateWrite>) =>
     request<ScheduleTemplate>(`/staff/schedule/${id}`, {
+      method: "PATCH",
+      body,
+    }),
+
+  // --- facility insurance ------------------------------------------------
+  //
+  // The facility maintains this and its save counts as confirmation: it runs
+  // the counter that takes the card. Patient-facing copy still says "Accepts
+  // Mutuelle" and never "you are covered" - docs/11 section 7 rule 6 governs
+  // the words, not who edits them.
+  facilityInsurance: () =>
+    request<FacilityInsurance>("/staff/insurance"),
+
+  setInsurerAccepted: (code: string, body: { accepted: boolean; note?: string }) =>
+    request<FacilityInsurer>(`/staff/insurance/${code}`, {
+      method: "PATCH",
+      body,
+    }),
+
+  setServiceCoverage: (
+    code: string,
+    service: string,
+    body: { coverage: CoverageLevel; note?: string },
+  ) =>
+    request<StaffServiceCoverage>(`/staff/insurance/${code}/services/${service}`, {
       method: "PATCH",
       body,
     }),

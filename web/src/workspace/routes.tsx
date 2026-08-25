@@ -6,6 +6,7 @@ import {
   IconChart,
   IconClock,
   IconHospital,
+  IconShield,
   IconStethoscope,
   IconUsers,
 } from "../ui/icons"
@@ -16,6 +17,7 @@ import { WorkspaceDoctors } from "./Doctors"
 import { WorkspaceServices } from "./Services"
 import { WorkspaceReports } from "./Reports"
 import { WorkspaceSchedule } from "./Schedule"
+import { WorkspaceInsurance } from "./Insurance"
 
 /**
  * The facility workspace.
@@ -46,6 +48,7 @@ const SECTIONS: NavSection[] = [
       { to: "/workspace/schedule", label: "Schedule", icon: <IconClock size={17} /> },
       { to: "/workspace/doctors", label: "Doctors", icon: <IconStethoscope size={17} /> },
       { to: "/workspace/services", label: "Services", icon: <IconHospital size={17} /> },
+      { to: "/workspace/insurance", label: "Insurance", icon: <IconShield size={17} /> },
       { to: "/workspace/reports", label: "Reports", icon: <IconChart size={17} /> },
     ],
   },
@@ -81,6 +84,12 @@ export function WorkspaceRoutes() {
         />
         <Route path="/doctors" element={<WorkspaceDoctors />} />
         <Route path="/services" element={<WorkspaceServices />} />
+        <Route
+          path="/insurance"
+          element={
+            <WorkspaceInsurance canManage={session.session.can_manage_queue} />
+          }
+        />
         <Route path="/reports" element={<WorkspaceReports />} />
         <Route path="*" element={<Navigate to="/workspace" replace />} />
       </Routes>

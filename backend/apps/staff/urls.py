@@ -20,4 +20,17 @@ urlpatterns = [
         views.update_schedule,
         name="staff-schedule-update",
     ),
+    # What this facility accepts. The facility maintains it, because the
+    # facility runs the counter that takes the card.
+    path("staff/insurance", views.insurance, name="staff-insurance"),
+    path(
+        "staff/insurance/<slug:code>",
+        views.set_insurer,
+        name="staff-insurance-set",
+    ),
+    path(
+        "staff/insurance/<slug:code>/services/<slug:service>",
+        views.set_coverage,
+        name="staff-insurance-coverage",
+    ),
 ]
