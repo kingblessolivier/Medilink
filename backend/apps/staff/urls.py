@@ -33,4 +33,15 @@ urlpatterns = [
         views.set_coverage,
         name="staff-insurance-coverage",
     ),
+    # Contact details and opening hours. Name, level and coordinates are NOT
+    # here - those are what verification attests to.
+    path("staff/facility", views.facility_settings, name="staff-facility"),
+    path(
+        "staff/facility/contact",
+        views.update_facility_contact,
+        name="staff-facility-contact",
+    ),
+    path("staff/facility/hours", views.replace_opening_hours, name="staff-hours"),
+    # Scoped to this facility's own patients, logged, and throttled.
+    path("staff/patients", views.patient_lookup, name="staff-patients"),
 ]

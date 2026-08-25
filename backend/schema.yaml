@@ -1311,6 +1311,92 @@ paths:
               schema:
                 $ref: '#/components/schemas/StaffAppointment'
           description: ''
+  /api/v1/staff/facility:
+    get:
+      operationId: staff_facility_retrieve
+      summary: The facility's own contact details and opening hours
+      tags:
+      - staff
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilitySettings'
+          description: ''
+  /api/v1/staff/facility/contact:
+    patch:
+      operationId: staff_facility_contact_partial_update
+      summary: Update contact details
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFacilityContactWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFacilityContactWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFacilityContactWrite'
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilitySettings'
+          description: ''
+  /api/v1/staff/facility/hours:
+    put:
+      operationId: staff_facility_hours_update
+      description: |-
+        The whole week at once, not row by row.
+
+        A weekday can hold two rows - that is how a lunch break is modelled, and it
+        is how a Rwandan health centre actually runs - so there is no stable "the
+        Tuesday row" to PATCH. Replacing the set keeps the client simple and makes
+        a half-applied edit impossible.
+
+        Opening hours decide whether a facility reads as open, which decides
+        whether it appears in "open now" and whether its wait shows as `closed`.
+        Getting this wrong makes a facility invisible, so the whole replacement is
+        one transaction.
+      summary: Replace the facility's opening hours
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpeningHoursWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OpeningHoursWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OpeningHoursWrite'
+        required: true
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilitySettings'
+          description: ''
   /api/v1/staff/insurance:
     get:
       operationId: staff_insurance_retrieve
@@ -1426,6 +1512,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StaffMe'
+          description: ''
+  /api/v1/staff/patients:
+    get:
+      operationId: staff_patients_retrieve
+      summary: Find a patient this facility has seen
+      parameters:
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Phone number or name. At least 3 characters - a shorter query
+          matches most of the register and is not a search.
+      tags:
+      - staff
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientLookup'
           description: ''
   /api/v1/staff/reports:
     get:
@@ -2450,6 +2560,42 @@ components:
       - period
       - today
       - wait
+    FacilitySettings:
+      type: object
+      properties:
+        name:
+          type: string
+        level:
+          type: string
+        ownership:
+          type: string
+        district:
+          type: string
+        verified:
+          type: boolean
+        phone:
+          type: string
+        email:
+          type: string
+        address:
+          type: string
+        sector:
+          type: string
+        hours:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpeningHoursRow'
+      required:
+      - address
+      - district
+      - email
+      - hours
+      - level
+      - name
+      - ownership
+      - phone
+      - sector
+      - verified
     Insurer:
       type: object
       properties:
@@ -2717,6 +2863,52 @@ components:
       - closes_at
       - opens_at
       - weekday
+    OpeningHoursRow:
+      type: object
+      properties:
+        weekday:
+          type: integer
+          maximum: 6
+          minimum: 0
+        opens_at:
+          type: string
+        closes_at:
+          type: string
+      required:
+      - closes_at
+      - opens_at
+      - weekday
+    OpeningHoursWrite:
+      type: object
+      description: |-
+        The whole week at once.
+
+        Two rows on one weekday model a lunch break, which is how a Rwandan health
+        centre actually runs, so there is no stable "the Tuesday row" to PATCH.
+      properties:
+        hours:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpeningHoursWriteRow'
+      required:
+      - hours
+    OpeningHoursWriteRow:
+      type: object
+      properties:
+        weekday:
+          type: integer
+          maximum: 6
+          minimum: 0
+        opens_at:
+          type: string
+          format: time
+        closes_at:
+          type: string
+          format: time
+      required:
+      - closes_at
+      - opens_at
+      - weekday
     OwnershipEnum:
       enum:
       - public
@@ -2727,6 +2919,21 @@ components:
         * `public` - Public
         * `private` - Private
         * `faith_based` - Faith-based
+    PatchedFacilityContactWrite:
+      type: object
+      properties:
+        phone:
+          type: string
+          maxLength: 20
+        email:
+          type: string
+          format: email
+        address:
+          type: string
+          maxLength: 255
+        sector:
+          type: string
+          maxLength: 50
     PatchedFacilityInsurerWrite:
       type: object
       properties:
@@ -2845,6 +3052,48 @@ components:
           type: integer
       required:
       - registered
+    PatientLookup:
+      type: object
+      properties:
+        count:
+          type: integer
+        query:
+          type: string
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PatientMatch'
+      required:
+      - count
+      - query
+      - results
+    PatientMatch:
+      type: object
+      properties:
+        id:
+          type: integer
+        display_name:
+          type: string
+        phone:
+          type: string
+        visits_here:
+          type: integer
+        last_seen:
+          type: string
+          nullable: true
+        in_queue_now:
+          type: boolean
+        ticket_code:
+          type: string
+          nullable: true
+      required:
+      - display_name
+      - id
+      - in_queue_now
+      - last_seen
+      - phone
+      - ticket_code
+      - visits_here
     PendingFacility:
       type: object
       properties:

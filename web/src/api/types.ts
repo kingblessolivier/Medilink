@@ -102,6 +102,10 @@ export type InsurerWithCoverage = Schemas["InsurerWithCoverage"]
 export type StaffServiceCoverage = Schemas["StaffServiceCoverage"]
 /** Matches FacilityServiceInsurer.Coverage exactly. */
 export type CoverageLevel = StaffServiceCoverage["coverage"]
+export type FacilitySettings = Schemas["FacilitySettings"]
+export type OpeningHoursRow = Schemas["OpeningHoursWriteRow"]
+export type PatientLookup = Schemas["PatientLookup"]
+export type PatientMatch = Schemas["PatientMatch"]
 
 /** Queue entry as the staff board sees it, plus a local-only flag. */
 export type QueueRow = Schemas["QueueEntry"] & {

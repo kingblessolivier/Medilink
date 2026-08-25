@@ -38,6 +38,9 @@ import type {
   FacilityInsurer,
   StaffServiceCoverage,
   CoverageLevel,
+  FacilitySettings,
+  OpeningHoursRow,
+  PatientLookup,
   // Platform
   AdminOverview,
   VerificationQueue,
@@ -386,6 +389,32 @@ export const api = {
       method: "PATCH",
       body,
     }),
+
+  // --- facility settings and patient lookup ------------------------------
+  facilitySettings: () => request<FacilitySettings>("/staff/facility"),
+
+  updateFacilityContact: (body: {
+    phone?: string
+    email?: string
+    address?: string
+    sector?: string
+  }) =>
+    request<FacilitySettings>("/staff/facility/contact", {
+      method: "PATCH",
+      body,
+    }),
+
+  // The whole week at once: a weekday can hold two periods (a lunch break),
+  // so there is no stable "the Tuesday row" to patch.
+  replaceOpeningHours: (body: { hours: OpeningHoursRow[] }) =>
+    request<FacilitySettings>("/staff/facility/hours", {
+      method: "PUT",
+      body,
+    }),
+
+  // Scoped to this facility's own patients, logged, and throttled.
+  patientLookup: (q: string) =>
+    request<PatientLookup>("/staff/patients", { params: { q } }),
 
   session: () => request<Session>("/auth/session"),
 

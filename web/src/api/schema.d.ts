@@ -866,6 +866,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/staff/facility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The facility's own contact details and opening hours */
+        get: operations["staff_facility_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/facility/contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update contact details */
+        patch: operations["staff_facility_contact_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/staff/facility/hours": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace the facility's opening hours
+         * @description The whole week at once, not row by row.
+         *
+         *     A weekday can hold two rows - that is how a lunch break is modelled, and it
+         *     is how a Rwandan health centre actually runs - so there is no stable "the
+         *     Tuesday row" to PATCH. Replacing the set keeps the client simple and makes
+         *     a half-applied edit impossible.
+         *
+         *     Opening hours decide whether a facility reads as open, which decides
+         *     whether it appears in "open now" and whether its wait shows as `closed`.
+         *     Getting this wrong makes a facility invisible, so the whole replacement is
+         *     one transaction.
+         */
+        put: operations["staff_facility_hours_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/staff/insurance": {
         parameters: {
             query?: never;
@@ -937,6 +1001,23 @@ export interface paths {
          *     operating, and which services that facility offers.
          */
         get: operations["staff_me_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/patients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Find a patient this facility has seen */
+        get: operations["staff_patients_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1386,6 +1467,18 @@ export interface components {
             appointments: components["schemas"]["ReportAppointments"];
             demand: components["schemas"]["ReportDemand"][];
         };
+        FacilitySettings: {
+            name: string;
+            level: string;
+            ownership: string;
+            district: string;
+            verified: boolean;
+            phone: string;
+            email: string;
+            address: string;
+            sector: string;
+            hours: components["schemas"]["OpeningHoursRow"][];
+        };
         Insurer: {
             code: string;
             name: string;
@@ -1495,6 +1588,27 @@ export interface components {
             /** Format: time */
             closes_at: string;
         };
+        OpeningHoursRow: {
+            weekday: number;
+            opens_at: string;
+            closes_at: string;
+        };
+        /**
+         * @description The whole week at once.
+         *
+         *     Two rows on one weekday model a lunch break, which is how a Rwandan health
+         *     centre actually runs, so there is no stable "the Tuesday row" to PATCH.
+         */
+        OpeningHoursWrite: {
+            hours: components["schemas"]["OpeningHoursWriteRow"][];
+        };
+        OpeningHoursWriteRow: {
+            weekday: number;
+            /** Format: time */
+            opens_at: string;
+            /** Format: time */
+            closes_at: string;
+        };
         /**
          * @description * `public` - Public
          *     * `private` - Private
@@ -1502,6 +1616,13 @@ export interface components {
          * @enum {string}
          */
         OwnershipEnum: "public" | "private" | "faith_based";
+        PatchedFacilityContactWrite: {
+            phone?: string;
+            /** Format: email */
+            email?: string;
+            address?: string;
+            sector?: string;
+        };
         PatchedFacilityInsurerWrite: {
             accepted?: boolean;
             /** @default  */
@@ -1558,6 +1679,20 @@ export interface components {
         };
         PatientCounts: {
             registered: number;
+        };
+        PatientLookup: {
+            count: number;
+            query: string;
+            results: components["schemas"]["PatientMatch"][];
+        };
+        PatientMatch: {
+            id: number;
+            display_name: string;
+            phone: string;
+            visits_here: number;
+            last_seen: string | null;
+            in_queue_now: boolean;
+            ticket_code: string | null;
         };
         PendingFacility: {
             id: number;
@@ -3192,6 +3327,75 @@ export interface operations {
             };
         };
     };
+    staff_facility_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacilitySettings"];
+                };
+            };
+        };
+    };
+    staff_facility_contact_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedFacilityContactWrite"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedFacilityContactWrite"];
+                "multipart/form-data": components["schemas"]["PatchedFacilityContactWrite"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacilitySettings"];
+                };
+            };
+        };
+    };
+    staff_facility_hours_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OpeningHoursWrite"];
+                "application/x-www-form-urlencoded": components["schemas"]["OpeningHoursWrite"];
+                "multipart/form-data": components["schemas"]["OpeningHoursWrite"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacilitySettings"];
+                };
+            };
+        };
+    };
     staff_insurance_retrieve: {
         parameters: {
             query?: never;
@@ -3281,6 +3485,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StaffMe"];
+                };
+            };
+        };
+    };
+    staff_patients_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Phone number or name. At least 3 characters - a shorter query matches most of the register and is not a search. */
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatientLookup"];
                 };
             };
         };
