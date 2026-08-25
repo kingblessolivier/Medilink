@@ -74,6 +74,11 @@ export function SiteFooter() {
             <ul className="mt-3 space-y-2">
               <FooterLink to="/search">{t("nav_facilities")}</FooterLink>
               <FooterLink to="/doctors">{t("nav_doctors")}</FooterLink>
+              {/* The brief lists Services in the primary nav, but that is
+                  already at its five-item limit and Find Care is the more
+                  common entry. It gets a destination here instead. */}
+              <FooterLink to="/services">{t("services_all")}</FooterLink>
+              <FooterLink to="/insurance">{t("nav_insurance")}</FooterLink>
               <FooterLink to="/compare">{t("compare")}</FooterLink>
             </ul>
           </nav>
