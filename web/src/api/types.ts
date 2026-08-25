@@ -106,6 +106,10 @@ export type FacilitySettings = Schemas["FacilitySettings"]
 export type OpeningHoursRow = Schemas["OpeningHoursWriteRow"]
 export type PatientLookup = Schemas["PatientLookup"]
 export type PatientMatch = Schemas["PatientMatch"]
+export type AdminInsurer = Schemas["AdminInsurer"]
+export type AdminInsurerList = Schemas["AdminInsurerList"]
+export type PlatformSettingsData = Schemas["PlatformSettings"]
+export type FixedSetting = Schemas["FixedSetting"]
 
 /** Queue entry as the staff board sees it, plus a local-only flag. */
 export type QueueRow = Schemas["QueueEntry"] & {

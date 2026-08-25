@@ -59,7 +59,13 @@ def find_nearby(
     Each returned Facility carries the annotations `distance`, `is_open`,
     `accepts_insurer` and `tier`.
     """
-    radius_m = radius_m or settings.DEFAULT_SEARCH_RADIUS_M
+    # The starting radius is administrable - Kigali is dense and a rural
+    # district is not, and somebody watching real searches is better placed to
+    # pick the number than whoever wrote the default. Falls back to the
+    # deployed setting if the row is unreachable.
+    from apps.platform_admin.settings_store import search_radius_m
+
+    radius_m = radius_m or search_radius_m()
 
     # PostGIS takes x then y: longitude BEFORE latitude. Getting this backwards
     # is silent - every Kigali facility lands in the Indian Ocean and distances

@@ -470,6 +470,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/insurers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every insurer on the platform */
+        get: operations["platform_insurers_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/insurers/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Rename or reorder an insurer */
+        patch: operations["platform_insurers_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/platform/insurers/new": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add an insurer */
+        post: operations["platform_insurers_new_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/overview": {
         parameters: {
             query?: never;
@@ -502,6 +553,40 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Platform configuration */
+        get: operations["platform_settings_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/settings/update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change platform configuration */
+        patch: operations["platform_settings_update_partial_update"];
         trace?: never;
     };
     "/api/v1/platform/staff": {
@@ -1217,6 +1302,23 @@ export interface components {
             count: number;
             results: components["schemas"]["AdminFacility"][];
         };
+        AdminInsurer: {
+            code: string;
+            name: string;
+            is_public: boolean;
+            sort_order: number;
+            facilities: number;
+        };
+        AdminInsurerList: {
+            count: number;
+            results: components["schemas"]["AdminInsurer"][];
+        };
+        AdminInsurerWrite: {
+            code?: string;
+            name?: string;
+            is_public?: boolean;
+            sort_order?: number;
+        };
         AdminOverview: {
             days: number;
             /** Format: date-time */
@@ -1481,6 +1583,12 @@ export interface components {
             sector: string;
             hours: components["schemas"]["OpeningHoursRow"][];
         };
+        /** @description A value an administrator can see and deliberately cannot change. */
+        FixedSetting: {
+            key: string;
+            value: string;
+            why: string;
+        };
         Insurer: {
             code: string;
             name: string;
@@ -1618,6 +1726,12 @@ export interface components {
          * @enum {string}
          */
         OwnershipEnum: "public" | "private" | "faith_based";
+        PatchedAdminInsurerWrite: {
+            code?: string;
+            name?: string;
+            is_public?: boolean;
+            sort_order?: number;
+        };
         PatchedFacilityContactWrite: {
             phone?: string;
             /** Format: email */
@@ -1639,6 +1753,9 @@ export interface components {
             readonly home_location?: {
                 [key: string]: unknown;
             } | null;
+        };
+        PatchedPlatformSettingsWrite: {
+            default_search_radius_m?: number;
         };
         PatchedPreferenceUpdate: {
             kind?: string;
@@ -1724,6 +1841,11 @@ export interface components {
             as_of: string;
             totals: components["schemas"]["ActivityTotals"];
             facilities: components["schemas"]["ActivityFacility"][];
+        };
+        PlatformSettings: {
+            default_search_radius_m: number;
+            updated_at: string | null;
+            fixed: components["schemas"]["FixedSetting"][];
         };
         Preference: {
             kind: string;
@@ -2878,6 +3000,77 @@ export interface operations {
             };
         };
     };
+    platform_insurers_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminInsurerList"];
+                };
+            };
+        };
+    };
+    platform_insurers_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedAdminInsurerWrite"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedAdminInsurerWrite"];
+                "multipart/form-data": components["schemas"]["PatchedAdminInsurerWrite"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminInsurer"];
+                };
+            };
+        };
+    };
+    platform_insurers_new_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["AdminInsurerWrite"];
+                "application/x-www-form-urlencoded": components["schemas"]["AdminInsurerWrite"];
+                "multipart/form-data": components["schemas"]["AdminInsurerWrite"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminInsurer"];
+                };
+            };
+        };
+    };
     platform_overview_retrieve: {
         parameters: {
             query?: {
@@ -2915,6 +3108,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminProviderList"];
+                };
+            };
+        };
+    };
+    platform_settings_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformSettings"];
+                };
+            };
+        };
+    };
+    platform_settings_update_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPlatformSettingsWrite"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPlatformSettingsWrite"];
+                "multipart/form-data": components["schemas"]["PatchedPlatformSettingsWrite"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformSettings"];
                 };
             };
         };

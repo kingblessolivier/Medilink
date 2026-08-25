@@ -746,6 +746,85 @@ paths:
               schema:
                 $ref: '#/components/schemas/AdminFacilityList'
           description: ''
+  /api/v1/platform/insurers:
+    get:
+      operationId: platform_insurers_retrieve
+      summary: Every insurer on the platform
+      tags:
+      - platform
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminInsurerList'
+          description: ''
+  /api/v1/platform/insurers/{code}:
+    patch:
+      operationId: platform_insurers_partial_update
+      summary: Rename or reorder an insurer
+      parameters:
+      - in: path
+        name: code
+        schema:
+          type: string
+        required: true
+      tags:
+      - platform
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAdminInsurerWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAdminInsurerWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAdminInsurerWrite'
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminInsurer'
+          description: ''
+  /api/v1/platform/insurers/new:
+    post:
+      operationId: platform_insurers_new_create
+      summary: Add an insurer
+      tags:
+      - platform
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminInsurerWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminInsurerWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminInsurerWrite'
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminInsurer'
+          description: ''
   /api/v1/platform/overview:
     get:
       operationId: platform_overview_retrieve
@@ -785,6 +864,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminProviderList'
+          description: ''
+  /api/v1/platform/settings:
+    get:
+      operationId: platform_settings_retrieve
+      summary: Platform configuration
+      tags:
+      - platform
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformSettings'
+          description: ''
+  /api/v1/platform/settings/update:
+    patch:
+      operationId: platform_settings_update_partial_update
+      summary: Change platform configuration
+      tags:
+      - platform
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPlatformSettingsWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPlatformSettingsWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPlatformSettingsWrite'
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformSettings'
           description: ''
   /api/v1/platform/staff:
     get:
@@ -1890,6 +2014,53 @@ components:
       required:
       - count
       - results
+    AdminInsurer:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        is_public:
+          type: boolean
+        sort_order:
+          type: integer
+        facilities:
+          type: integer
+      required:
+      - code
+      - facilities
+      - is_public
+      - name
+      - sort_order
+    AdminInsurerList:
+      type: object
+      properties:
+        count:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminInsurer'
+      required:
+      - count
+      - results
+    AdminInsurerWrite:
+      type: object
+      properties:
+        code:
+          type: string
+          maxLength: 30
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          maxLength: 120
+        is_public:
+          type: boolean
+        sort_order:
+          type: integer
+          maximum: 999
+          minimum: 0
     AdminOverview:
       type: object
       properties:
@@ -2601,6 +2772,20 @@ components:
       - phone
       - sector
       - verified
+    FixedSetting:
+      type: object
+      description: A value an administrator can see and deliberately cannot change.
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+        why:
+          type: string
+      required:
+      - key
+      - value
+      - why
     Insurer:
       type: object
       properties:
@@ -2924,6 +3109,22 @@ components:
         * `public` - Public
         * `private` - Private
         * `faith_based` - Faith-based
+    PatchedAdminInsurerWrite:
+      type: object
+      properties:
+        code:
+          type: string
+          maxLength: 30
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          maxLength: 120
+        is_public:
+          type: boolean
+        sort_order:
+          type: integer
+          maximum: 999
+          minimum: 0
     PatchedFacilityContactWrite:
       type: object
       properties:
@@ -2970,6 +3171,13 @@ components:
           additionalProperties: {}
           nullable: true
           readOnly: true
+    PatchedPlatformSettingsWrite:
+      type: object
+      properties:
+        default_search_radius_m:
+          type: integer
+          maximum: 50000
+          minimum: 500
     PatchedPreferenceUpdate:
       type: object
       properties:
@@ -3182,6 +3390,22 @@ components:
       - days
       - facilities
       - totals
+    PlatformSettings:
+      type: object
+      properties:
+        default_search_radius_m:
+          type: integer
+        updated_at:
+          type: string
+          nullable: true
+        fixed:
+          type: array
+          items:
+            $ref: '#/components/schemas/FixedSetting'
+      required:
+      - default_search_radius_m
+      - fixed
+      - updated_at
     Preference:
       type: object
       properties:

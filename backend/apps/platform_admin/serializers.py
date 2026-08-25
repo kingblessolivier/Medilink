@@ -241,3 +241,56 @@ class DeliveryReportSerializer(serializers.Serializer):
     # Null when nothing was sent: no messages is not a 100% success rate.
     failure_rate = serializers.FloatField(allow_null=True)
     by_kind = DeliveryKindSerializer(many=True)
+
+
+# --------------------------------------------------------------------------
+# Insurers and platform configuration
+# --------------------------------------------------------------------------
+
+
+class AdminInsurerSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    name = serializers.CharField()
+    is_public = serializers.BooleanField()
+    sort_order = serializers.IntegerField()
+    # How many facilities accept this. The number to look at before touching
+    # an insurer: it is how many patients a mistake would misdirect.
+    facilities = serializers.IntegerField()
+
+
+class AdminInsurerListSerializer(serializers.Serializer):
+    count = serializers.IntegerField()
+    results = AdminInsurerSerializer(many=True)
+
+
+class AdminInsurerWriteSerializer(serializers.Serializer):
+    # Lowercase and hyphenated, matching the fixture codes and the search
+    # aliases. Not editable after creation - see the note in views.py.
+    code = serializers.SlugField(max_length=30, required=False)
+    name = serializers.CharField(max_length=120, required=False)
+    is_public = serializers.BooleanField(required=False)
+    sort_order = serializers.IntegerField(
+        required=False, min_value=0, max_value=999
+    )
+
+
+class FixedSettingSerializer(serializers.Serializer):
+    """A value an administrator can see and deliberately cannot change."""
+
+    key = serializers.CharField()
+    value = serializers.CharField()
+    why = serializers.CharField()
+
+
+class PlatformSettingsSerializer(serializers.Serializer):
+    default_search_radius_m = serializers.IntegerField()
+    updated_at = serializers.CharField(allow_null=True)
+    fixed = FixedSettingSerializer(many=True)
+
+
+class PlatformSettingsWriteSerializer(serializers.Serializer):
+    # 500 m is smaller than most Kigali sectors; 50 km already reaches the next
+    # province. Outside that range this is a typo, not an intention.
+    default_search_radius_m = serializers.IntegerField(
+        required=False, min_value=500, max_value=50000
+    )

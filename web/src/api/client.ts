@@ -41,6 +41,9 @@ import type {
   FacilitySettings,
   OpeningHoursRow,
   PatientLookup,
+  AdminInsurer,
+  AdminInsurerList,
+  PlatformSettingsData,
   // Platform
   AdminOverview,
   VerificationQueue,
@@ -415,6 +418,27 @@ export const api = {
   // Scoped to this facility's own patients, logged, and throttled.
   patientLookup: (q: string) =>
     request<PatientLookup>("/staff/patients", { params: { q } }),
+
+  // --- platform: insurers and configuration -------------------------------
+  adminInsurers: () => request<AdminInsurerList>("/platform/insurers"),
+
+  createInsurer: (body: { code: string; name: string; is_public?: boolean }) =>
+    request<AdminInsurer>("/platform/insurers/new", { method: "POST", body }),
+
+  // `code` is deliberately absent: facilities, fixtures and the search
+  // aliases all key on it.
+  updateInsurer: (
+    code: string,
+    body: { name?: string; is_public?: boolean; sort_order?: number },
+  ) => request<AdminInsurer>(`/platform/insurers/${code}`, { method: "PATCH", body }),
+
+  platformSettings: () => request<PlatformSettingsData>("/platform/settings"),
+
+  updatePlatformSettings: (body: { default_search_radius_m?: number }) =>
+    request<PlatformSettingsData>("/platform/settings/update", {
+      method: "PATCH",
+      body,
+    }),
 
   session: () => request<Session>("/auth/session"),
 

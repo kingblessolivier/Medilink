@@ -28,6 +28,21 @@ urlpatterns = [
     path("platform/activity", views.admin_activity, name="admin-activity"),
     path("platform/access-log", views.admin_access_log, name="admin-access-log"),
     path("platform/delivery", views.admin_delivery, name="admin-delivery"),
+    # Insurers were a fixture file; adding one was a deploy.
+    path("platform/insurers", views.admin_insurers, name="admin-insurers"),
+    path("platform/insurers/new", views.create_insurer, name="admin-insurer-create"),
+    path(
+        "platform/insurers/<slug:code>",
+        views.update_insurer,
+        name="admin-insurer-update",
+    ),
+    # What can be changed while running, and what deliberately cannot.
+    path("platform/settings", views.platform_settings, name="admin-settings"),
+    path(
+        "platform/settings/update",
+        views.update_platform_settings,
+        name="admin-settings-update",
+    ),
     path(
         "platform/triage-monitoring",
         views.admin_triage_monitoring,
