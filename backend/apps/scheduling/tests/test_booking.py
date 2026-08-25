@@ -702,3 +702,34 @@ def test_a_named_clinician_and_the_general_clinic_do_not_block_each_other(
     )
 
     assert Appointment.objects.filter(slot_start=slot).count() == 2
+
+
+@pytest.mark.django_db
+def test_duplicate_general_clinic_sessions_are_refused_at_the_database(
+    facility, general
+):
+    """The case `unique_together` silently missed.
+
+    It listed `provider`, and SQL compares NULL to NULL as NOT EQUAL - so a
+    named clinician's list was protected and the GENERAL CLINIC, where
+    provider is NULL, was not. That is the default and the common case.
+
+    Two identical templates put the same 09:00 in the list twice and leave
+    `_template_for` picking between them arbitrarily.
+    """
+    from django.db import IntegrityError
+
+    from apps.scheduling.models import ScheduleTemplate
+
+    fields = dict(
+        facility=facility,
+        service_type=general,
+        provider=None,
+        weekday=1,
+        start_time=time(8, 0),
+        end_time=time(12, 0),
+    )
+    ScheduleTemplate.objects.create(**fields)
+
+    with pytest.raises(IntegrityError):
+        ScheduleTemplate.objects.create(**fields)

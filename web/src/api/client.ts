@@ -31,6 +31,9 @@ import type {
   StaffAppointmentList,
   AppointmentAction,
   FacilityReport,
+  ScheduleTemplate,
+  ScheduleTemplateList,
+  ScheduleTemplateWrite,
   // Platform
   AdminOverview,
   VerificationQueue,
@@ -334,6 +337,25 @@ export const api = {
       method: "POST",
       body: payload,
       auth: false,
+    }),
+
+  // --- facility schedule -------------------------------------------------
+  //
+  // The facility's own bookable hours. Everything about booking rests on
+  // these, and until now only a developer could create one.
+  schedule: () =>
+    request<ScheduleTemplateList>("/staff/schedule"),
+
+  createSchedule: (body: ScheduleTemplateWrite) =>
+    request<ScheduleTemplate>("/staff/schedule/new", {
+      method: "POST",
+      body,
+    }),
+
+  updateSchedule: (id: number, body: Partial<ScheduleTemplateWrite>) =>
+    request<ScheduleTemplate>(`/staff/schedule/${id}`, {
+      method: "PATCH",
+      body,
     }),
 
   session: () => request<Session>("/auth/session"),

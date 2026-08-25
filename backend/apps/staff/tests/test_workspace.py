@@ -546,3 +546,240 @@ def test_reviving_a_no_show_into_an_occupied_slot_is_a_409(
     assert response.status_code == 409
     missed.refresh_from_db()
     assert missed.status == Appointment.Status.NO_SHOW
+
+
+# --------------------------------------------------------------------------
+# Schedule management - the facility's own bookable hours
+# --------------------------------------------------------------------------
+
+SCHEDULE = "/api/v1/staff/schedule"
+SCHEDULE_NEW = "/api/v1/staff/schedule/new"
+
+
+@pytest.fixture
+def offered(facility, general):
+    """A facility can only schedule a service it actually offers."""
+    from apps.facilities.models import FacilityService
+
+    return FacilityService.objects.create(
+        facility=facility, service_type=general, available=True
+    )
+
+
+@pytest.fixture
+def clinician(facility):
+    return make_staff(facility, "doctor", role="clinician")
+
+
+@pytest.fixture
+def schedule_patient(db):
+    return Patient.objects.create(phone="+250788555777")
+
+
+
+def _session(**overrides):
+    body = {
+        "weekday": 1,
+        "service": "general_consultation",
+        "start_time": "08:00",
+        "end_time": "12:00",
+        "slot_minutes": 15,
+        "capacity_per_slot": 2,
+    }
+    body.update(overrides)
+    return body
+
+
+@pytest.mark.django_db
+def test_a_facility_can_open_a_bookable_session(client_as, desk, general, facility, offered):
+    """ScheduleTemplate drives the entire booking system and there was no way
+    for a facility to create one."""
+    from apps.scheduling.models import ScheduleTemplate
+
+    response = client_as(desk).post(SCHEDULE_NEW, _session(), format="json")
+
+    assert response.status_code == 201
+    body = response.json()
+    # 4 hours at 15 minutes is 16 slots, 2 patients each.
+    assert body["slots_per_week"] == 32
+    assert ScheduleTemplate.objects.filter(facility=facility).count() == 1
+
+
+@pytest.mark.django_db
+def test_a_new_session_becomes_bookable_immediately(
+    client_as, desk, general, facility, offered
+):
+    """The point of the screen. A session nobody can book into is decoration."""
+    from datetime import timedelta
+
+    from apps.scheduling.services import available_slots
+
+    # Open every weekday so the assertion does not depend on when it runs.
+    for weekday in range(7):
+        client_as(desk).post(
+            SCHEDULE_NEW, _session(weekday=weekday), format="json"
+        )
+
+    days = available_slots(
+        facility=facility,
+        service_type=general,
+        date_to=timezone.localtime().date() + timedelta(days=3),
+    )
+
+    assert days, "a session was opened but no slots were offered"
+
+
+@pytest.mark.django_db
+def test_a_session_cannot_be_opened_for_a_service_the_facility_lacks(
+    client_as, desk, offered
+):
+    response = client_as(desk).post(
+        SCHEDULE_NEW, _session(service="neurosurgery"), format="json"
+    )
+
+    assert response.status_code == 400
+    assert "does not offer" in str(response.json())
+
+
+@pytest.mark.django_db
+def test_a_session_must_end_after_it_starts(client_as, desk, general, offered):
+    response = client_as(desk).post(
+        SCHEDULE_NEW,
+        _session(start_time="14:00", end_time="09:00"),
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert "end after it starts" in str(response.json())
+
+
+@pytest.mark.django_db
+def test_a_slot_cannot_be_longer_than_its_session(client_as, desk, general, offered):
+    """Otherwise the session produces zero slots and reads as broken rather
+    than as misconfigured."""
+    response = client_as(desk).post(
+        SCHEDULE_NEW,
+        _session(start_time="09:00", end_time="09:30", slot_minutes=60),
+        format="json",
+    )
+
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_two_sessions_cannot_start_at_the_same_time(client_as, desk, general, offered):
+    client_as(desk).post(SCHEDULE_NEW, _session(), format="json")
+
+    response = client_as(desk).post(SCHEDULE_NEW, _session(), format="json")
+
+    assert response.status_code == 400
+    assert "already starts" in str(response.json())
+
+
+@pytest.mark.django_db
+def test_closing_a_session_stops_new_bookings(client_as, desk, general, facility, offered):
+    """Deactivating is the safe operation: it closes the door without
+    cancelling anybody who is already through it."""
+    from datetime import timedelta
+
+    from apps.scheduling.services import available_slots
+
+    for weekday in range(7):
+        client_as(desk).post(
+            SCHEDULE_NEW, _session(weekday=weekday), format="json"
+        )
+    listed = client_as(desk).get(SCHEDULE).json()["results"]
+
+    for row in listed:
+        client_as(desk).patch(
+            f"{SCHEDULE}/{row['id']}", {"active": False}, format="json"
+        )
+
+    days = available_slots(
+        facility=facility,
+        service_type=general,
+        date_to=timezone.localtime().date() + timedelta(days=3),
+    )
+    assert days == []
+
+
+@pytest.mark.django_db
+def test_the_list_reports_how_many_patients_a_session_already_holds(
+    client_as, desk, general, facility, offered, schedule_patient
+):
+    """The number a facility needs BEFORE closing a session. Deactivating
+    stops new bookings and does not cancel existing ones, so somebody has to
+    know they still have patients coming."""
+    from datetime import timedelta
+
+    from apps.scheduling.models import Appointment
+
+    client_as(desk).post(SCHEDULE_NEW, _session(weekday=1), format="json")
+
+    # A future Tuesday, matching the session's weekday.
+    when = timezone.localtime() + timedelta(days=1)
+    while when.weekday() != 1:
+        when += timedelta(days=1)
+    Appointment.objects.create(
+        facility=facility,
+        patient=schedule_patient,
+        service_type=general,
+        slot_start=when.replace(hour=9, minute=0, second=0, microsecond=0),
+        slot_end=when.replace(hour=9, minute=15, second=0, microsecond=0),
+    )
+
+    row = client_as(desk).get(SCHEDULE).json()["results"][0]
+
+    assert row["upcoming"] == 1
+
+
+@pytest.mark.django_db
+def test_a_clinician_from_another_facility_cannot_be_scheduled(
+    client_as, desk, general, other_facility, offered
+):
+    """A staff member must not be able to open a session in another
+    facility's doctor's name."""
+    from apps.providers.models import Provider, ProviderFacility
+
+    outsider = Provider.objects.create(
+        full_name="Dr Elsewhere", slug="dr-elsewhere"
+    )
+    ProviderFacility.objects.create(provider=outsider, facility=other_facility)
+
+    response = client_as(desk).post(
+        SCHEDULE_NEW, _session(provider="dr-elsewhere"), format="json"
+    )
+
+    assert response.status_code == 400
+    assert "does not work at this facility" in str(response.json())
+
+
+@pytest.mark.django_db
+def test_another_facilitys_session_is_not_editable(
+    client_as, desk, other_facility, general, offered
+):
+    """404 rather than 403 - the response must not confirm the id exists."""
+    from apps.scheduling.models import ScheduleTemplate
+
+    theirs = ScheduleTemplate.objects.create(
+        facility=other_facility,
+        service_type=general,
+        weekday=1,
+        start_time=time(8, 0),
+        end_time=time(12, 0),
+    )
+
+    response = client_as(desk).patch(
+        f"{SCHEDULE}/{theirs.id}", {"active": False}, format="json"
+    )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_a_clinician_cannot_change_the_schedule(client_as, clinician, general, offered):
+    """Same rule as the queue: clinicians read, receptionists and admins
+    write."""
+    response = client_as(clinician).post(SCHEDULE_NEW, _session(), format="json")
+
+    assert response.status_code == 403
