@@ -1,3 +1,5 @@
+from datetime import date, datetime
+
 from rest_framework import serializers
 
 
@@ -113,3 +115,88 @@ class AppointmentStatusSerializer(serializers.Serializer):
     """
 
     status = serializers.ChoiceField(choices=["arrived", "served", "no_show"])
+
+
+# --------------------------------------------------------------------------
+# Schedule templates - the facility's own bookable hours
+# --------------------------------------------------------------------------
+
+
+class ScheduleTemplateSerializer(serializers.Serializer):
+    """One recurring weekly session.
+
+    Read shape. `upcoming` is the count of appointments already booked against
+    this session in the future - the number a facility needs before it decides
+    to close a session, because deactivating stops new bookings and does NOT
+    cancel the patients who already hold one.
+    """
+
+    id = serializers.IntegerField(read_only=True)
+    weekday = serializers.IntegerField()
+    service = serializers.CharField()
+    service_name_en = serializers.CharField()
+    service_name_rw = serializers.CharField()
+    provider = serializers.CharField(allow_null=True)
+    provider_name = serializers.CharField(allow_null=True)
+    start_time = serializers.CharField()
+    end_time = serializers.CharField()
+    slot_minutes = serializers.IntegerField()
+    capacity_per_slot = serializers.IntegerField()
+    active = serializers.BooleanField()
+    slots_per_week = serializers.IntegerField()
+    upcoming = serializers.IntegerField()
+
+
+class ScheduleTemplateListSerializer(serializers.Serializer):
+    count = serializers.IntegerField()
+    results = ScheduleTemplateSerializer(many=True)
+
+
+class ScheduleTemplateWriteSerializer(serializers.Serializer):
+    """Create or update a session.
+
+    `provider` is a slug or omitted. Omitted means the facility's general
+    clinic - the session where staff assign whoever is free, which is how most
+    booking at a health centre actually works.
+    """
+
+    weekday = serializers.IntegerField(min_value=0, max_value=6)
+    service = serializers.SlugField()
+    provider = serializers.SlugField(required=False, allow_null=True, allow_blank=True)
+    start_time = serializers.TimeField()
+    end_time = serializers.TimeField()
+    # 5 minutes is the shortest sane consultation slot; 4 hours the longest.
+    slot_minutes = serializers.IntegerField(min_value=5, max_value=240)
+    capacity_per_slot = serializers.IntegerField(min_value=1, max_value=50)
+    active = serializers.BooleanField(required=False, default=True)
+
+    def validate(self, attrs):
+        """Cross-field checks, written to survive a PATCH.
+
+        The same serializer runs partial for an update, where a request that
+        only closes a session sends `{"active": false}` and nothing else. The
+        checks below therefore run only when the fields they compare are
+        actually present - reaching into `attrs` unconditionally raised
+        KeyError on every partial update, which is a 500 for what should be
+        the safest operation on this screen.
+        """
+        start = attrs.get("start_time")
+        end = attrs.get("end_time")
+        if start and end:
+            if start >= end:
+                raise serializers.ValidationError(
+                    {"end_time": "The session must end after it starts."}
+                )
+            span = (
+                datetime.combine(date.min, end) - datetime.combine(date.min, start)
+            ).total_seconds() / 60
+            if span < attrs.get("slot_minutes", 0):
+                raise serializers.ValidationError(
+                    {
+                        "slot_minutes": (
+                            "A slot cannot be longer than the session that "
+                            "holds it."
+                        )
+                    }
+                )
+        return attrs

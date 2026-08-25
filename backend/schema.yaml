@@ -1354,6 +1354,86 @@ paths:
               schema:
                 $ref: '#/components/schemas/FacilityReport'
           description: ''
+  /api/v1/staff/schedule:
+    get:
+      operationId: staff_schedule_retrieve
+      summary: The facility's recurring bookable sessions
+      tags:
+      - staff
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleTemplateList'
+          description: ''
+  /api/v1/staff/schedule/{id}:
+    patch:
+      operationId: staff_schedule_partial_update
+      summary: Change or close a bookable session
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedScheduleTemplateWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedScheduleTemplateWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedScheduleTemplateWrite'
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleTemplate'
+          description: ''
+  /api/v1/staff/schedule/new:
+    post:
+      operationId: staff_schedule_new_create
+      summary: Open a new bookable session
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleTemplateWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ScheduleTemplateWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ScheduleTemplateWrite'
+        required: true
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleTemplate'
+          description: ''
   /api/v1/triage/sessions:
     post:
       operationId: triage_sessions_create
@@ -2512,6 +2592,43 @@ components:
           maxLength: 24
         enabled:
           type: boolean
+    PatchedScheduleTemplateWrite:
+      type: object
+      description: |-
+        Create or update a session.
+
+        `provider` is a slug or omitted. Omitted means the facility's general
+        clinic - the session where staff assign whoever is free, which is how most
+        booking at a health centre actually works.
+      properties:
+        weekday:
+          type: integer
+          maximum: 6
+          minimum: 0
+        service:
+          type: string
+          pattern: ^[-a-zA-Z0-9_]+$
+        provider:
+          type: string
+          nullable: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+        slot_minutes:
+          type: integer
+          maximum: 240
+          minimum: 5
+        capacity_per_slot:
+          type: integer
+          maximum: 50
+          minimum: 1
+        active:
+          type: boolean
+          default: true
     Patient:
       type: object
       properties:
@@ -3051,6 +3168,118 @@ components:
       - median_minutes
       - sample_size
       - this_week_minutes
+    ScheduleTemplate:
+      type: object
+      description: |-
+        One recurring weekly session.
+
+        Read shape. `upcoming` is the count of appointments already booked against
+        this session in the future - the number a facility needs before it decides
+        to close a session, because deactivating stops new bookings and does NOT
+        cancel the patients who already hold one.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        weekday:
+          type: integer
+        service:
+          type: string
+        service_name_en:
+          type: string
+        service_name_rw:
+          type: string
+        provider:
+          type: string
+          nullable: true
+        provider_name:
+          type: string
+          nullable: true
+        start_time:
+          type: string
+        end_time:
+          type: string
+        slot_minutes:
+          type: integer
+        capacity_per_slot:
+          type: integer
+        active:
+          type: boolean
+        slots_per_week:
+          type: integer
+        upcoming:
+          type: integer
+      required:
+      - active
+      - capacity_per_slot
+      - end_time
+      - id
+      - provider
+      - provider_name
+      - service
+      - service_name_en
+      - service_name_rw
+      - slot_minutes
+      - slots_per_week
+      - start_time
+      - upcoming
+      - weekday
+    ScheduleTemplateList:
+      type: object
+      properties:
+        count:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduleTemplate'
+      required:
+      - count
+      - results
+    ScheduleTemplateWrite:
+      type: object
+      description: |-
+        Create or update a session.
+
+        `provider` is a slug or omitted. Omitted means the facility's general
+        clinic - the session where staff assign whoever is free, which is how most
+        booking at a health centre actually works.
+      properties:
+        weekday:
+          type: integer
+          maximum: 6
+          minimum: 0
+        service:
+          type: string
+          pattern: ^[-a-zA-Z0-9_]+$
+        provider:
+          type: string
+          nullable: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+        slot_minutes:
+          type: integer
+          maximum: 240
+          minimum: 5
+        capacity_per_slot:
+          type: integer
+          maximum: 50
+          minimum: 1
+        active:
+          type: boolean
+          default: true
+      required:
+      - capacity_per_slot
+      - end_time
+      - service
+      - slot_minutes
+      - start_time
+      - weekday
     SearchGroup:
       type: object
       properties:

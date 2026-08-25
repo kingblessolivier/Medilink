@@ -4,6 +4,7 @@ import { DashboardShell, type NavSection } from "../components/DashboardShell"
 import {
   IconCalendar,
   IconChart,
+  IconClock,
   IconHospital,
   IconStethoscope,
   IconUsers,
@@ -14,6 +15,7 @@ import { WorkspaceAppointments } from "./Appointments"
 import { WorkspaceDoctors } from "./Doctors"
 import { WorkspaceServices } from "./Services"
 import { WorkspaceReports } from "./Reports"
+import { WorkspaceSchedule } from "./Schedule"
 
 /**
  * The facility workspace.
@@ -41,6 +43,7 @@ const SECTIONS: NavSection[] = [
   {
     label: "Facility",
     items: [
+      { to: "/workspace/schedule", label: "Schedule", icon: <IconClock size={17} /> },
       { to: "/workspace/doctors", label: "Doctors", icon: <IconStethoscope size={17} /> },
       { to: "/workspace/services", label: "Services", icon: <IconHospital size={17} /> },
       { to: "/workspace/reports", label: "Reports", icon: <IconChart size={17} /> },
@@ -68,6 +71,12 @@ export function WorkspaceRoutes() {
             <WorkspaceAppointments
               canManage={session.session.can_manage_queue}
             />
+          }
+        />
+        <Route
+          path="/schedule"
+          element={
+            <WorkspaceSchedule canManage={session.session.can_manage_queue} />
           }
         />
         <Route path="/doctors" element={<WorkspaceDoctors />} />

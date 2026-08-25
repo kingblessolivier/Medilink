@@ -47,13 +47,33 @@ class ScheduleTemplate(models.Model):
 
     class Meta:
         ordering = ["weekday", "start_time"]
-        unique_together = (
-            "facility",
-            "service_type",
-            "provider",
-            "weekday",
-            "start_time",
-        )
+        constraints = [
+            # `nulls_distinct=False` is the whole point of this constraint.
+            #
+            # It was `unique_together`, which in SQL compares NULL to NULL as
+            # NOT EQUAL - so it protected a named clinician's list and silently
+            # permitted duplicates of the general clinic, where `provider` is
+            # NULL. The general clinic is the DEFAULT and by far the common
+            # case, so the constraint covered everything except the thing that
+            # needed covering.
+            #
+            # Two identical templates produce the same slot twice in
+            # `available_slots`, so a patient sees 09:00 listed twice and
+            # `_template_for` picks between them arbitrarily. It never
+            # surfaced while only developers could create templates through
+            # fixtures; it surfaced the moment a facility could.
+            models.UniqueConstraint(
+                fields=[
+                    "facility",
+                    "service_type",
+                    "provider",
+                    "weekday",
+                    "start_time",
+                ],
+                nulls_distinct=False,
+                name="unique_session_per_slot_start",
+            )
+        ]
 
     def __str__(self) -> str:
         return (

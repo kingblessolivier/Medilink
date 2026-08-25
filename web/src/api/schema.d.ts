@@ -904,6 +904,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/staff/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The facility's recurring bookable sessions */
+        get: operations["staff_schedule_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/schedule/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change or close a bookable session */
+        patch: operations["staff_schedule_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/staff/schedule/new": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open a new bookable session */
+        post: operations["staff_schedule_new_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/triage/sessions": {
         parameters: {
             query?: never;
@@ -1380,6 +1431,26 @@ export interface components {
             kind?: string;
             enabled?: boolean;
         };
+        /**
+         * @description Create or update a session.
+         *
+         *     `provider` is a slug or omitted. Omitted means the facility's general
+         *     clinic - the session where staff assign whoever is free, which is how most
+         *     booking at a health centre actually works.
+         */
+        PatchedScheduleTemplateWrite: {
+            weekday?: number;
+            service?: string;
+            provider?: string | null;
+            /** Format: time */
+            start_time?: string;
+            /** Format: time */
+            end_time?: string;
+            slot_minutes?: number;
+            capacity_per_slot?: number;
+            /** @default true */
+            active: boolean;
+        };
         Patient: {
             readonly id: number;
             readonly phone: string;
@@ -1576,6 +1647,54 @@ export interface components {
             /** Format: double */
             last_week_minutes: number | null;
             enough_data: boolean;
+        };
+        /**
+         * @description One recurring weekly session.
+         *
+         *     Read shape. `upcoming` is the count of appointments already booked against
+         *     this session in the future - the number a facility needs before it decides
+         *     to close a session, because deactivating stops new bookings and does NOT
+         *     cancel the patients who already hold one.
+         */
+        ScheduleTemplate: {
+            readonly id: number;
+            weekday: number;
+            service: string;
+            service_name_en: string;
+            service_name_rw: string;
+            provider: string | null;
+            provider_name: string | null;
+            start_time: string;
+            end_time: string;
+            slot_minutes: number;
+            capacity_per_slot: number;
+            active: boolean;
+            slots_per_week: number;
+            upcoming: number;
+        };
+        ScheduleTemplateList: {
+            count: number;
+            results: components["schemas"]["ScheduleTemplate"][];
+        };
+        /**
+         * @description Create or update a session.
+         *
+         *     `provider` is a slug or omitted. Omitted means the facility's general
+         *     clinic - the session where staff assign whoever is free, which is how most
+         *     booking at a health centre actually works.
+         */
+        ScheduleTemplateWrite: {
+            weekday: number;
+            service: string;
+            provider?: string | null;
+            /** Format: time */
+            start_time: string;
+            /** Format: time */
+            end_time: string;
+            slot_minutes: number;
+            capacity_per_slot: number;
+            /** @default true */
+            active: boolean;
         };
         SearchGroup: {
             kind: components["schemas"]["KindEnum"];
@@ -3009,6 +3128,77 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FacilityReport"];
+                };
+            };
+        };
+    };
+    staff_schedule_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleTemplateList"];
+                };
+            };
+        };
+    };
+    staff_schedule_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedScheduleTemplateWrite"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedScheduleTemplateWrite"];
+                "multipart/form-data": components["schemas"]["PatchedScheduleTemplateWrite"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleTemplate"];
+                };
+            };
+        };
+    };
+    staff_schedule_new_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleTemplateWrite"];
+                "application/x-www-form-urlencoded": components["schemas"]["ScheduleTemplateWrite"];
+                "multipart/form-data": components["schemas"]["ScheduleTemplateWrite"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleTemplate"];
                 };
             };
         };
