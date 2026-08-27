@@ -91,6 +91,31 @@ DATABASES = {
     }
 }
 
+# Where to find the native GDAL and GEOS libraries, when they are not on a
+# path Django already searches.
+#
+# **Only Windows needs these.** The Docker image installs libgdal through apt,
+# where the versioned soname is exactly what Django probes for. The container
+# does NOT get to inherit these: compose reads the same `backend/.env` through
+# `env_file`, so it blanks both in its `environment:` block - otherwise the
+# API tries to dlopen a `C:\` path and dies on import. On Windows there is no GDAL
+# wheel on PyPI - OSGeo4W is the supported route - and it installs
+# `gdal313.dll`, while Django 5.2 only probes the names `gdal310` down to
+# `gdal301`. The DLL is present and still not found, so the path has to be
+# given explicitly rather than put on PATH.
+#
+# Set both in `backend/.env`, which is gitignored, because the location is a
+# fact about one machine and not about this project:
+#
+#     GDAL_LIBRARY_PATH=C:/OSGeo4W/bin/gdal313.dll
+#     GEOS_LIBRARY_PATH=C:/OSGeo4W/bin/geos_c.dll
+#
+# Unset is the normal case and means "search the usual places".
+if _gdal := env("GDAL_LIBRARY_PATH", default=""):
+    GDAL_LIBRARY_PATH = _gdal
+if _geos := env("GEOS_LIBRARY_PATH", default=""):
+    GEOS_LIBRARY_PATH = _geos
+
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
