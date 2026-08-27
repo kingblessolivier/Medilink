@@ -4,3 +4,9 @@ pytest-django==4.11.1
 pytest-cov==7.0.0
 factory-boy==3.3.1
 ruff==0.6.9
+
+# docs/07 tells you to run this in the container and docs/12 reports its
+# result as launch evidence. It was in neither the image nor the host venv, so
+# the documented command failed and the recorded result could not be
+# reproduced anywhere. Evidence you cannot re-run is not evidence.
+pip-audit==2.7.3

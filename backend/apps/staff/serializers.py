@@ -171,17 +171,40 @@ class ScheduleTemplateWriteSerializer(serializers.Serializer):
     active = serializers.BooleanField(required=False, default=True)
 
     def validate(self, attrs):
-        """Cross-field checks, written to survive a PATCH.
+        """Cross-field checks, resolved against the session as it will END UP.
 
         The same serializer runs partial for an update, where a request that
-        only closes a session sends `{"active": false}` and nothing else. The
-        checks below therefore run only when the fields they compare are
-        actually present - reaching into `attrs` unconditionally raised
-        KeyError on every partial update, which is a 500 for what should be
-        the safest operation on this screen.
+        only closes a session sends `{"active": false}` and nothing else. So
+        the checks cannot reach into `attrs` unconditionally - that raised
+        KeyError on every partial update, a 500 for what should be the safest
+        operation on this screen.
+
+        But checking only what the request carried is the opposite mistake,
+        and it let two PATCHes through that must not pass. `{"slot_minutes":
+        240}` on a half-hour session carries no times to compare against.
+        `{"start_time", "end_time"}` that shrinks a session below its stored
+        slot length carries no slot length - and comparing against a default
+        of zero made the guard a no-op rather than a check. Both produce a
+        session that yields zero slots, which reads as broken rather than as
+        misconfigured. That is the failure
+        `test_a_slot_cannot_be_longer_than_its_session` exists to prevent, and
+        it went unprevented on update because the test only ever posted.
+
+        Each field therefore falls back to the stored value when the request
+        omits it, and the invariants are checked against the merged result.
+        Create passes no instance and requires every field, so the fallbacks
+        are unused there.
         """
-        start = attrs.get("start_time")
-        end = attrs.get("end_time")
+
+        def resolved(field):
+            if field in attrs:
+                return attrs[field]
+            return getattr(self.instance, field, None)
+
+        start = resolved("start_time")
+        end = resolved("end_time")
+        slot = resolved("slot_minutes")
+
         if start and end:
             if start >= end:
                 raise serializers.ValidationError(
@@ -190,7 +213,7 @@ class ScheduleTemplateWriteSerializer(serializers.Serializer):
             span = (
                 datetime.combine(date.min, end) - datetime.combine(date.min, start)
             ).total_seconds() / 60
-            if span < attrs.get("slot_minutes", 0):
+            if slot and span < slot:
                 raise serializers.ValidationError(
                     {
                         "slot_minutes": (

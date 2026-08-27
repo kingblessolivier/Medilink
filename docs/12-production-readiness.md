@@ -15,24 +15,43 @@ a database in the wrong country.
 
 | | |
 |---|---|
-| Backend tests | 612 passing, 94% coverage |
-| Frontend tests | 33 passing |
-| API operations | 53, schema generated with zero warnings, no drift from the committed file |
-| Routes | 28 screens across three surfaces |
-| Translations | 345 keys × 3 languages, parity enforced by test |
-| Patient bundle | 104 KB gzipped (budget 150 KB) |
+| Backend tests | 669 passing, 94% coverage |
+| Frontend tests | 37 passing |
+| API operations | 68 across 64 paths, schema generated with zero warnings, no drift from the committed file |
+| Routes | 48 `<Route>` declarations across three surfaces |
+| Translations | 401 keys × 3 languages, parity enforced by test |
+| Patient bundle | 112.64 KB gzipped (budget 150 KB, enforced in CI) |
 | `ruff check apps/` | clean |
-| `npm audit` | 0 vulnerabilities |
+| `npm audit` | 0 in production dependencies; 6 in the dev toolchain (see below) |
 | `pip-audit` | clean, excluding `pip` itself (the installer, not shipped) |
 | Django | 5.2 LTS |
 
-Every figure above was observed on 2026-08-24, in the compose stack, not
-carried over from a previous edit. Two of them had drifted: the test counts
-predated the audit remediation below, and "35 routes" did not match the 28
-`<Route>` screens the router actually declares. This table is the one thing
-in the repo people quote without re-checking, so it re-states the rule the
-correction further down already learned - a number here is a measurement or
-it does not belong.
+Every figure above was observed on 2026-08-27, in the compose stack, not
+carried over from a previous edit.
+
+**This is the third time these numbers have drifted, and the second time the
+same correction has been written here.** The previous note recorded that the
+test counts had gone stale and that "35 routes" did not match the router; both
+were fixed, and within three days every count in the table was wrong again
+because PRs #53-#60 landed after it was last measured. The table is the one
+thing in the repo people quote without re-checking, so the rule stands and
+now has a habit behind it: **a number here is a measurement or it does not
+belong.** If you change what the system contains, re-run the checks in
+`docs/07` and edit this table in the same PR.
+
+Two rows earned their qualifiers the hard way:
+
+- **`npm audit`** previously read "0 vulnerabilities" without qualification.
+  Plain `npm audit` reports 6 (1 critical, 1 high, 4 moderate), all in Vite
+  and Vitest. `npm audit --omit=dev` is what reports zero. Nothing vulnerable
+  reaches a patient, but the unqualified sentence did not survive somebody
+  running the command - and two of the advisories are Windows path-handling
+  issues on a team that develops on Windows.
+- **`pip-audit`** was reported here while being installed in neither the image
+  nor the host venv, so the documented command failed and this result could
+  not be reproduced anywhere. It is now pinned in `requirements-dev.txt`. The
+  claim itself was accurate: all six findings are in `pip`, exactly the
+  exclusion named above.
 
 Run `python manage.py readiness` for the settings-level launch checks. It
 exits non-zero on a blocker, so it can gate a deploy.
@@ -56,6 +75,41 @@ A full audit against the proposal produced 26 findings - 13 in the system,
 Both survived a 585-test suite because tests asserted the buggy behaviour.
 Both of those tests were rewritten rather than deleted, and the frontend
 gained its first coverage of a component's failure path.
+
+### The re-audit, 2026-08-27
+
+A third audit covered PRs #53-#60 - 33 commits and roughly 6,700 lines that
+had landed after the previous two audits and had never been reviewed. Six
+findings, all fixed here. Four were the documentation drift corrected above.
+The two in code:
+
+- **A slot could outgrow its session on a partial update.** The rule that a
+  slot cannot be longer than the session holding it was enforced on create
+  and skipped on every `PATCH`, because the check only compared fields the
+  request happened to carry - and it compared the slot length against a
+  default of zero, which made the guard a no-op rather than a check. A
+  facility could set a four-hour slot on a half-hour session, or shrink a
+  session below its slot, and the session would then generate **zero** slots
+  while still listing as active: unbookable, with nothing to say why. It now
+  validates the session as it will end up, falling back to stored values for
+  whatever the request omitted.
+- **The USSD address allowlist could be talked past with a header.**
+  `client_ip()` read the first `X-Forwarded-For` entry, but nginx forwards
+  that header with `$proxy_add_x_forwarded_for`, which *appends* the real peer
+  to whatever the caller sent - so the first entry was the caller's own claim.
+  Anyone could name an allowlisted address and pass `USSD_ALLOWED_IPS`, and
+  every rejection was logged against a spoofable address. The shared secret
+  still held, so this was never a way in on its own. It now reads `X-Real-IP`,
+  which nginx *replaces* rather than appends, falling back to `REMOTE_ADDR`.
+
+**The pattern from the first audit repeated, and is worth stating plainly.** A
+test named `test_a_slot_cannot_be_longer_than_its_session` already existed,
+and its docstring described the exact failure - "the session produces zero
+slots and reads as broken rather than as misconfigured". It only ever tested
+`POST`. Twice now the suite has covered the shape that works rather than the
+shape that breaks. When you add a rule, test the update path as well as the
+create path; both fixes above ship with tests that were confirmed to fail
+against the old code before being kept.
 
 ### What works end to end
 

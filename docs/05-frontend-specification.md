@@ -223,8 +223,12 @@ harmful - it would tell a patient to stay home when they are being called.
 | Time to Interactive on 3G | < 4 s |
 | Lighthouse Performance | > 85 |
 
-Enforce with `rollup-plugin-visualizer` in CI and fail the build when the bundle
-exceeds budget.
+The initial-JS budget is enforced in CI by the `Bundle size budget` step in
+`.github/workflows/ci.yml`: it gzips `dist/assets/index-*.js` after the build
+and exits non-zero above 150 KB. No bundle-analysis plugin is installed - a
+gzipped byte count is the thing the budget is actually about, and it needs no
+dependency to measure. The other three rows are targets, not gates; nothing
+checks them automatically.
 
 ## 6. Provider app - the reception screen
 

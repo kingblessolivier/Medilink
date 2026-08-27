@@ -667,6 +667,78 @@ def test_a_slot_cannot_be_longer_than_its_session(client_as, desk, general, offe
 
 
 @pytest.mark.django_db
+def test_a_slot_cannot_outgrow_its_session_on_a_partial_update(
+    client_as, desk, general, offered
+):
+    """The same rule as above, on the PATCH path, which used to skip it.
+
+    A request that changes only the slot length carries no times to compare
+    against. Validating what the request contained rather than what the
+    session would become let this through, and the session then produced zero
+    bookable slots while still listing as active - broken, not misconfigured.
+    """
+    created = client_as(desk).post(
+        SCHEDULE_NEW,
+        _session(start_time="09:00", end_time="09:30", slot_minutes=15),
+        format="json",
+    )
+    session_id = created.json()["id"]
+
+    response = client_as(desk).patch(
+        f"{SCHEDULE}/{session_id}", {"slot_minutes": 240}, format="json"
+    )
+
+    assert response.status_code == 400
+    assert "longer than the session" in str(response.json())
+
+
+@pytest.mark.django_db
+def test_a_session_cannot_be_shrunk_below_its_slot_length(
+    client_as, desk, general, offered
+):
+    """The same invariant approached from the other side.
+
+    Here the times are sent and the slot length is the stored value, so a
+    check that read the slot length only from the request compared against
+    nothing and passed.
+    """
+    created = client_as(desk).post(
+        SCHEDULE_NEW,
+        _session(start_time="08:00", end_time="12:00", slot_minutes=60),
+        format="json",
+    )
+    session_id = created.json()["id"]
+
+    response = client_as(desk).patch(
+        f"{SCHEDULE}/{session_id}",
+        {"start_time": "08:00", "end_time": "08:10"},
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert "longer than the session" in str(response.json())
+
+
+@pytest.mark.django_db
+def test_closing_a_session_needs_no_other_field(client_as, desk, general, offered):
+    """The reason the checks are conditional at all.
+
+    Deactivating sends `{"active": false}` and nothing else. It must stay a
+    one-field request - guarding the invariant above must not make the safest
+    operation on the screen require a full payload.
+    """
+    created = client_as(desk).post(SCHEDULE_NEW, _session(), format="json")
+    session_id = created.json()["id"]
+
+    response = client_as(desk).patch(
+        f"{SCHEDULE}/{session_id}", {"active": False}, format="json"
+    )
+
+    assert response.status_code == 200
+    assert response.json()["active"] is False
+
+
+@pytest.mark.django_db
 def test_two_sessions_cannot_start_at_the_same_time(client_as, desk, general, offered):
     client_as(desk).post(SCHEDULE_NEW, _session(), format="json")
 

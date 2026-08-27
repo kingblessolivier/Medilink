@@ -139,6 +139,43 @@ def test_ip_allowlist_is_enforced_when_set(client, settings):
     assert post(client, "", REMOTE_ADDR="203.0.113.7").status_code == 200
 
 
+@pytest.mark.django_db
+def test_the_allowlist_cannot_be_talked_past_with_a_header(client, settings):
+    """A caller claiming to be the aggregator is still not the aggregator.
+
+    nginx forwards `X-Forwarded-For` with `$proxy_add_x_forwarded_for`, which
+    appends the real peer to whatever arrived. Reading the first entry meant
+    reading the caller's own claim, so anyone could name an allowlisted
+    address and be let through. Only what the proxy set counts.
+    """
+    settings.USSD_ALLOWED_IPS = ["203.0.113.0/24"]
+
+    spoofed = post(
+        client,
+        "",
+        REMOTE_ADDR="198.51.100.9",
+        HTTP_X_FORWARDED_FOR="203.0.113.7, 198.51.100.9",
+    )
+
+    assert spoofed.status_code == 403
+
+
+@pytest.mark.django_db
+def test_the_allowlist_reads_the_address_nginx_set(client, settings):
+    """Behind the proxy, `X-Real-IP` carries the true peer.
+
+    `proxy_set_header` replaces rather than appends, so unlike
+    `X-Forwarded-For` this is a value the caller cannot contribute to.
+    """
+    settings.USSD_ALLOWED_IPS = ["203.0.113.0/24"]
+
+    forwarded = post(
+        client, "", REMOTE_ADDR="10.0.0.2", HTTP_X_REAL_IP="203.0.113.7"
+    )
+
+    assert forwarded.status_code == 200
+
+
 # --------------------------------------------------------------------------
 # Never blank
 # --------------------------------------------------------------------------

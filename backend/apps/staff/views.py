@@ -468,7 +468,12 @@ def update_schedule(request, pk):
         # must not confirm that the id exists.
         raise NotFound("No such session at this facility.")
 
-    payload = ScheduleTemplateWriteSerializer(data=request.data, partial=True)
+    # The instance goes in so the cross-field checks can resolve what the
+    # request omitted: a PATCH that changes only the slot length still has to
+    # be measured against the times already stored.
+    payload = ScheduleTemplateWriteSerializer(
+        instance=template, data=request.data, partial=True
+    )
     payload.is_valid(raise_exception=True)
     data = payload.validated_data
 
