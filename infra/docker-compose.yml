@@ -6,7 +6,19 @@ services:
       POSTGRES_DB: medilink
       POSTGRES_USER: medilink
       POSTGRES_PASSWORD: medilink
-    ports: ["5432:5432"]
+    # 55432 on the HOST, 5432 inside. The API is unaffected either way - it
+    # reaches this over the compose network as `db:5432`, and the published
+    # port exists only for tools running natively on the machine.
+    #
+    # It used to publish 5432, which looks right and quietly is not: a
+    # developer machine with PostgreSQL installed natively already has a
+    # postgres.exe listening there, and that service wins the port. Docker
+    # still reports 5432 as published, so `localhost:5432` appears correct
+    # while actually reaching the wrong database entirely - the failure is
+    # `password authentication failed`, which reads like a bad credential
+    # rather than a bad server. Same class of conflict as the Redis note
+    # below, and the same fix: do not fight for a port somebody else holds.
+    ports: ["55432:5432"]
     volumes: ["pgdata:/var/lib/postgresql/data"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U medilink -d medilink"]
@@ -17,11 +29,18 @@ services:
   redis:
     image: redis:7-alpine
     container_name: medilink-redis
-    # No published port. Nothing on the HOST needs to reach Redis - the API
-    # talks to it over the compose network on 6379. Publishing it only created
-    # a conflict with whatever else on this machine wanted 6380, which is
-    # exactly what stopped the stack coming up.
-    expose: ["6379"]
+    # 56379 on the HOST, 6379 inside. The API does not use this - it reaches
+    # Redis over the compose network on 6379 - but anything running natively
+    # against this stack does, and without a published port every cached or
+    # throttled endpoint fails.
+    #
+    # This used to publish nothing, on the reasoning that nothing on the host
+    # needed Redis. That stopped being true the moment the backend could be
+    # run natively. The original conflict was real, though, and the lesson
+    # from it holds: 6379 and 6380 are both already taken on a machine with
+    # other projects on it, so this claims a port high enough that nothing
+    # else is likely to want it, rather than competing for the obvious one.
+    ports: ["56379:6379"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -49,6 +68,16 @@ services:
       DATABASE_URL: postgis://medilink:medilink@db:5432/medilink
       REDIS_URL: redis://redis:6379/0
       DJANGO_SETTINGS_MODULE: config.settings.dev
+      # Blanked deliberately, for the same reason the two URLs above are set
+      # here: `env_file` below pulls in backend/.env, which on a Windows
+      # machine carries native GDAL/GEOS paths so the backend can be run
+      # outside Docker. Inherited in here, they point ctypes at a `C:\` path
+      # that does not exist in a Linux container, and the API dies on import
+      # with `cannot open shared object file`. This image gets GDAL from apt
+      # under a soname Django already probes for, so empty is correct and
+      # means "search the usual places".
+      GDAL_LIBRARY_PATH: ""
+      GEOS_LIBRARY_PATH: ""
     env_file:
       - ../backend/.env
     depends_on:

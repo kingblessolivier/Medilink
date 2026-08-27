@@ -6,15 +6,76 @@ GeoDjango requires the native **GDAL**, **GEOS** and **PROJ** libraries. Install
 these directly on Windows via OSGeo4W is a genuine time sink and a recurring
 source of "works on my machine" failures across a team.
 
-**Run the backend in Docker or WSL2. Do not install GDAL natively on Windows.**
+**Run the backend in Docker or WSL2 unless you have a reason not to.** Native
+Windows is supported and documented in section 1a - it is a deliberate choice
+with two known traps, not the default.
 
 | Approach | Verdict |
 |---|---|
 | Docker Desktop + WSL2 backend | **Recommended** - identical for everyone |
 | WSL2 Ubuntu, native Python | Good - `apt install gdal-bin libgdal-dev` just works |
-| Native Windows + OSGeo4W | Avoid - expect to lose days to DLL paths |
+| Native Windows + OSGeo4W | Works, and is written down below - but you own the DLL paths |
 
-The React apps run fine natively on Windows. Only the Django backend needs Linux.
+The React apps run fine natively on Windows. Only the Django backend needs Linux
+libraries.
+
+### 1a. Native Windows, if you want it
+
+This used to say "avoid, expect to lose days". It does work, and the two things
+that actually cost the time are both recorded here, so it should not cost them
+again. Docker remains the recommendation because it is identical for everyone;
+this is for when you want a debugger attached to Django without WSL in the way.
+
+```powershell
+py -3.12 -m venv .venv          # 3.12, not 3.14 - Django 5.2 does not support 3.14
+.venv\Scripts\activate
+pip install -r backend\requirements-dev.txt
+```
+
+There is **no GDAL wheel on PyPI for Windows** - `pip install GDAL` reports
+`from versions: none`. OSGeo4W is the supported source. Installing only the
+`gdal` package pulls GEOS and PROJ with it:
+
+```powershell
+.\osgeo4w-setup.exe -q -k -r -A -s https://download.osgeo.org/osgeo4w/v2/ -P gdal -R $env:LOCALAPPDATA\OSGeo4W
+```
+
+**Trap 1: the DLL is found by name, and the name will not match.** Django 5.2
+probes for `gdal310` down to `gdal301`. OSGeo4W currently ships `gdal313`, so
+the library is installed, on your PATH, and still "not found". Putting it on
+PATH does not help - the name is the problem. Give the full path in
+`backend/.env` instead (gitignored, because this is a fact about one machine):
+
+```bash
+GDAL_LIBRARY_PATH=C:/Users/<you>/AppData/Local/OSGeo4W/bin/gdal313.dll
+GEOS_LIBRARY_PATH=C:/Users/<you>/AppData/Local/OSGeo4W/bin/geos_c.dll
+```
+
+**Trap 2: those two lines will break the container if you let them.** Compose
+loads the same `backend/.env` through `env_file`, so a Windows path reaches the
+Linux container, and the API dies on import with `cannot open shared object
+file`. `infra/docker-compose.yml` blanks both in its `environment:` block to
+stop that. If you add any other machine-specific path to `.env`, ask what it
+does inside the container.
+
+**Ports.** The stack publishes Postgres on **55432** and Redis on **56379**, not
+5432 and 6379. This is not arbitrary: a developer machine with PostgreSQL
+installed natively already has `postgres.exe` on 5432, and it wins the port
+while Docker still reports 5432 as published - so `localhost:5432` silently
+reaches the wrong database and fails with `password authentication failed`,
+which reads like a bad password rather than a bad server. Redis had the same
+problem with other projects on 6379 and 6380. Point `.env` at the published
+ports:
+
+```bash
+DATABASE_URL=postgis://medilink:medilink@localhost:55432/medilink
+REDIS_URL=redis://localhost:56379/0
+```
+
+Verify with `python manage.py check`, then `python manage.py migrate --check`,
+then hit `/api/v1/facilities/nearby?lat=-1.94&lng=30.06` - that one endpoint
+exercises GDAL, PostGIS and the Redis cache together, so a 200 means the whole
+chain is wired.
 
 ## 2. Prerequisites
 
@@ -36,7 +97,7 @@ services:
       POSTGRES_DB: medilink
       POSTGRES_USER: medilink
       POSTGRES_PASSWORD: medilink
-    ports: ["5432:5432"]
+    ports: ["55432:5432"]     # 55432 on the host - see section 1a
     volumes: ["pgdata:/var/lib/postgresql/data"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U medilink"]
@@ -45,7 +106,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports: ["6380:6379"]
+    ports: ["56379:6379"]     # 6379 and 6380 are usually taken
 
   mailhog:                      # catches OTP emails in development
     image: mailhog/mailhog
@@ -95,13 +156,15 @@ import time.
 
 ## 5. Backend, WSL2 native (faster iteration)
 
-> **On Windows, use Docker instead - section 4.** This section is WSL2 or
-> Linux only. GeoDjango needs GDAL, GEOS and PROJ as native libraries, and the
-> `apt` packages below do not exist on Windows. A `.venv` created in
-> PowerShell will fail at `pip install` on the GDAL bindings, or import-time
-> with `OSError: could not find the GDAL library` - which surfaces confusingly
-> as `ModuleNotFoundError: No module named 'django'` if the install aborted
-> part-way and left the venv empty.
+> **This section is WSL2 or Linux only** - the `apt` packages below do not
+> exist on Windows. For native Windows see section 1a, which covers the same
+> ground with OSGeo4W.
+>
+> One symptom is worth knowing either way: if a `pip install` aborts part-way
+> it leaves the venv empty, and the next command fails with
+> `ModuleNotFoundError: No module named 'django'`. That message is about the
+> half-finished install, not about GDAL - check `pip list` before chasing
+> native libraries.
 >
 > `docker compose -f infra/docker-compose.yml up -d` brings up the database,
 > Redis and the API together. Edits are bind-mounted, so the reloader picks
@@ -223,10 +286,10 @@ SECRET_KEY=change-me-in-production
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
 
-DATABASE_URL=postgis://medilink:medilink@localhost:5432/medilink
-REDIS_URL=redis://localhost:6380/0
+DATABASE_URL=postgis://medilink:medilink@localhost:55432/medilink
+REDIS_URL=redis://localhost:56379/0
 
-CELERY_BROKER_URL=redis://localhost:6380/1
+CELERY_BROKER_URL=redis://localhost:56379/1
 
 # Identity
 NATIONAL_ID_PEPPER=change-me-and-never-rotate-casually
