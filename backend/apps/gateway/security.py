@@ -34,9 +34,24 @@ class GatewayForbidden(Exception):
 
 
 def client_ip(request) -> str:
-    forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    """The peer address, taken from what the proxy set - never from the caller.
+
+    **`X-Forwarded-For` is not usable here.** nginx forwards it with
+    `$proxy_add_x_forwarded_for`, which APPENDS the real peer to whatever the
+    caller already sent. Reading the first entry - the obvious way, and what
+    this used to do - therefore reads a value the caller chose. Anyone could
+    put an allowlisted aggregator address in that header and walk through
+    `USSD_ALLOWED_IPS`, and every rejection logged against a spoofed address
+    is a brute-force attempt the audit trail attributes to somebody else.
+
+    `X-Real-IP` is set by our own nginx from `$remote_addr` with
+    `proxy_set_header`, which REPLACES rather than appends, so a caller cannot
+    contribute to it. Falling back to `REMOTE_ADDR` covers the compose stack,
+    where the API is reached directly and there is no proxy at all.
+    """
+    real = request.META.get("HTTP_X_REAL_IP", "").strip()
+    if real:
+        return real
     return request.META.get("REMOTE_ADDR", "")
 
 

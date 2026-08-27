@@ -340,9 +340,12 @@ def refresh_service_time_stats(facility=None, window_days=STATS_WINDOW_DAYS) -> 
     they arrived afterwards, the clinic was waiting for them, not the other way
     round.
 
-    That distinction is why there is no arbitrary "gap too long to be real"
-    threshold here. A genuine ninety-minute consultation is counted, because
-    somebody was genuinely waiting through it.
+    That distinction is what does the real work, so the remaining threshold is
+    a narrow one: `MAX_PLAUSIBLE_GAP_MINUTES` (8 hours) discards a gap longer
+    than a working day, which is a register left open overnight rather than a
+    consultation. It is deliberately far above anything clinical - a genuine
+    ninety-minute consultation is counted, because somebody was genuinely
+    waiting through it.
 
     Bucketed by the hour the interval STARTED, so a long consultation is
     attributed to the hour it began rather than the one it spilled into.
