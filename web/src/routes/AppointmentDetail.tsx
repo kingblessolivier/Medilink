@@ -62,7 +62,7 @@ export function AppointmentDetail() {
   const past = start.getTime() < Date.now()
 
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24">
+    <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24 md:pb-10">
       <Link to="/visits" className="text-small font-medium text-primary">
         {t("back")}
       </Link>

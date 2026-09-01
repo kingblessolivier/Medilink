@@ -42,7 +42,7 @@ export function Gallery() {
   const [value, setValue] = useState("")
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-6 pb-24">
+    <div className="mx-auto w-full max-w-3xl px-4 py-6 pb-24 md:pb-10">
       <h1 className="text-h1">Component gallery</h1>
       <p className="mt-1 text-body text-ink-muted">
         One of everything, in every state. If something here looks unstyled,

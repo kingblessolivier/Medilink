@@ -1,5 +1,6 @@
+import { useState } from "react"
 import { useSearchParams } from "react-router-dom"
-import { IconStethoscope } from "../ui/icons"
+import { IconChevronRight, IconStethoscope } from "../ui/icons"
 import { useI18n } from "../i18n"
 import { useProviders } from "../hooks/useProviders"
 import { useSpecialties } from "../hooks/useSpecialties"
@@ -46,6 +47,12 @@ export function Doctors() {
   // whole page rather than drop one filter. Narrow it here instead.
   const language = asLanguage(params.get("language"))
 
+  // Collapsed by default on a phone, always open from `sm` up. The count
+  // goes in the button label so a collapsed panel never hides the fact that
+  // the list is filtered.
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const activeFilters = [specialty, language].filter(Boolean).length
+
   const { data: specialtyData } = useSpecialties()
   useDistricts() // warmed for the facility links below
   const query = useProviders({ specialty, language, search, limit: 30 })
@@ -66,13 +73,20 @@ export function Doctors() {
   const results = query.data?.results ?? []
 
   return (
-    <div className="ml-page py-6 pb-24">
+    <div className="ml-page py-6 pb-24 md:pb-10">
       <h1 className="text-h1">{t("doctors_title")}</h1>
       <p className="mt-1 max-w-prose text-body text-ink-muted">
         {t("doctors_body")}
       </p>
 
-      <div className="ml-card mt-5 grid gap-3 p-4 sm:grid-cols-3">
+      {/* Search first and full width, filters under it.
+          All three controls shared one three-column card, which gave the
+          search field a third of the row - the same weight as "Language
+          spoken", on the control people actually use. On a phone the two
+          selects then stacked under it, so the list of doctors started below
+          the fold. Search is now its own row; the selects sit under it on a
+          wide screen and collapse behind a Filters button on a narrow one. */}
+      <div className="mt-5 space-y-3">
         <Field label={t("search_by_name")}>
           {(id) => (
             <TextInput
@@ -85,6 +99,32 @@ export function Doctors() {
           )}
         </Field>
 
+        <div className="sm:hidden">
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((open) => !open)}
+            aria-expanded={filtersOpen}
+            aria-controls="doctor-filters"
+            className="ml-btn-secondary w-full justify-between"
+          >
+            <span>
+              {activeFilters > 0
+                ? t("filters_active", { n: activeFilters })
+                : t("filters")}
+            </span>
+            <IconChevronRight
+              size={16}
+              className={filtersOpen ? "rotate-90 transition-transform" : "transition-transform"}
+            />
+          </button>
+        </div>
+
+        <div
+          id="doctor-filters"
+          className={
+            "gap-3 sm:grid sm:grid-cols-2 " + (filtersOpen ? "grid" : "hidden")
+          }
+        >
         <Field label={t("group_specialties")}>
           {(id) => (
             <Select
@@ -118,6 +158,7 @@ export function Doctors() {
             </Select>
           )}
         </Field>
+        </div>
       </div>
 
       <div className="mb-3 mt-5 flex items-baseline justify-between">

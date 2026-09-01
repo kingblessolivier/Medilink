@@ -53,7 +53,7 @@ export function Visits() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 pb-24 pt-4">
+    <div className="mx-auto max-w-md px-4 pb-24 md:pb-10 pt-4">
       <h1 className="mb-4 text-h1">{t("visits_title")}</h1>
 
       {cancel.isError && (

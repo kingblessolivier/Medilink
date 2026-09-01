@@ -10,6 +10,7 @@ import {
 import { useSpecialties } from "../hooks/useSpecialties"
 import { useInsurerPreference } from "../hooks/useInsurerPreference"
 import { FacilityCard } from "../components/FacilityCard"
+import { NoLiveWaitNote } from "../components/NoLiveWaitNote"
 import { DistrictPicker } from "../components/DistrictPicker"
 import { CachedNotice } from "../components/CachedNotice"
 import { Button, Chip, EmptyState, ErrorState, Field, ListSkeleton, Notice, Select, Skeleton } from "../ui"
@@ -250,6 +251,7 @@ export function FindCare() {
               />
             ))}
           </div>
+          <NoLiveWaitNote facilities={results} className="mt-3" />
         </div>
 
         {/* ---------------------------------------------------- map column */}

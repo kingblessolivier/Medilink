@@ -66,7 +66,7 @@ export function CareGuide() {
 
   if (!status.available) {
     return (
-      <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24">
+      <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24 md:pb-10">
         <h1 className="text-h1">{t("care_guide")}</h1>
         <div className="mt-4">
           {/* Not an error. Nothing is broken - the feature is waiting on a
@@ -119,7 +119,7 @@ export function CareGuide() {
   // --------------------------------------------------------------- landing
   if (!session) {
     return (
-      <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24">
+      <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24 md:pb-10">
         <h1 className="text-h1">{t("care_guide")}</h1>
         <p className="mt-2 text-body text-ink-muted">{t("care_guide_intro")}</p>
 
@@ -185,7 +185,7 @@ export function CareGuide() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24">
+    <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24 md:pb-10">
       {/* Staged progress. The total is unknown - the protocol branches - so
           this counts what has been answered rather than faking a bar that
           would jump backwards when a branch turns out to be longer. */}
@@ -280,7 +280,7 @@ function Emergency({
 }) {
   const { t } = useI18n()
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24">
+    <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24 md:pb-10">
       {/* The flow is over. There is deliberately no way back into it - a
           patient who has been told to seek emergency care must not be able to
           answer their way out of that advice. */}
@@ -341,7 +341,7 @@ function Result({
       : ""
 
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24">
+    <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24 md:pb-10">
       <h1 className="text-h1">{t("care_guide_result_title")}</h1>
 
       {recommendation ? (

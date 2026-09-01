@@ -55,7 +55,7 @@ export function Notifications() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24">
+    <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24 md:pb-10">
       <h1 className="text-h1">{t("notifications_title")}</h1>
 
       {/* --------------------------------------------------- preferences */}
