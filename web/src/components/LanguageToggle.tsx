@@ -37,7 +37,7 @@ export function LanguageToggle() {
 
       {/* Wide: all three, so the choice is visible rather than discovered. */}
       <div
-        className="hidden gap-1 sm:flex"
+        className="hidden rounded-lg border border-line bg-surface-sunken p-0.5 sm:flex"
         role="group"
         aria-label={t("language")}
       >
@@ -48,12 +48,17 @@ export function LanguageToggle() {
             aria-pressed={lang === code}
             // 36x26 before this: below any usable touch target, on a control
             // that appears on every screen.
+            // One bordered group, not three separate buttons. Three boxed
+            // controls with a solid green fill on the current one put a
+            // saturated brand-coloured block in the top bar of every screen,
+            // competing with Sign in. A segmented control reads as one
+            // setting, and the selected segment only needs a surface lift.
             className={
               "inline-flex min-h-touch min-w-touch items-center justify-center " +
-              "rounded-lg px-3 text-caption font-medium uppercase " +
+              "rounded-md px-2.5 text-caption font-semibold uppercase transition-colors " +
               (lang === code
-                ? "bg-primary text-white"
-                : "border border-line bg-surface text-ink-muted")
+                ? "bg-surface text-ink shadow-sm"
+                : "text-ink-subtle hover:text-ink")
             }
           >
             {code}

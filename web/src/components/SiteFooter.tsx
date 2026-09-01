@@ -42,9 +42,15 @@ export function SiteFooter() {
           line ends up 25px behind the nav bar. */}
       <div className="ml-shell pt-8 pb-24 md:pb-8">
         {/* Emergency first, and unmissable. Not a link among links. */}
+        {/* Compact, and it stops where its content stops. Stretched to the
+            full 88rem shell it became a pink band across the bottom of every
+            page - loud enough to read as a site-wide error state, which is
+            the opposite of what an emergency affordance should feel like on
+            a page nobody is panicking on. Constrained, it is still the first
+            and most contrasting thing in the footer. */}
         <a
           href={`tel:${emergency}`}
-          className="flex items-center gap-3 rounded-lg border border-danger-border bg-danger-subtle p-3 text-ink no-underline hover:bg-danger-subtle/70"
+          className="inline-flex w-full max-w-sm items-center gap-3 rounded-xl border border-danger-border bg-danger-subtle p-3 text-ink no-underline transition-colors hover:bg-danger-subtle/70"
         >
           <span className="ml-icon-plate bg-danger text-white">
             <IconPhone size={18} />
@@ -60,7 +66,7 @@ export function SiteFooter() {
         </a>
 
         <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="lg:col-span-2">
+          <div>
             <p className="text-h3 font-semibold text-primary">MediLink</p>
             <p className="mt-1 max-w-prose text-small text-ink-muted">
               {t("footer_tagline")}
@@ -90,9 +96,21 @@ export function SiteFooter() {
             <ul className="mt-3 space-y-2">
               <FooterLink to="/visits">{t("nav_visits")}</FooterLink>
               <FooterLink to="/profile">{t("nav_profile")}</FooterLink>
-              <FooterLink to="/privacy">{t("footer_privacy_link")}</FooterLink>
-              <FooterLink to="/about">{t("about_title")}</FooterLink>
+            </ul>
+          </nav>
+
+          {/* Support was folded into "Your account", which left one column
+              carrying five unrelated links and the brand column spanning half
+              the footer with a single sentence in it. Four columns of roughly
+              equal weight read as a structure rather than as leftovers. */}
+          <nav aria-label={t("footer_support")}>
+            <p className="text-caption font-semibold uppercase tracking-wide text-ink-subtle">
+              {t("footer_support")}
+            </p>
+            <ul className="mt-3 space-y-2">
               <FooterLink to="/help">{t("help_title")}</FooterLink>
+              <FooterLink to="/about">{t("about_title")}</FooterLink>
+              <FooterLink to="/privacy">{t("footer_privacy_link")}</FooterLink>
             </ul>
           </nav>
         </div>

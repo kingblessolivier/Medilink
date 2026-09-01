@@ -115,7 +115,7 @@ export function Home() {
       {!queue.data && (
         <section
           className={
-            "relative overflow-hidden bg-hero-wash text-white " +
+            "relative overflow-hidden border-b border-line bg-hero-wash text-ink " +
             (nextAppointment ? "mt-4" : "")
           }
         >
@@ -128,26 +128,26 @@ export function Home() {
           />
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/5"
+            className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-primary/[0.06]"
           />
 
-          <div className="ml-shell relative grid gap-10 py-10 sm:py-14 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-center lg:gap-16 lg:py-20">
+          <div className="ml-shell relative grid gap-10 py-10 sm:py-12 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-center lg:gap-14 lg:py-16">
             {/* 42rem ran the subhead to 82 characters a line on a 1920
                 monitor - past the 45-75 that stays comfortable to read. The
                 headline is short enough not to care; the sentence under it
                 is not. */}
             <div className="max-w-xl">
-              <p className="text-small font-medium text-white/70">
+              <p className="text-small font-medium uppercase tracking-wide text-primary">
                 {patient?.full_name
                   ? t("greeting_named", { name: patient.full_name })
                   : t("greeting")}
               </p>
               <h1 className="mt-2 text-h1 sm:text-display">{t("hero_title")}</h1>
-              <p className="mt-3 max-w-prose text-body-lg text-white/80">
+              <p className="mt-3 max-w-prose text-body-lg text-ink-muted">
                 {t("hero_body")}
               </p>
 
-              <div className="mt-6 [--tw-ring-color:transparent]">
+              <div className="mt-6">
                 <GlobalSearch coords={coords} />
               </div>
 
@@ -162,7 +162,7 @@ export function Home() {
               <div className="mt-4 flex flex-wrap gap-2">
                 <Link
                   to="/search"
-                  className="ml-btn inline-flex border border-white/30 text-white hover:bg-white/10"
+                  className="ml-btn-secondary inline-flex"
                 >
                   <IconSearch size={17} />
                   {t("find_care")}
@@ -172,7 +172,7 @@ export function Home() {
                 {triage.available && (
                   <Link
                     to="/care-guide"
-                    className="ml-btn inline-flex border border-white/30 text-white hover:bg-white/10"
+                    className="ml-btn-secondary inline-flex"
                   >
                     <IconHeart size={17} />
                     {t("start_care_guide")}
@@ -185,15 +185,15 @@ export function Home() {
                 right-hand column on a wide screen - which is what stops a
                 1440px viewport being half empty green - and fall back to a
                 strip underneath the copy on anything narrower. */}
-            <ul className="grid gap-5 border-t border-white/15 pt-6 sm:grid-cols-3 lg:grid-cols-1 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+            <ul className="grid gap-5 border-t border-line pt-6 sm:grid-cols-3 lg:grid-cols-1 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
               {VALUE_POINTS.map(({ Glyph, title, body }) => (
                 <li key={title} className="flex gap-3">
-                  <span className="ml-icon-plate bg-white/10 text-white">
+                  <span className="ml-icon-plate bg-primary-subtle text-primary">
                     <Glyph size={18} />
                   </span>
                   <span>
                     <span className="block text-body font-medium">{t(title)}</span>
-                    <span className="mt-0.5 block text-small text-white/70">
+                    <span className="mt-0.5 block text-small text-ink-muted">
                       {t(body)}
                     </span>
                   </span>
@@ -316,8 +316,11 @@ export function Home() {
               </Link>
             }
           >
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {doctors.data?.results.map((doctor) => (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {/* Three, to fill the row exactly. The API returns four, which
+                  left one card stranded on a second row under two columns of
+                  whitespace - the "See all" link is the route to the rest. */}
+              {doctors.data?.results.slice(0, 3).map((doctor) => (
                 <DoctorCard key={doctor.slug} doctor={doctor} />
               ))}
             </div>

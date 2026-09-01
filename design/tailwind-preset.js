@@ -160,10 +160,18 @@ export default {
         // The hero. A single soft wash rather than a photograph: stock
         // imagery of smiling clinicians is the visual language of marketing,
         // and this is a tool people open when they are unwell.
+        //
+        // It used to be a saturated green block with white text, which made
+        // the first screen of the product a solid slab of brand colour and
+        // put green - the colour that means "open", "verified", "available"
+        // everywhere else - on 400px of decoration. Rule 1 of the design
+        // system is that green is not the interface. The hero is now a light
+        // surface with green used only as an accent, so the eye still lands
+        // on the search field rather than on the background.
         "hero-wash":
-          "radial-gradient(120% 100% at 15% 0%, #0E7A61 0%, #0B6B55 42%, #084C3D 100%)",
+          "radial-gradient(120% 120% at 85% -10%, #EEF5F2 0%, #F7F9F8 45%, #FFFFFF 100%)",
         "hero-grid":
-          "linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px)",
+          "linear-gradient(rgba(11,107,85,0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(11,107,85,0.055) 1px, transparent 1px)",
       },
 
       backgroundSize: {
