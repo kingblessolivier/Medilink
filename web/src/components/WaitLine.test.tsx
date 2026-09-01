@@ -21,11 +21,14 @@ function wait(status: WaitStatus, minutes: number | null = null): Wait {
   }
 }
 
-function renderWait(value: Wait, lang = "en") {
+function renderWait(
+  value: Wait,
+  { lang = "en", omitUnknown = false }: { lang?: string; omitUnknown?: boolean } = {},
+) {
   window.localStorage.setItem("medilink.language", lang)
   return render(
     <I18nProvider>
-      <WaitLine wait={value} />
+      <WaitLine wait={value} omitUnknown={omitUnknown} />
     </I18nProvider>,
   )
 }
@@ -46,10 +49,40 @@ describe("WaitLine", () => {
     "shows no number for %s",
     (status) => {
       const { container } = renderWait(wait(status))
-      expect(screen.getByText(/not available/i)).toBeInTheDocument()
+      // Asserted on behaviour, not on the sentence: the copy is a
+      // translation key and rewording it must not fail the suite. What must
+      // never change is that an unknown wait carries no number.
+      expect(container.textContent?.trim()).not.toBe("")
       expect(container.textContent).not.toMatch(/\d+\s*min/i)
     },
   )
+
+  it.each<[WaitStatus]>([["not_reported"], ["insufficient_data"]])(
+    "renders %s as plain text, never as a chip",
+    (status) => {
+      // A pill is for a fact worth scanning. Six services with no live data
+      // produced six identical grey pills, which read as broken widgets
+      // rather than as one honest gap - so the unknown state must stay
+      // unboxed. Guards the regression, not the wording.
+      const { container } = renderWait(wait(status))
+      expect(container.querySelector('[class*="ml-chip"]')).toBeNull()
+    },
+  )
+
+  it.each<[WaitStatus]>([["not_reported"], ["insufficient_data"]])(
+    "renders nothing for %s when the caller explains the gap itself",
+    (status) => {
+      // FacilityDetail lists six services and states the absence once below
+      // the list instead of once per row.
+      const { container } = renderWait(wait(status), { omitUnknown: true })
+      expect(container.textContent?.trim()).toBe("")
+    },
+  )
+
+  it("still shows a chip for a wait we actually know", () => {
+    const { container } = renderWait(wait("available", 40))
+    expect(container.querySelector('[class*="ml-chip"]')).not.toBeNull()
+  })
 
   it("says closed rather than showing a wait", () => {
     const { container } = renderWait(wait("closed", 40))

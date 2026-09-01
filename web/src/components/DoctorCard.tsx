@@ -56,11 +56,18 @@ export function DoctorCard({ doctor }: { doctor: Provider }) {
           </p>
         )}
 
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        {/* Verification is asymmetric on purpose.
+            A checked profile earns a chip: it is a positive fact, and there
+            will be few of them. An unchecked one is the DEFAULT - every
+            doctor starts here - so a pill on each of twelve cards made "not
+            yet verified" the loudest repeated element on the directory and
+            read as twelve warnings. Stated, not shouted: same words, plain
+            text, quietest colour in the system. */}
+        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
           {doctor.verified ? (
             <Chip tone="success">{t("verified")}</Chip>
           ) : (
-            <Chip tone="unknown">{t("not_yet_verified")}</Chip>
+            <span className="text-caption text-unknown">{t("not_yet_verified")}</span>
           )}
           {doctor.languages.length > 0 && (
             <span className="text-caption text-ink-subtle">
@@ -68,7 +75,22 @@ export function DoctorCard({ doctor }: { doctor: Provider }) {
             </span>
           )}
         </div>
+
+        {/* The whole card is already the link; this is the visible affordance
+            for it, because the cards read as inert blocks without one. It
+            sits in the content flow rather than beside the name - placed in
+            the right-hand gutter it stole width from the heading and broke
+            "Dr Bizimana Thierry" across two lines in the 4-up grid.
+            Deliberately NOT an anchor: a second link inside a stretched-link
+            card gives a screen reader two targets for one destination. */}
+        <span
+          aria-hidden="true"
+          className="mt-2 block text-small font-medium text-primary"
+        >
+          {t("view_profile")}
+        </span>
       </div>
+
     </Card>
   )
 }

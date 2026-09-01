@@ -87,7 +87,12 @@ export function FacilityCard({
         {/* Hidden, not blanked: a district search has no distance to show,
             and an empty slot reads as a value that failed to load. */}
         {distance && (
-          <span className="flex shrink-0 items-center gap-1 text-small font-medium tabular-nums text-ink-muted">
+          // Distance is the single fact that orders these results and the
+          // one a patient scans down the column for. At text-small in muted
+          // grey it sat below the facility type in visual weight and read as
+          // metadata. Same position, full ink, tabular so the column does not
+          // jitter between "800 m" and "2.8 km".
+          <span className="flex shrink-0 items-center gap-1 text-body font-semibold tabular-nums text-ink">
             <IconPin size={14} className="text-ink-subtle" />
             {distance}
           </span>

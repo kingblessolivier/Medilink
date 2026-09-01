@@ -6,9 +6,9 @@ import type { Wait, WaitStatus } from "../api/types"
 /**
  * Where the honesty rule reaches the screen.
  *
- * Four states, and only one of them may carry a number. The `unknown` tone is
- * the quietest in the design system on purpose: a patient must be able to tell
- * "we do not know" from "we know" at a glance, without reading the words.
+ * Four states, and only one of them may carry a number. A patient must be able
+ * to tell "we do not know" from "we know" at a glance, without reading the
+ * words.
  *
  * There is deliberately no "estimated" state. We never guess a wait time.
  */
@@ -32,14 +32,42 @@ const TONE: Record<WaitStatus, ChipTone> = {
  * Recorded here because it looks like an oversight and is not.
  */
 
-export function WaitLine({ wait, className }: { wait: Wait; className?: string }) {
+export function isWaitKnown(wait: Wait): boolean {
+  return wait.status === "available"
+}
+
+/**
+ * Unknown wait times are TEXT, not a chip.
+ *
+ * They used to render as a bordered pill, the same shape as "Open until 12:00"
+ * next to it. Because almost no facility reports live queue data yet, a
+ * results page showed six identical grey pills all saying the same thing, and
+ * a facility page showed one per service - which reads as six broken widgets
+ * rather than as one honest absence.
+ *
+ * A pill is for a fact worth scanning. "We do not know" is worth stating once,
+ * quietly, in the flow of the text. Rule 4 of the design system - unknown data
+ * is the quietest thing on screen - is better served by weight and colour than
+ * by drawing a box around it.
+ *
+ * Callers with many rows should pass `omitUnknown` and explain the absence
+ * once at section level instead. See FacilityDetail's availability list.
+ */
+export function WaitLine({
+  wait,
+  className,
+  omitUnknown = false,
+}: {
+  wait: Wait
+  className?: string
+  omitUnknown?: boolean
+}) {
   const { t, lang } = useI18n()
-  const tone = TONE[wait.status]
 
   if (wait.status === "available") {
     return (
       <div className={className}>
-        <Chip tone={tone}>
+        <Chip tone={TONE.available}>
           {t("wait_about", { minutes: roundTo5(wait.minutes ?? 0) })}
         </Chip>
         {/* Staleness is never hidden. A stale number that looks live is worse
@@ -54,14 +82,16 @@ export function WaitLine({ wait, className }: { wait: Wait; className?: string }
   if (wait.status === "closed") {
     return (
       <div className={className}>
-        <Chip tone={tone}>{t("closed")}</Chip>
+        <Chip tone={TONE.closed}>{t("closed")}</Chip>
       </div>
     )
   }
 
+  if (omitUnknown) return null
+
   return (
-    <div className={className}>
-      <Chip tone={tone}>{t("wait_unavailable")}</Chip>
-    </div>
+    <p className={className}>
+      <span className="text-caption text-unknown">{t("wait_unavailable")}</span>
+    </p>
   )
 }

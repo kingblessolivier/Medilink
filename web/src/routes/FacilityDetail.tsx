@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react"
 import { Link, useParams } from "react-router-dom"
 import { IconHospital } from "../ui/icons"
 import { useQueries, useQuery } from "@tanstack/react-query"
@@ -19,7 +20,15 @@ import {
   TabPanel,
   Tabs,
 } from "../ui"
-import type { FacilityDetail as Detail, ServiceCoverage } from "../api/types"
+import type {
+  Facility as NearbyFacility,
+  FacilityDetail as Detail,
+  ServiceCoverage,
+} from "../api/types"
+
+// Same treatment as FindCare: maplibre is 250 KB gzipped and must never sit in
+// the entry bundle for a patient who only wanted opening hours.
+const FacilityMap = lazy(() => import("../components/FacilityMap"))
 
 const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6]
 
@@ -87,12 +96,12 @@ export function FacilityDetail() {
 
           {/* -------------------------------------------------- overview */}
           <TabPanel value="overview">
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
               <section>
-                <h2 className="text-h3 mb-2">{t("current_status")}</h2>
+                <h2 className="text-h3">{t("availability_title")}</h2>
                 {/* Per-service status is the answer to "how busy is the thing
                     I need", which is what a patient actually asks. */}
-                <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+                <ul className="mt-3 divide-y divide-line rounded-xl border border-line bg-surface">
                   {data.services.slice(0, 6).map((service) => (
                     // Stacks on a narrow screen. Side by side, the service
                     // name was the half that gave way - and it is the half
@@ -107,32 +116,64 @@ export function FacilityDetail() {
                       <span className="min-w-0 text-body sm:truncate">
                         {label(service)}
                       </span>
-                      <WaitLine wait={service.wait} className="shrink-0" />
+                      {/* The unknown state is suppressed per row and stated
+                          once below instead. Six services with no live queue
+                          data produced six identical "Wait time not
+                          available" chips stacked down the page, which reads
+                          as six broken widgets rather than one honest gap. */}
+                      <WaitLine wait={service.wait} className="shrink-0" omitUnknown />
                     </li>
                   ))}
                 </ul>
+                {!data.services.slice(0, 6).some((s) => s.wait.status === "available") && (
+                  <p className="mt-2 text-small text-ink-muted">
+                    {t("wait_unavailable_explained")}
+                  </p>
+                )}
               </section>
 
+              {/* Location is not a row in a table. A patient deciding whether
+                  to travel needs to see where this is, and the map is the
+                  fastest way to answer that - so the address, the phone and
+                  the map are one block, with directions as its action. */}
               <section>
-                <h2 className="text-h3 mb-2">{t("facility_information")}</h2>
-                <dl className="divide-y divide-line rounded-xl border border-line bg-surface">
-                  <Row label={t("compare_district")}>
-                    {placeLabel(data.sector, data.district)}
-                  </Row>
-                  {data.address && <Row label={t("address")}>{data.address}</Row>}
-                  {data.phone && (
-                    <Row label={t("phone")}>
-                      <a href={`tel:${data.phone}`} className="text-primary underline">
-                        {data.phone}
-                      </a>
-                    </Row>
-                  )}
-                  <Row label={t("verified")}>
-                    {data.verified_at
-                      ? new Date(data.verified_at).toLocaleDateString()
-                      : t("not_yet_verified")}
-                  </Row>
-                </dl>
+                <h2 className="text-h3">{t("location_title")}</h2>
+                <div className="mt-3 overflow-hidden rounded-xl border border-line bg-surface">
+                  <div className="h-52 border-b border-line">
+                    <Suspense
+                      fallback={<Skeleton className="h-full w-full rounded-none" />}
+                    >
+                      <FacilityMap
+                        facilities={[data as unknown as NearbyFacility]}
+                        center={data.location}
+                        selectedSlug={data.slug}
+                        onSelect={() => {}}
+                      />
+                    </Suspense>
+                  </div>
+                  <div className="space-y-1 p-4">
+                    <p className="text-body">
+                      {placeLabel(data.sector, data.district)}
+                    </p>
+                    {data.address && (
+                      <p className="text-small text-ink-muted">{data.address}</p>
+                    )}
+                    {data.phone && (
+                      <p className="text-small">
+                        <a href={`tel:${data.phone}`} className="text-primary underline">
+                          {data.phone}
+                        </a>
+                      </p>
+                    )}
+                    <p className="pt-1 text-caption text-ink-subtle">
+                      {data.verified_at
+                        ? t("verified_on", {
+                            date: new Date(data.verified_at).toLocaleDateString(),
+                          })
+                        : t("not_yet_verified")}
+                    </p>
+                  </div>
+                </div>
               </section>
             </div>
           </TabPanel>

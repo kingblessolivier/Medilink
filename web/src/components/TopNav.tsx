@@ -124,11 +124,18 @@ export function TopNav({
                 <NavLink
                   to={to}
                   end={end}
+                  // Active state is weight, colour and a 2px underline - not
+                  // a filled plate. A tinted box on every active item put a
+                  // second competing "button" in a bar that already has a
+                  // primary action in it, and read as heavier than the Sign
+                  // in button it sat beside. The underline is the quieter
+                  // convention and leaves the bar visually light.
                   className={({ isActive }) =>
-                    "flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-body transition-colors " +
+                    "relative flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-body transition-colors " +
+                    "after:absolute after:inset-x-3 after:-bottom-px after:h-0.5 after:rounded-full after:transition-colors " +
                     (isActive
-                      ? "bg-primary-subtle font-medium text-primary"
-                      : "text-ink-muted hover:bg-surface-sunken hover:text-ink")
+                      ? "font-medium text-ink after:bg-primary"
+                      : "text-ink-muted after:bg-transparent hover:text-ink")
                   }
                 >
                   {/* Same glyphs as the bottom tab bar, so moving between a
