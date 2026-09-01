@@ -37,6 +37,54 @@ Each option must do exactly one of three things, or the protocol fails to load:
 `recommend_service` must use a `ServiceType.code` that exists in the database,
 so the recommendation joins straight onto the facility directory.
 
+## Optional: free-text entry points
+
+A patient may type how they feel instead of starting at the first question.
+Add `symptom_entries` to the protocol file:
+
+```json
+"symptom_entries": [
+  {
+    "question": "dental_pain",
+    "phrases": {
+      "rw": ["amenyo arambabaza"],
+      "en": ["my tooth hurts", "toothache"],
+      "fr": ["mal aux dents"]
+    }
+  }
+]
+```
+
+**What this is, and is not.** A phrase list chooses WHICH QUESTION the flow
+starts on. It never chooses an outcome. The recommendation still comes from
+the questions a clinician signed, reached by the same path as the menu. That
+is what keeps the whole protocol signable as one artefact - the lexicon lives
+inside the protocol file, so it carries the same `version` and the same
+signature and cannot drift from the routing it feeds.
+
+**Screening is unaffected.** The engine asks every red-flag question before it
+consults the entry point, so no phrase - and no failure to match one - can
+route a patient past emergency screening. A test asserts this for every phrase
+in the lexicon.
+
+The rules the loader enforces:
+
+- every `question` must exist in this protocol
+- all three languages are required per entry; Kinyarwanda is the default
+  language of this product, and an English-only list silently ignores most
+  patients
+- no duplicate entries for one question - merge the phrase lists instead, so
+  matching cannot depend on declaration order
+- no blank phrases; a blank normalises to nothing and would match every input
+
+Matching is deterministic substring matching with word boundaries, after
+case-folding and accent-stripping. The longest matching phrase wins, ties
+break on declaration order. Omit `symptom_entries` entirely for a menu-only
+protocol, which is how every protocol behaved before this existed.
+
+The typed text is never stored. It is matched, reduced to a question code, and
+dropped.
+
 ## Getting it reviewed
 
 Validate the structure, then generate the document the clinician actually

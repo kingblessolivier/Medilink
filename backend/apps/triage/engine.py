@@ -73,11 +73,31 @@ class SessionState:
         return cls(session_id=session_id, **data)
 
 
-def new_session(protocol: Protocol) -> SessionState:
+def new_session(protocol: Protocol, symptom_text: str = "") -> SessionState:
+    """Start a flow, optionally from something the patient typed.
+
+    `symptom_text` only chooses WHERE the routing questions begin. It cannot
+    reach an outcome and it cannot skip screening: `next_question` below still
+    asks every red-flag question first, so the entry point is not consulted
+    until screening is done. See lexicon.py for why that ordering is the whole
+    safety argument.
+
+    The text is not stored. It is matched here, reduced to a question code,
+    and dropped - the session keeps the code, never the sentence.
+    """
+    answers: dict = {}
+
+    if symptom_text:
+        from .lexicon import entry_question
+
+        question = entry_question(protocol, symptom_text)
+        if question:
+            answers["__entry__"] = question
+
     state = SessionState(
         session_id=secrets.token_urlsafe(16),
         protocol_version=protocol.version,
-        answers={},
+        answers=answers,
         asked=[],
     )
     save(state)
@@ -110,9 +130,31 @@ def next_question(protocol: Protocol, state: SessionState) -> Question | None:
             return question
 
     pending = state.answers.get("__next__") or protocol.first_question
+
+    # A typed entry point replaces the FIRST routing question and nothing
+    # else. It is kept under its own key because red-flag options carry their
+    # own `next_question` - "no, I have no chest pain" points at the normal
+    # menu - and that write would otherwise overwrite what the patient typed
+    # the moment they cleared screening.
+    #
+    # Once any routing question has been asked the flow owns the sequence
+    # again, so the entry point stops applying rather than pulling the patient
+    # back to where they came in.
+    entry = state.answers.get("__entry__")
+    if entry and not _routing_started(protocol, state):
+        pending = entry
+
     if pending in state.asked:
         return None
     return protocol.question(pending)
+
+
+def _routing_started(protocol: Protocol, state: SessionState) -> bool:
+    """Has anything other than red-flag screening been asked yet?"""
+    return any(
+        (question := protocol.question(code)) is not None and not question.red_flag
+        for code in state.asked
+    )
 
 
 def answer(

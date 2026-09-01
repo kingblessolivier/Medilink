@@ -15,6 +15,20 @@ class TriageStatusSerializer(serializers.Serializer):
     reason = serializers.CharField(allow_blank=True)
 
 
+class StartSessionSerializer(serializers.Serializer):
+    """Optional free text describing how the patient feels.
+
+    Capped hard. This is matched against a phrase list and then discarded, so
+    there is no reason to accept an essay - and an unbounded field that is
+    normalised character by character is a cheap way to burn CPU on a public
+    endpoint.
+    """
+
+    symptom_text = serializers.CharField(
+        required=False, allow_blank=True, max_length=300, trim_whitespace=True
+    )
+
+
 class TriageOptionSerializer(serializers.Serializer):
     code = serializers.CharField()
     text = TranslationSerializer()

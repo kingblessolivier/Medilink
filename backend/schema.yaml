@@ -1770,6 +1770,17 @@ paths:
       summary: Start a triage session
       tags:
       - triage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartSession'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StartSession'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StartSession'
       security:
       - patientJWT: []
       - jwtAuth: []
@@ -4374,6 +4385,19 @@ components:
       - coverage
       - name_en
       - note
+    StartSession:
+      type: object
+      description: |-
+        Optional free text describing how the patient feels.
+
+        Capped hard. This is matched against a phrase list and then discarded, so
+        there is no reason to accept an essay - and an unbounded field that is
+        normalised character by character is a cheap way to burn CPU on a public
+        endpoint.
+      properties:
+        symptom_text:
+          type: string
+          maxLength: 300
     Sync:
       type: object
       properties:
