@@ -37,6 +37,25 @@ Each option must do exactly one of three things, or the protocol fails to load:
 `recommend_service` must use a `ServiceType.code` that exists in the database,
 so the recommendation joins straight onto the facility directory.
 
+## Getting it reviewed
+
+Validate the structure, then generate the document the clinician actually
+reads and signs:
+
+```bash
+python manage.py check_triage_protocol path/to/routing.2026.1.json
+python manage.py export_triage_review path/to/routing.2026.1.json --lang rw --output review.rw.txt
+python manage.py export_triage_review path/to/routing.2026.1.json --lang en --output review.en.txt
+python manage.py export_triage_review path/to/routing.2026.1.json --lang fr --output review.fr.txt
+```
+
+The review document writes out every path a patient can take, in the order the
+engine asks the questions, with the outcome of each. It also lists which
+directory services the protocol can never reach - not an error, but a gap the
+clinician should decide about deliberately rather than discover from a patient.
+
+It needs no database; without one it omits only the coverage section.
+
 ## Rules the engine enforces for you
 
 1. **Red-flag questions are asked first**, before any routing question.

@@ -259,6 +259,27 @@ The recommendation is always a `ServiceType` code, never a condition name, and
 `manage.py check_triage_protocol` fails if a protocol routes to a service the
 facility directory does not have.
 
+### Producing the document the clinician signs
+
+Validation proves a protocol is well formed. It says nothing about whether the
+routing is clinically right, which is the only question the sign-off asks - and
+a clinician cannot answer it from the JSON, because the flow is a graph stored
+as a flat list of questions keyed by code.
+
+    python manage.py export_triage_review <file> --lang rw --output review.rw.txt
+
+This renders every distinct path a patient can take, end to end, in the
+language the patient reads, plus the red-flag screens, the service coverage in
+both directions, and the sign-off block naming the four settings the signature
+authorises. Run it once per language; the Kinyarwanda document is the one that
+matters most, and the one most likely to contain a translation that changed the
+clinical meaning.
+
+The paths it prints are the paths the engine runs - `enumerate_paths` mirrors
+`engine.next_question`, including red-flags-first ordering and one-way
+escalation, and a test replays every enumerated path through the real engine so
+the document cannot drift out of date without the suite failing.
+
 Session answers live in Redis with a 30-minute TTL and are discarded the moment
 the flow ends. Only `TriageOutcome` persists, and it deliberately has no
 patient link, no session id and no answers - just protocol version, outcome,
