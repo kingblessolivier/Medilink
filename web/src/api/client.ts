@@ -219,8 +219,16 @@ export const api = {
   // is the gate working, not an outage - the UI must already have hidden the
   // entry point, and treats a 503 here as "not available yet", never as an
   // error to retry. See docs/08 section 8.
-  triageStart: () =>
-    request<TriageSession>("/triage/sessions", { method: "POST", auth: false }),
+  // `symptomText` is optional free text describing how the patient feels. The
+  // backend matches it to an ENTRY POINT in the signed protocol and discards
+  // it - it never reaches an outcome, and it is not stored. Omitted entirely
+  // when blank so the request body stays empty for the menu-only path.
+  triageStart: (symptomText?: string) =>
+    request<TriageSession>("/triage/sessions", {
+      method: "POST",
+      auth: false,
+      body: symptomText?.trim() ? { symptom_text: symptomText.trim() } : {},
+    }),
 
   triageAnswer: (sessionId: string, question: string, option: string) =>
     request<TriageSession>(`/triage/sessions/${sessionId}/answer`, {

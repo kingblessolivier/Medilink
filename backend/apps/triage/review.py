@@ -288,6 +288,37 @@ def render(
             add(f"  => OUTCOME: routed to service '{outcome.recommend_service}'")
         add("")
 
+    # ------------------------------------------------------- symptom entries
+    rule()
+    add("FREE-TEXT ENTRY POINTS")
+    rule()
+    add("")
+    if not protocol.symptom_entries:
+        add("  None. This protocol is menu-only: patients answer questions")
+        add("  from the first one, and cannot type how they feel.")
+        add("")
+    else:
+        add("A patient may type how they feel instead of starting at the")
+        add("first question. What they type is matched against the phrases")
+        add("below and used ONLY to choose which question the flow starts on.")
+        add("")
+        add("It cannot reach an outcome, and it cannot skip screening: the")
+        add("red-flag questions above are asked first whatever was typed.")
+        add("These phrases are yours to review - a phrase on the wrong entry")
+        add("starts a patient in the wrong part of the flow.")
+        add("")
+        for entry in protocol.symptom_entries:
+            target = protocol.question(entry.question)
+            add(f"  STARTS AT: {entry.question}")
+            if target is not None:
+                for line in _wrap(target.text.get(lang, ""), width, "    "):
+                    add(line)
+            phrases = entry.phrases.get(lang, ())
+            add(f"    phrases ({lang}, {len(phrases)}):")
+            for phrase in phrases:
+                add(f"      - {phrase}")
+            add("")
+
     # -------------------------------------------------------------- coverage
     rule()
     add("SERVICE COVERAGE")

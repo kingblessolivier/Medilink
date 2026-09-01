@@ -34,3 +34,20 @@ CACHES = {
 
 # Fail fast rather than retrying against a gateway that is not there.
 SMS_BACKEND = "apps.notifications.sms.ConsoleSMSBackend"
+
+
+# **The clinical gate is shut for tests, whatever the developer's .env says.**
+#
+# test.py inherits dev.py, which reads backend/.env - so a developer who has
+# opened the gate locally (to demo the Care Guide, say) turns four gate tests
+# red, including `test_the_gate_is_shut_out_of_the_box`. Those tests assert a
+# SAFETY DEFAULT, and a safety default that any ambient config can flip is not
+# being tested at all.
+#
+# Tests that need the gate open set these explicitly with the `settings`
+# fixture, which is also what makes it obvious in the test which state it is
+# asserting.
+TRIAGE_PROTOCOL_VERSION = ""
+TRIAGE_APPROVED_BY = ""
+TRIAGE_APPROVED_ON = ""
+TRIAGE_PROTOCOL_FILE = ""

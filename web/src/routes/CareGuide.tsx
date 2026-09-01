@@ -34,9 +34,10 @@ export function CareGuide() {
 
   const [session, setSession] = useState<TriageSession | null>(null)
   const [answered, setAnswered] = useState(0)
+  const [symptomText, setSymptomText] = useState("")
 
   const start = useMutation({
-    mutationFn: api.triageStart,
+    mutationFn: () => api.triageStart(symptomText),
     onSuccess: (data) => {
       setSession(data)
       setAnswered(0)
@@ -136,12 +137,53 @@ export function CareGuide() {
           <Notice tone="warning">{t("care_guide_emergency_first")}</Notice>
         </div>
 
+        {/* Free text is an ENTRY POINT, not an answer.
+            What is typed here is matched against a clinician-authored phrase
+            list and used to choose which question the flow starts on - the
+            recommendation still comes from the signed protocol, by the same
+            path as the menu. Screening is unaffected: the red-flag questions
+            are asked first whatever was typed.
+
+            Optional on purpose. A patient who does not know what to write, or
+            would rather not type in Kinyarwanda on a phone keyboard, presses
+            the button and gets the menu, which is the behaviour that existed
+            before this field. */}
+        <div className="mt-6">
+          <label
+            htmlFor="symptom-text"
+            className="block text-body font-medium"
+          >
+            {t("care_guide_symptom_label")}
+          </label>
+          <p className="mt-1 text-small text-ink-muted">
+            {t("care_guide_symptom_hint")}
+          </p>
+          <textarea
+            id="symptom-text"
+            rows={3}
+            maxLength={300}
+            value={symptomText}
+            onChange={(event) => setSymptomText(event.target.value)}
+            placeholder={t("care_guide_symptom_placeholder")}
+            className={
+              "mt-2 w-full rounded-xl border border-line bg-surface px-4 py-3 " +
+              "text-body placeholder:text-ink-subtle focus-visible:outline-none " +
+              "focus-visible:ring-2 focus-visible:ring-primary"
+            }
+          />
+          <p className="mt-1.5 text-caption text-ink-subtle">
+            {t("care_guide_symptom_privacy")}
+          </p>
+        </div>
+
         <button
-          className="ml-btn-primary mt-6 w-full"
+          className="ml-btn-primary mt-4 w-full"
           disabled={start.isPending}
           onClick={() => start.mutate()}
         >
-          {t("care_guide_start")}
+          {symptomText.trim()
+            ? t("care_guide_start_with_symptoms")
+            : t("care_guide_start")}
         </button>
 
         {/* Paced by the real request, not a scripted delay - see

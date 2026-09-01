@@ -19,6 +19,7 @@ from .models import TriageOutcome
 from .protocol import ProtocolError, load
 from .serializers import (
     AnswerSerializer,
+    StartSessionSerializer,
     TriageSessionSerializer,
     TriageStatusSerializer,
 )
@@ -116,7 +117,9 @@ def status_view(request):
 
 @extend_schema(
     summary="Start a triage session",
-    request=None,  # no body; the first question comes back in the response
+    # Optional free text. Matched to an entry point and discarded - see
+    # lexicon.py. Never a diagnosis, and never stored.
+    request=StartSessionSerializer,
     responses=TriageSessionSerializer,
 )
 @api_view(["POST"])
@@ -131,7 +134,16 @@ def create_session(request):
         logger.exception("triage_protocol_invalid")
         return _unavailable(f"Symptom checker misconfigured: {exc}")
 
-    state = engine.new_session(protocol)
+    params = StartSessionSerializer(data=request.data or {})
+    params.is_valid(raise_exception=True)
+
+    # Deliberately NOT logged, here or anywhere. Free text about symptoms is
+    # the most sensitive thing a patient hands this product, and docs/08
+    # minimisation says we keep what we need: the matched question code, which
+    # new_session extracts and stores instead.
+    symptom_text = params.validated_data.get("symptom_text", "")
+
+    state = engine.new_session(protocol, symptom_text=symptom_text)
     return Response(_render(protocol, state, record), status=http.HTTP_201_CREATED)
 
 

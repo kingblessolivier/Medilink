@@ -43,6 +43,28 @@ class Question:
 
 
 @dataclass(frozen=True)
+class SymptomEntry:
+    """A way into the protocol from something a patient typed.
+
+    `phrases` is per language and clinician-authored. It carries NO clinical
+    meaning of its own: it only says "text like this starts at this question".
+    The routing decision stays in the questions, which is what keeps the whole
+    protocol signable as one artefact.
+    """
+
+    question: str
+    phrases: dict  # {"rw": [...], "en": [...], "fr": [...]}
+
+    @property
+    def all_phrases(self) -> tuple[str, ...]:
+        return tuple(
+            phrase
+            for language in REQUIRED_LANGUAGES
+            for phrase in self.phrases.get(language, ())
+        )
+
+
+@dataclass(frozen=True)
 class Protocol:
     version: str
     source: str
@@ -51,6 +73,9 @@ class Protocol:
     emergency_advice: dict
     questions: dict = field(default_factory=dict)
     first_question: str = ""
+    # Optional. A protocol with none is menu-only, which is the behaviour
+    # every existing protocol had before free-text entry existed.
+    symptom_entries: tuple = ()
 
     def question(self, code: str) -> Question | None:
         return self.questions.get(code)
@@ -148,6 +173,8 @@ def parse(raw: dict, source: str = "<memory>") -> Protocol:
     _reject_cycles(questions, first_question, source)
     _reject_unreachable(questions, first_question, source)
 
+    symptom_entries = _parse_symptom_entries(raw, questions, source)
+
     return Protocol(
         version=version,
         source=source,
@@ -156,7 +183,73 @@ def parse(raw: dict, source: str = "<memory>") -> Protocol:
         emergency_advice=emergency_advice,
         questions=questions,
         first_question=first_question,
+        symptom_entries=symptom_entries,
     )
+
+
+def _parse_symptom_entries(
+    raw: dict, questions: dict, source: str
+) -> tuple[SymptomEntry, ...]:
+    """Free-text entry points. Optional; absent means a menu-only protocol.
+
+    Validated as strictly as the questions, because a phrase list is the one
+    part of the protocol a patient can steer with their own words. Every entry
+    must point at a question that exists - an entry pointing nowhere would
+    silently fall back to the menu, which looks like the feature ignoring what
+    the patient typed.
+    """
+    entries_raw = raw.get("symptom_entries")
+    if entries_raw is None:
+        return ()
+    if not isinstance(entries_raw, list):
+        raise ProtocolError(f"{source}.symptom_entries: expected a list")
+
+    seen: set[str] = set()
+    entries: list[SymptomEntry] = []
+
+    for entry in entries_raw:
+        where = f"{source}.symptom_entries"
+        question = _require(entry, "question", where)
+        where = f"{where}[{question}]"
+
+        if question not in questions:
+            raise ProtocolError(
+                f"{where}: question '{question}' is not defined in this protocol"
+            )
+        if question in seen:
+            raise ProtocolError(
+                f"{where}: duplicate entry - merge the phrase lists instead, "
+                "so the matcher cannot depend on which one is declared first"
+            )
+        seen.add(question)
+
+        phrases_raw = _require(entry, "phrases", where)
+        if not isinstance(phrases_raw, dict):
+            raise ProtocolError(f"{where}.phrases: expected an object keyed by language")
+
+        phrases: dict[str, tuple[str, ...]] = {}
+        for language in REQUIRED_LANGUAGES:
+            value = phrases_raw.get(language)
+            # Kinyarwanda is the default language of this product. A phrase
+            # list that only speaks English routes English speakers and
+            # silently ignores everybody else.
+            if not value:
+                raise ProtocolError(
+                    f"{where}.phrases: missing phrases for '{language}'. Every "
+                    "entry needs all of " + ", ".join(REQUIRED_LANGUAGES)
+                )
+            if not isinstance(value, list) or not all(isinstance(p, str) for p in value):
+                raise ProtocolError(
+                    f"{where}.phrases.{language}: expected a list of strings"
+                )
+            blank = [p for p in value if not p.strip()]
+            if blank:
+                raise ProtocolError(f"{where}.phrases.{language}: blank phrase")
+            phrases[language] = tuple(value)
+
+        entries.append(SymptomEntry(question=question, phrases=phrases))
+
+    return tuple(entries)
 
 
 def _links(question: Question) -> tuple[str, ...]:
