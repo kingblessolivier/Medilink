@@ -127,11 +127,19 @@ def find_nearby(
         steps = [min(radius_m, settings.MAX_SEARCH_RADIUS_M)]
 
     for step in steps:
-        # Filter FIRST, annotate distance SECOND. distance_lte compiles to
-        # ST_DWithin, which uses the GIST index; filtering on an annotated
-        # Distance() instead would sequentially scan the whole table.
+        # Filter FIRST, annotate distance SECOND, and filter with `dwithin`.
+        #
+        # The lookup matters as much as the ordering. `dwithin` compiles to
+        # ST_DWithin, which the GIST index answers. `distance_lte` looks
+        # equivalent and returns the same rows, but on a geography column it
+        # compiles to `ST_Distance(...) <= n` - a spheroid distance computed
+        # for every row in the table, and a sequential scan every time.
+        # Filtering on an annotated Distance() has the same effect.
+        #
+        # test_definition_of_done.py asserts the plan, because the difference
+        # is invisible in the response: same results, 100x the cost.
         results = list(
-            qs.filter(location__distance_lte=(point, D(m=step)))
+            qs.filter(location__dwithin=(point, D(m=step)))
             .annotate(distance=Distance("location", point))
             # level and name break distance ties so ordering is stable
             # between refreshes.

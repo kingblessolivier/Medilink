@@ -1,0 +1,476 @@
+openapi: 3.0.3
+info:
+  title: MediLink Rwanda API
+  version: 0.1.0
+  description: Find nearby health facilities and check insurance acceptance.
+paths:
+  /api/v1/districts:
+    get:
+      operationId: districts_retrieve
+      description: |-
+        Drives the fallback picker when geolocation is denied or out of bounds,
+        and the first USSD menu in Phase 3.
+      summary: Districts with verified facilities
+      tags:
+      - districts
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DistrictList'
+          description: ''
+  /api/v1/facilities/{slug}:
+    get:
+      operationId: facilities_retrieve
+      summary: Facility detail
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - facilities
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityDetail'
+          description: ''
+  /api/v1/facilities/nearby:
+    get:
+      operationId: facilities_nearby_retrieve
+      description: Verified facilities near a coordinate, ranked by (tier, distance).
+        Results are never ranked by wait time - only a minority of facilities report
+        queue data, so ranking on it would bury good facilities that simply do not
+        report.
+      summary: Nearby facilities
+      parameters:
+      - in: query
+        name: insurer
+        schema:
+          type: string
+        description: Insurer code, e.g. mutuelle
+      - in: query
+        name: lat
+        schema:
+          type: number
+          format: double
+        required: true
+      - in: query
+        name: level
+        schema:
+          type: array
+          items:
+            type: string
+      - in: query
+        name: limit
+        schema:
+          type: integer
+      - in: query
+        name: lng
+        schema:
+          type: number
+          format: double
+        required: true
+      - in: query
+        name: open_now
+        schema:
+          type: boolean
+      - in: query
+        name: radius
+        schema:
+          type: integer
+        description: Metres. Default 5000, max 50000.
+      - in: query
+        name: service
+        schema:
+          type: string
+        description: Service type code
+      tags:
+      - facilities
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NearbyResponse'
+          description: ''
+  /api/v1/insurers:
+    get:
+      operationId: insurers_retrieve
+      description: Reference list. Changes perhaps twice a year - cache for 24h client-side.
+      summary: Insurers
+      tags:
+      - insurers
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsurerList'
+          description: ''
+  /api/v1/service-types:
+    get:
+      operationId: service_types_retrieve
+      description: |-
+        Small, cacheable reference list. Includes all three language names so
+        that USSD and WhatsApp can render without a second call.
+      summary: Service types
+      tags:
+      - service-types
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceTypeList'
+          description: ''
+components:
+  schemas:
+    DistrictList:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: string
+      required:
+      - results
+    FacilityDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        slug:
+          type: string
+          maxLength: 220
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          maxLength: 200
+        level:
+          $ref: '#/components/schemas/LevelEnum'
+        ownership:
+          $ref: '#/components/schemas/OwnershipEnum'
+        province:
+          type: string
+          maxLength: 50
+        district:
+          type: string
+          maxLength: 50
+        sector:
+          type: string
+          maxLength: 50
+        address:
+          type: string
+          maxLength: 255
+        location:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        phone:
+          type: string
+          maxLength: 20
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        is_open:
+          type: boolean
+          readOnly: true
+        opening_hours:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpeningHours'
+          readOnly: true
+        insurers:
+          type: array
+          items: {}
+          readOnly: true
+        services:
+          type: array
+          items: {}
+          readOnly: true
+        wait:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        directions_url:
+          type: string
+          readOnly: true
+        verified_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - directions_url
+      - district
+      - id
+      - insurers
+      - is_open
+      - level
+      - location
+      - name
+      - opening_hours
+      - ownership
+      - services
+      - slug
+      - wait
+    FacilityNearby:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        slug:
+          type: string
+          maxLength: 220
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          maxLength: 200
+        level:
+          $ref: '#/components/schemas/LevelEnum'
+        ownership:
+          $ref: '#/components/schemas/OwnershipEnum'
+        district:
+          type: string
+          maxLength: 50
+        sector:
+          type: string
+          maxLength: 50
+        location:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        distance_m:
+          type: integer
+          readOnly: true
+        phone:
+          type: string
+          maxLength: 20
+        is_open:
+          type: boolean
+          readOnly: true
+        opens_at:
+          type: string
+          nullable: true
+          readOnly: true
+        closes_at:
+          type: string
+          nullable: true
+          readOnly: true
+        closing_soon:
+          type: boolean
+          description: A patient must not travel to a door that shuts on arrival.
+          readOnly: true
+        accepts_insurer:
+          type: boolean
+          readOnly: true
+        insurers:
+          type: array
+          items: {}
+          readOnly: true
+        services:
+          type: array
+          items: {}
+          readOnly: true
+        wait:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        bookable:
+          type: boolean
+          readOnly: true
+      required:
+      - accepts_insurer
+      - bookable
+      - closes_at
+      - closing_soon
+      - distance_m
+      - district
+      - id
+      - insurers
+      - is_open
+      - level
+      - location
+      - name
+      - opens_at
+      - ownership
+      - services
+      - slug
+      - wait
+    Insurer:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        is_public:
+          type: boolean
+      required:
+      - code
+      - is_public
+      - name
+    InsurerList:
+      type: object
+      description: |-
+        Envelope for the reference list.
+
+        Declared so drf-spectacular can type the response of a function-based
+        view; the view itself builds the payload directly.
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Insurer'
+      required:
+      - results
+    LevelEnum:
+      enum:
+      - health_post
+      - health_centre
+      - district_hospital
+      - referral_hospital
+      - clinic
+      - pharmacy
+      type: string
+      description: |-
+        * `health_post` - Health post
+        * `health_centre` - Health centre
+        * `district_hospital` - District hospital
+        * `referral_hospital` - Referral hospital
+        * `clinic` - Clinic / polyclinic
+        * `pharmacy` - Pharmacy
+    NearbyQueryEcho:
+      type: object
+      description: The query as the server understood it, including any radius expansion.
+      properties:
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+        radius:
+          type: integer
+        radius_expanded:
+          type: boolean
+        insurer:
+          type: string
+          nullable: true
+        service:
+          type: string
+          nullable: true
+        open_now:
+          type: boolean
+      required:
+      - insurer
+      - lat
+      - lng
+      - open_now
+      - radius
+      - radius_expanded
+      - service
+    NearbyResponse:
+      type: object
+      properties:
+        as_of:
+          type: string
+          format: date-time
+        query:
+          $ref: '#/components/schemas/NearbyQueryEcho'
+        count:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FacilityNearby'
+      required:
+      - as_of
+      - count
+      - query
+      - results
+    OpeningHours:
+      type: object
+      properties:
+        weekday:
+          type: integer
+        opens_at:
+          type: string
+          format: time
+        closes_at:
+          type: string
+          format: time
+      required:
+      - closes_at
+      - opens_at
+      - weekday
+    OwnershipEnum:
+      enum:
+      - public
+      - private
+      - faith_based
+      type: string
+      description: |-
+        * `public` - Public
+        * `private` - Private
+        * `faith_based` - Faith-based
+    ServiceType:
+      type: object
+      properties:
+        code:
+          type: string
+        name_rw:
+          type: string
+        name_en:
+          type: string
+        name_fr:
+          type: string
+      required:
+      - code
+      - name_en
+      - name_fr
+      - name_rw
+    ServiceTypeList:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceType'
+      required:
+      - results
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

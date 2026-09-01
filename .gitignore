@@ -28,6 +28,8 @@ dist-ssr/
 .idea/
 .DS_Store
 
-# Generated API client
-schema.yaml
 .ruff_cache/
+
+# schema.yaml is deliberately NOT ignored. It is the contract the frontend
+# client is generated from, so it is committed and CI fails when a code change
+# leaves it stale.

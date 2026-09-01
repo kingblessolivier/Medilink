@@ -3,9 +3,10 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from .models import Insurer
+from .serializers import InsurerListSerializer
 
 
-@extend_schema(summary="Insurers")
+@extend_schema(summary="Insurers", responses=InsurerListSerializer)
 @api_view(["GET"])
 def insurers(request):
     """Reference list. Changes perhaps twice a year - cache for 24h client-side."""

@@ -51,14 +51,31 @@ Also start in week 1, because they take months: **USSD shortcode application**,
 
 ### Definition of done
 
+Everything that can be asserted in code now is, in
+`backend/apps/facilities/tests/test_definition_of_done.py` and
+`web-patient/src/components/WaitLine.test.tsx`. The rest is field work, and no
+amount of testing closes it.
+
 - [ ] 50+ facilities loaded, each with a coordinate verified on-site
-- [ ] Nearby search returns correct distances (asserted against known pairs)
-- [ ] `EXPLAIN ANALYZE` shows an Index Scan, not a Seq Scan
-- [ ] Insurance filter works for Mutuelle, RSSB and MMI
-- [ ] Opening hours correct, including lunch breaks
-- [ ] All four `wait.status` values render (all will be `not_reported` here)
+      - **25 loaded, 0 verified.** Field work; see `backend/fixtures/README.md`.
+- [x] Nearby search returns correct distances (asserted against known pairs)
+- [x] `EXPLAIN ANALYZE` shows an Index Scan, not a Seq Scan
+      - Was a Seq Scan. `distance_lte` compiles to `ST_Distance(...) <= n` on a
+        geography column, which no index answers; `dwithin` compiles to
+        `ST_DWithin`, which the GIST index does. Same rows either way, so only
+        the query plan revealed it. Asserted now.
+- [x] Insurance filter works for Mutuelle, RSSB and MMI
+- [x] Opening hours correct, including lunch breaks
+      - The *logic* is asserted across a 07:00-12:00 / 13:00-17:00 day. Whether
+        the hours match the sign on the door is part of the verification visit.
+- [x] All four `wait.status` values render (all will be `not_reported` here)
 - [ ] Works offline with cached results
+      - Runtime caching is configured and the build emits a service worker, but
+        this has never been exercised in a browser with the network cut. Not
+        ticked until someone has actually done that.
 - [ ] Loads in under 3 s on a real 3G connection on a real low-end Android phone
+      - The 150 KB gzipped budget is enforced in CI (currently 69 KB), which is
+        a proxy for this, not a measurement of it.
 - [ ] Ten real patients have used it and been interviewed
 
 That final item is the real gate. Not "it works", but "ten strangers used it and

@@ -6,9 +6,12 @@ from rest_framework.response import Response
 
 from .models import Facility, ServiceType
 from .serializers import (
+    DistrictListSerializer,
     FacilityDetailSerializer,
     FacilityNearbySerializer,
     NearbyQuerySerializer,
+    NearbyResponseSerializer,
+    ServiceTypeListSerializer,
 )
 from .services import find_nearby
 from .wait import wait_snapshot
@@ -32,6 +35,7 @@ from .wait import wait_snapshot
         OpenApiParameter("open_now", bool),
         OpenApiParameter("limit", int),
     ],
+    responses=NearbyResponseSerializer,
 )
 @api_view(["GET"])
 def nearby(request):
@@ -72,7 +76,7 @@ def nearby(request):
     )
 
 
-@extend_schema(summary="Facility detail")
+@extend_schema(summary="Facility detail", responses=FacilityDetailSerializer)
 @api_view(["GET"])
 def facility_detail(request, slug):
     facility = get_object_or_404(
@@ -87,7 +91,7 @@ def facility_detail(request, slug):
     )
 
 
-@extend_schema(summary="Service types")
+@extend_schema(summary="Service types", responses=ServiceTypeListSerializer)
 @api_view(["GET"])
 def service_types(request):
     """Small, cacheable reference list. Includes all three language names so
@@ -107,7 +111,10 @@ def service_types(request):
     )
 
 
-@extend_schema(summary="Districts with verified facilities")
+@extend_schema(
+    summary="Districts with verified facilities",
+    responses=DistrictListSerializer,
+)
 @api_view(["GET"])
 def districts(request):
     """Drives the fallback picker when geolocation is denied or out of bounds,
