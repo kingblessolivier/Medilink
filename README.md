@@ -83,13 +83,23 @@ specified in the docs but not yet built.
 | `facilities` + `insurance` apps, migrations, Django admin | Done |
 | `GET /facilities/nearby`, `/facilities/{slug}`, `/insurers`, `/service-types`, `/districts` | Done |
 | Patient PWA: home (state A), search, facility detail, rw/en/fr | Done |
-| Backend test suite | 24 tests, all passing |
-| Frontend bundle | 71 KB gzipped (budget 150 KB) |
+| Backend test suite | 47 tests, all passing, 87% coverage |
+| Frontend test suite | 33 tests, all passing |
+| OpenAPI schema | `schema.yaml`, committed; every endpoint typed |
+| Frontend bundle | 69 KB gzipped (budget 150 KB) |
 | Facility data | 25 seed facilities, **coordinates approximate - not field verified** |
 
-The last row is the gate on Phase 0. See
-[backend/fixtures/README.md](backend/fixtures/README.md) for the verification
-procedure.
+The last row is the gate on Phase 0, and it is field work rather than
+engineering. See [backend/fixtures/README.md](backend/fixtures/README.md) for
+the verification procedure, and the checklist in
+[docs/09](docs/09-roadmap-and-milestones.md) for what is closed and what is not.
+
+Running the tests needs no Docker and no Redis - only a PostGIS database:
+
+```bash
+cd backend && pytest        # uses config/settings/test.py
+cd web-patient && npm test
+```
 
 ## Quick start
 

@@ -119,11 +119,14 @@ class FacilityNearbySerializer(serializers.ModelSerializer):
     def get_services(self, obj) -> list:
         return [fs.service_type.code for fs in obj.services.all() if fs.available]
 
-    def get_opens_at(self, obj):
+    # The return hints are what puts "HH:MM or null" in the generated schema;
+    # without them drf-spectacular defaults to a plain required string and the
+    # TS client types these as non-nullable.
+    def get_opens_at(self, obj) -> str | None:
         value = opens_next(obj)
         return value.strftime("%H:%M") if value else None
 
-    def get_closes_at(self, obj):
+    def get_closes_at(self, obj) -> str | None:
         value = closes_at(obj)
         return value.strftime("%H:%M") if value else None
 
@@ -222,3 +225,48 @@ class FacilityDetailSerializer(serializers.ModelSerializer):
             "https://www.google.com/maps/dir/?api=1&destination="
             f"{obj.location.y},{obj.location.x}"
         )
+
+
+# --- Response envelopes -------------------------------------------------------
+#
+# These exist for the generated schema, not for the views, which build their
+# payloads directly. Without them drf-spectacular cannot guess a response for a
+# function-based @api_view and emits an endpoint with no response body at all,
+# which makes `npm run gen:api` produce an untyped client.
+#
+# CI asserts the committed schema.yaml matches, so a change here that is not
+# regenerated fails the build.
+
+
+class NearbyQueryEchoSerializer(serializers.Serializer):
+    """The query as the server understood it, including any radius expansion."""
+
+    lat = serializers.FloatField()
+    lng = serializers.FloatField()
+    radius = serializers.IntegerField()
+    radius_expanded = serializers.BooleanField()
+    insurer = serializers.CharField(allow_null=True)
+    service = serializers.CharField(allow_null=True)
+    open_now = serializers.BooleanField()
+
+
+class NearbyResponseSerializer(serializers.Serializer):
+    as_of = serializers.DateTimeField()
+    query = NearbyQueryEchoSerializer()
+    count = serializers.IntegerField()
+    results = FacilityNearbySerializer(many=True)
+
+
+class ServiceTypeSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    name_rw = serializers.CharField()
+    name_en = serializers.CharField()
+    name_fr = serializers.CharField()
+
+
+class ServiceTypeListSerializer(serializers.Serializer):
+    results = ServiceTypeSerializer(many=True)
+
+
+class DistrictListSerializer(serializers.Serializer):
+    results = serializers.ListField(child=serializers.CharField())
