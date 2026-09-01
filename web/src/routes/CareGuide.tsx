@@ -7,6 +7,7 @@ import { useI18n } from "../i18n"
 import { useTriageStatus } from "../hooks/useTriageStatus"
 import type { TriageSession, Translation } from "../api/types"
 import { Card, Chip, ErrorState, ListSkeleton, Notice } from "../ui"
+import { IconChevronRight } from "../ui/icons"
 
 /**
  * The Care Guide.
@@ -205,17 +206,36 @@ export function CareGuide() {
 
       <h1 className="mt-3 text-h2">{say(question.text)}</h1>
 
-      <ul className="mt-6 space-y-2">
+      {/* Answers are choices, not buttons in a toolbar.
+          `ml-btn-secondary` gave each option a 1px outline and a centred-ish
+          label, so a stack of them read as a column of disabled text inputs -
+          nothing about them said "pick one". These are the only interactive
+          thing on the screen and the entire flow depends on them being
+          obviously tappable: a surface, a hover lift, a chevron, and a target
+          big enough for a thumb on a phone held one-handed. */}
+      <ul className="mt-6 space-y-2.5">
         {question.options.map((option) => (
           <li key={option.code}>
             <button
-              className="ml-btn-secondary w-full justify-start text-left"
+              className={
+                "group flex w-full items-center justify-between gap-3 rounded-xl " +
+                "border border-line bg-surface px-4 py-3.5 text-left text-body " +
+                "transition-colors hover:border-primary-border hover:bg-primary-subtle " +
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary " +
+                "disabled:cursor-not-allowed disabled:opacity-60"
+              }
               disabled={answer.isPending}
               onClick={() =>
                 answer.mutate({ question: question.code, option: option.code })
               }
             >
-              {say(option.text)}
+              <span className="min-w-0">{say(option.text)}</span>
+              <span
+                aria-hidden="true"
+                className="shrink-0 text-ink-subtle transition-colors group-hover:text-primary"
+              >
+                <IconChevronRight size={18} />
+              </span>
             </button>
           </li>
         ))}
@@ -256,15 +276,23 @@ export function CareGuide() {
       {/* Rule 2: every step, not once at the start. */}
       <Disclaimer text={say(session.disclaimer)} />
 
-      <button
-        className="ml-btn-tertiary mt-4 w-full"
-        onClick={() => {
-          setSession(null)
-          answer.reset()
-        }}
-      >
-        {t("care_guide_stop")}
-      </button>
+      {/* Abandoning the flow is a real affordance and stays available, but it
+          is not what this screen is for. Full-width and tinted it was the
+          largest, most solid-looking control on the page - below the answers
+          it was competing with them, and it sat where a "next" button would
+          be on every other form the patient has ever used. Left-aligned and
+          inline, it reads as the way out rather than the way on. */}
+      <div className="mt-6">
+        <button
+          className="ml-btn-tertiary ml-btn-sm"
+          onClick={() => {
+            setSession(null)
+            answer.reset()
+          }}
+        >
+          {t("care_guide_stop")}
+        </button>
+      </div>
     </div>
   )
 }
