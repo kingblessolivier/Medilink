@@ -114,8 +114,14 @@ export function FacilityCard({
           `wait.status === "closed"` renders the same word again - so a shut
           facility read "Closed · Closed". The wait line has nothing to add
           once the door is shut. */}
+      {/* `omitUnknown`: the unknown state is suppressed per card and stated
+          once per list instead - see NoLiveWaitNote. Six cards each carrying
+          "Wait time unavailable" is the repetition that made a results page
+          read as broken; the fact is unchanged, it is just said once. A wait
+          we DO know still renders here, because that is worth seeing on
+          every card. */}
       {facility.wait.status !== "closed" && (
-        <WaitLine wait={facility.wait} className="mt-2.5" />
+        <WaitLine wait={facility.wait} className="mt-2.5" omitUnknown />
       )}
 
       {/* `relative` lifts these above the stretched card link, so they stay

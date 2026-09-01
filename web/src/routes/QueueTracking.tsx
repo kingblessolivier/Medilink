@@ -97,7 +97,7 @@ export function QueueTracking() {
   const called = entry.status === "called"
 
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24">
+    <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24 md:pb-10">
       {/* Visually the facility name leads, but the page still has to SAY what
           it is - the position and the departure time below carry the weight,
           so the heading stays small rather than competing with them. */}

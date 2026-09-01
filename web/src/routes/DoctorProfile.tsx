@@ -57,7 +57,7 @@ export function DoctorProfile() {
   }
 
   return (
-    <div className="ml-page py-6 pb-24">
+    <div className="ml-page py-6 pb-24 md:pb-10">
       <Link to="/doctors" className="text-small font-medium text-primary">
         {t("back")}
       </Link>

@@ -131,7 +131,7 @@ export function Book() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24">
+    <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24 md:pb-10">
       <Link to={`/facility/${slug}`} className="text-small font-medium text-primary">
         {t("back")}
       </Link>

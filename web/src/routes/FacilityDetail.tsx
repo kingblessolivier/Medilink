@@ -79,7 +79,7 @@ export function FacilityDetail() {
     lang === "rw" ? s.name_rw : lang === "fr" ? s.name_fr : s.name_en
 
   return (
-    <div className="ml-page py-5 pb-24">
+    <div className="ml-page py-5 pb-24 md:pb-10">
       <Header facility={data} />
 
       <div className="mt-6">

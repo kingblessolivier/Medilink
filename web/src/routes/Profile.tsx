@@ -46,7 +46,7 @@ export function Profile() {
   const patient = session.patient
 
   return (
-    <div className="mx-auto max-w-md px-4 pb-24 pt-4">
+    <div className="mx-auto max-w-md px-4 pb-24 md:pb-10 pt-4">
       <h1 className="mb-4 text-h1">{t("profile_title")}</h1>
 
       {/* Who you are, before what you can change. The phone is the identity

@@ -14,6 +14,7 @@ import { usePatient } from "../hooks/useAuth"
 import { useProviders } from "../hooks/useProviders"
 import { useTriageStatus } from "../hooks/useTriageStatus"
 import { FacilityCard } from "../components/FacilityCard"
+import { NoLiveWaitNote } from "../components/NoLiveWaitNote"
 import { DoctorCard } from "../components/DoctorCard"
 import { GlobalSearch } from "../components/GlobalSearch"
 import { InsurerChip } from "../components/InsurerChip"
@@ -303,6 +304,10 @@ export function Home() {
               />
             ))}
           </div>
+          <NoLiveWaitNote
+            facilities={nearby.data?.results.slice(0, nearbyLimit) ?? []}
+            className="mt-3"
+          />
         </Section>
 
         {/* ---- Doctors. Omitted entirely when none are listed, rather than
