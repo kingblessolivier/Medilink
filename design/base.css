@@ -229,8 +229,28 @@
   /* Map markers are real buttons - keyboard reachable and announced. The
      selected state is a size and ring change, not colour alone. */
   .ml-marker {
-    @apply grid h-6 w-6 place-items-center rounded-full border-2 border-white
-           bg-primary shadow-md transition-transform;
+    @apply relative grid h-6 w-6 place-items-center rounded-full border-2
+           border-white bg-primary shadow-md transition-transform;
+  }
+
+  /* A 24px pin is the right SIZE - any bigger and the pins cover the map they
+     are meant to describe - but it is not a usable touch TARGET. This gives
+     it the full 44px to be tapped in without drawing anything: the pin looks
+     identical, the hit area is rule 6.
+
+     Coarse pointers only. On a desktop map the pins sit close enough together
+     that invisible 44px catchers would start stealing clicks from each
+     other, and a mouse does not need the help. */
+  @media (pointer: coarse) {
+    .ml-marker::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: var(--touch-target);
+      height: var(--touch-target);
+      transform: translate(-50%, -50%);
+    }
   }
   .ml-marker::after {
     content: "";
@@ -278,6 +298,19 @@
 .maplibregl-ctrl-group button:focus-visible {
   box-shadow: theme("boxShadow.focus");
   outline: none;
+}
+
+/* 36px above suits a mouse and keeps the controls from dominating a small
+   map. Under a thumb it is below the 44px minimum, so it grows there - the
+   same bargain `.ml-control-sm` makes for dense workspace tables.
+
+   This has to sit AFTER the rule it overrides: both carry `!important`, so
+   they have equal weight and source order is what decides. */
+@media (pointer: coarse) {
+  .maplibregl-ctrl-group button {
+    width: var(--touch-target) !important;
+    height: var(--touch-target) !important;
+  }
 }
 
 /* Required attribution, kept legible without competing with the pins. */

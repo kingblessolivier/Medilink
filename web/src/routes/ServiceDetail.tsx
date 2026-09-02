@@ -60,7 +60,7 @@ export function ServiceDetail() {
 
   return (
     <div className="ml-page py-6 pb-24 md:pb-10">
-      <Link to="/search" className="text-body font-medium text-primary">
+      <Link to="/search" className="inline-flex min-h-touch items-center text-body font-medium text-primary">
         {t("back")}
       </Link>
 
@@ -95,7 +95,7 @@ export function ServiceDetail() {
           {results.length > 3 && (
             <Link
               to={`/search?service=${code}`}
-              className="text-body font-medium text-primary"
+              className="inline-flex min-h-touch items-center text-body font-medium text-primary"
             >
               {t("see_all")}
             </Link>
