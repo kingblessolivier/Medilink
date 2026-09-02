@@ -71,6 +71,9 @@ const SignIn = lazy(() =>
 const Register = lazy(() =>
   import("./routes/Register").then((m) => ({ default: m.Register })),
 )
+const Emergency = lazy(() =>
+  import("./routes/Emergency").then((m) => ({ default: m.Emergency })),
+)
 const Welcome = lazy(() =>
   import("./routes/Welcome").then((m) => ({ default: m.Welcome })),
 )
@@ -280,6 +283,9 @@ function Shell() {
             arriving from a WhatsApp link, or reopening the app while waiting
             in a queue, needs the product rather than an introduction. */}
         <Route path="/welcome" element={<Welcome />} />
+        {/* S-13. Linked from the footer emergency strip, which is on every
+            patient page, so it is always one tap away. */}
+        <Route path="/emergency" element={<Emergency />} />
         <Route path="/about" element={<About />} />
         <Route path="/help" element={<Help />} />
 

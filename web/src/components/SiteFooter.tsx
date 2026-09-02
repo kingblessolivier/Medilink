@@ -65,6 +65,19 @@ export function SiteFooter() {
           </span>
         </a>
 
+        {/* Calling stays the primary action - it is the fastest useful thing
+            somebody can do. This is the second one, for a person who can
+            travel and needs to know where: S-13 lists facilities that
+            actually run an emergency service, nearest first. */}
+        <p className="mt-2">
+          <Link
+            to="/emergency"
+            className="inline-flex min-h-touch items-center text-body font-medium text-primary"
+          >
+            {t("emergency_nearest")}
+          </Link>
+        </p>
+
         <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <p className="text-h3 text-primary">MediLink</p>
