@@ -77,3 +77,29 @@ describe("Card", () => {
     expect(screen.getByRole("article")).toBeInTheDocument()
   })
 })
+
+describe("Card legacy prop", () => {
+  it("maps interactive={true} to the interactive variant", () => {
+    render(
+      <Card interactive>
+        <span>content</span>
+      </Card>,
+    )
+
+    expect(screen.getByText("content").parentElement).toHaveClass("shadow-sm")
+  })
+
+  it("never leaks `interactive` into the DOM", () => {
+    // It used to fall through `...rest` onto the element: React warned about a
+    // non-boolean attribute, and the card lost the hover it was asking for.
+    render(
+      <Card interactive>
+        <span>content</span>
+      </Card>,
+    )
+
+    expect(
+      screen.getByText("content").parentElement,
+    ).not.toHaveAttribute("interactive")
+  })
+})

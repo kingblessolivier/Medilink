@@ -21,6 +21,16 @@ export type CardProps = {
   padding?: CardPadding
   /** Render as something other than a div - `article` in a list, `li` in a ul. */
   as?: "div" | "article" | "section" | "li" | "label"
+  /**
+   * Deprecated spelling of `variant="interactive"`, kept because call sites
+   * across the app still use it.
+   *
+   * It has to be destructured rather than left to fall through: `...rest` is
+   * spread onto the element, so an unrecognised `interactive` lands in the
+   * DOM as a bare attribute, React warns about a non-boolean value, and the
+   * card silently loses the hover it was asking for.
+   */
+  interactive?: boolean
   className?: string
   children: ReactNode
 } & Record<string, unknown>
@@ -46,19 +56,23 @@ const PADDING: Record<CardPadding, string> = {
 }
 
 export function Card({
-  variant = "default",
+  variant,
   padding,
   as: Tag = "div",
+  interactive = false,
   className,
   children,
   ...rest
 }: CardProps) {
+  const resolved: CardVariant =
+    variant ?? (interactive ? "interactive" : "default")
+
   return (
     <Tag
       {...rest}
       className={[
         "rounded-lg border",
-        VARIANT[variant],
+        VARIANT[resolved],
         padding && PADDING[padding],
         className,
       ]

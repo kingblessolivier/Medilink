@@ -1,10 +1,12 @@
-import { defineConfig } from "vite"
+import { defineConfig, type Plugin } from "vite"
+import { resolve } from "node:path"
 import react from "@vitejs/plugin-react"
 import { VitePWA } from "vite-plugin-pwa"
 
 export default defineConfig({
   plugins: [
     react(),
+    watchDesignSystem(),
     VitePWA({
       registerType: "autoUpdate",
       manifest: false, // served from public/manifest.json
@@ -84,3 +86,41 @@ export default defineConfig({
     proxy: { "/api": "http://localhost:8000" },
   },
 })
+
+/**
+ * Restart the dev server when the design system changes.
+ *
+ * `design/tailwind-preset.js` lives outside this app's root, so Vite does not
+ * watch it and Tailwind does not know it changed. The symptom is genuinely
+ * misleading: a token you just added comes back as "The `bg-n100` class does
+ * not exist", exactly as though you had typo'd it, and the page dies behind a
+ * full-screen PostCSS overlay. The production build is fine the whole time,
+ * which is what makes it so confusing - `npm run build` passes while the dev
+ * server insists the class is missing.
+ *
+ * It cost a debugging session on the day before a launch. Watching the file
+ * and restarting is three lines; remembering to restart by hand is not
+ * something anybody should have to do twice.
+ */
+function watchDesignSystem(): Plugin {
+  return {
+    name: "medilink:watch-design-system",
+    configureServer(server) {
+      // `server.config.root` rather than `__dirname`: this config is loaded as
+      // ESM, where `__dirname` is undefined, and the failure would be a crash
+      // on startup rather than a missing feature.
+      const preset = resolve(
+        server.config.root,
+        "../design/tailwind-preset.js",
+      )
+      server.watcher.add(preset)
+      server.watcher.on("change", (file) => {
+        if (resolve(file) !== preset) return
+        server.config.logger.info(
+          "\n  design system changed - restarting so Tailwind reloads it\n",
+        )
+        server.restart()
+      })
+    },
+  }
+}

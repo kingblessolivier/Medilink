@@ -1,13 +1,10 @@
 /**
  * Input.
  *
- *  Absorbs `TextInput` from index.tsx when implemented. Border 1.5px n300;
- *  focus takes the primary border plus the tinted 3px ring held in
- *  `--shadow-input-focus`. The error state is a danger border AND a message -
- *  never a red outline on its own, which tells a screen reader nothing.
- *
- * TASK 1C SCAFFOLD - interface only, no implementation yet. Not exported from
- * index.tsx until it is built, so nothing can import it by accident.
+ * The error state is a danger border AND `aria-invalid` - never a red outline
+ * on its own, which tells a screen reader nothing and tells a colour-blind
+ * user nothing either. The message itself belongs to `Field`, which owns the
+ * label and the description wiring.
  */
 
 import type { InputHTMLAttributes } from "react"
@@ -16,8 +13,16 @@ export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   invalid?: boolean
 }
 
-export function Input(_props: InputProps) {
-  return null
+export function Input({ invalid, className, ...rest }: InputProps) {
+  return (
+    <input
+      {...rest}
+      aria-invalid={invalid || undefined}
+      className={["ml-field", invalid && "ml-field-invalid", className]
+        .filter(Boolean)
+        .join(" ")}
+    />
+  )
 }
 
 export default Input

@@ -13,27 +13,36 @@
  * bundle than the primitives this product actually needs, and the patient app
  * has a 150 KB budget on a 3G connection.
  *
- * NOT re-exported here: Badge, Input, Avatar, Toast, Modal,
- * QueuePositionDisplay, FacilityCard, InsuranceBadge and StatusPill. Those are
- * scaffolds - interfaces and file structure, no implementation - and leaving
- * them out of the barrel is what stops one from being imported by
- * autocomplete and rendering nothing on a patient's screen. Import them by
- * path once they are built, then add them here.
+ * All fourteen are built. `TextInput` and `Chip` remain as thin aliases of
+ * `Input` and `Badge` so that existing call sites keep working; new code
+ * should use the spec names.
  */
 
+export { Avatar, type AvatarProps, type AvatarSize } from "./Avatar"
+export { Badge, type BadgeProps, type BadgeTone } from "./Badge"
 export { Button, type ButtonProps, type ButtonVariant, type ButtonSize } from "./Button"
 export { Card, type CardProps, type CardVariant, type CardPadding } from "./Card"
 export { EmptyState, type EmptyStateProps } from "./EmptyState"
+export { FacilityCard as FacilityCardPrimitive, type FacilityCardProps } from "./FacilityCard"
+export { Input, type InputProps } from "./Input"
+export { InsuranceBadge, type InsuranceBadgeProps, type InsuranceStatus } from "./InsuranceBadge"
+export { Modal, type ModalProps } from "./Modal"
+export {
+  QueuePositionDisplay,
+  type QueuePositionDisplayProps,
+} from "./QueuePositionDisplay"
 export { Select, type SelectProps } from "./Select"
 export { Spinner, type SpinnerProps, type SpinnerSize } from "./Spinner"
+export { StatusPill, type QueueStatus, type StatusPillProps } from "./StatusPill"
+export { Toast, type ToastProps, type ToastVariant } from "./Toast"
 
+import { Badge } from "./Badge"
 import { IconAlert, IconInfo } from "./icons"
 import {
   createContext,
   useContext,
   useId,
   useState,
-  type InputHTMLAttributes,
   type ReactNode,
 } from "react"
 
@@ -90,22 +99,18 @@ export function Field({
   )
 }
 
-export function TextInput({
-  invalid,
-  className,
-  ...rest
-}: InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }) {
-  return (
-    <input
-      {...rest}
-      aria-invalid={invalid || undefined}
-      className={cx("ml-field", invalid && "ml-field-invalid", className)}
-    />
-  )
-}
+/** Deprecated alias. New code imports `Input`. */
+export { Input as TextInput } from "./Input"
 
 /* -------------------------------------------------------------------- Chip */
 
+/**
+ * Deprecated alias. New code imports `Badge`.
+ *
+ * `info` maps to `primary`: the standard palette has no separate
+ * informational colour, and the brand green is what carries that meaning
+ * everywhere else in the product.
+ */
 export type ChipTone =
   | "success"
   | "warning"
@@ -114,20 +119,6 @@ export type ChipTone =
   | "neutral"
   | "unknown"
 
-const CHIP_CLASS: Record<ChipTone, string> = {
-  success: "ml-chip-success",
-  warning: "ml-chip-warning",
-  danger: "ml-chip-danger",
-  info: "ml-chip-info",
-  neutral: "ml-chip-neutral",
-  unknown: "ml-chip-unknown",
-}
-
-/**
- * Status is never colour alone - the child text carries the meaning and the
- * tone only reinforces it. A colour-blind user, or anyone reading in bright
- * Kigali daylight, gets the same information.
- */
 export function Chip({
   tone = "neutral",
   children,
@@ -137,7 +128,11 @@ export function Chip({
   children: ReactNode
   className?: string
 }) {
-  return <span className={cx(CHIP_CLASS[tone], className)}>{children}</span>
+  return (
+    <Badge tone={tone === "info" ? "primary" : tone} className={className}>
+      {children}
+    </Badge>
+  )
 }
 
 /* -------------------------------------------------------------------- Card */

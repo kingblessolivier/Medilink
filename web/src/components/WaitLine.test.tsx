@@ -65,7 +65,7 @@ describe("WaitLine", () => {
       // rather than as one honest gap - so the unknown state must stay
       // unboxed. Guards the regression, not the wording.
       const { container } = renderWait(wait(status))
-      expect(container.querySelector('[class*="ml-chip"]')).toBeNull()
+      expect(container.querySelector("[data-badge]")).toBeNull()
     },
   )
 
@@ -81,7 +81,7 @@ describe("WaitLine", () => {
 
   it("still shows a chip for a wait we actually know", () => {
     const { container } = renderWait(wait("available", 40))
-    expect(container.querySelector('[class*="ml-chip"]')).not.toBeNull()
+    expect(container.querySelector("[data-badge]")).not.toBeNull()
   })
 
   it("says closed rather than showing a wait", () => {
