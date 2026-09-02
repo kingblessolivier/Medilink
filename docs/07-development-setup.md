@@ -58,7 +58,7 @@ file`. `infra/docker-compose.yml` blanks both in its `environment:` block to
 stop that. If you add any other machine-specific path to `.env`, ask what it
 does inside the container.
 
-**Ports.** The stack publishes Postgres on **55432** and Redis on **56379**, not
+**Ports.** The stack publishes Postgres on **55432** and Redis on **6381**, not
 5432 and 6379. This is not arbitrary: a developer machine with PostgreSQL
 installed natively already has `postgres.exe` on 5432, and it wins the port
 while Docker still reports 5432 as published - so `localhost:5432` silently
@@ -69,7 +69,7 @@ ports:
 
 ```bash
 DATABASE_URL=postgis://medilink:medilink@localhost:55432/medilink
-REDIS_URL=redis://localhost:56379/0
+REDIS_URL=redis://localhost:6381/0
 ```
 
 Verify with `python manage.py check`, then `python manage.py migrate --check`,
@@ -106,7 +106,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports: ["56379:6379"]     # 6379 and 6380 are usually taken
+    ports: ["6381:6379"]     # 6379 and 6380 are usually taken
 
   mailhog:                      # catches OTP emails in development
     image: mailhog/mailhog
@@ -287,9 +287,9 @@ DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
 
 DATABASE_URL=postgis://medilink:medilink@localhost:55432/medilink
-REDIS_URL=redis://localhost:56379/0
+REDIS_URL=redis://localhost:6381/0
 
-CELERY_BROKER_URL=redis://localhost:56379/1
+CELERY_BROKER_URL=redis://localhost:6381/1
 
 # Identity
 NATIONAL_ID_PEPPER=change-me-and-never-rotate-casually
