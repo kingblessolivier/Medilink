@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediLink Rwanda — Full Product Redesign Roadmap</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  :root {
+    --primary: #0A6E5E;
+    --primary-dark: #074F44;
+    --primary-light: #E6F4F1;
+    --accent: #F4A832;
+    --danger: #D93025;
+    --success: #1E8A4C;
+    --warning: #E67E22;
+    --n900: #0F1117;
+    --n800: #1A1A2E;
+    --n700: #2D3748;
+    --n600: #4A5568;
+    --n400: #718096;
+    --n300: #CBD5E0;
+    --n200: #E2E8F0;
+    --n100: #F7FAFC;
+    --white: #FFFFFF;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--n100); color: var(--n900); line-height: 1.7; font-size: 15px; }
+
+  /* ── COVER ── */
+  .cover {
+    background: var(--n800);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 10%;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: var(--primary);
+    border-radius: 50%;
+    opacity: 0.07;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -150px; left: -100px;
+    width: 400px; height: 400px;
+    background: var(--accent);
+    border-radius: 50%;
+    opacity: 0.05;
+  }
+  .cover-tag { display: inline-block; background: rgba(10,110,94,0.3); border: 1px solid rgba(10,110,94,0.5); color: #4AE89A; border-radius: 20px; padding: 6px 18px; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 32px; }
+  .cover h1 { font-size: clamp(36px, 5vw, 64px); font-weight: 900; color: #fff; line-height: 1.1; letter-spacing: -2px; margin-bottom: 24px; }
+  .cover h1 span { color: #4AE89A; }
+  .cover-sub { font-size: 18px; color: rgba(255,255,255,0.6); max-width: 600px; line-height: 1.6; margin-bottom: 48px; }
+  .cover-meta { display: flex; gap: 40px; }
+  .cover-meta-item { }
+  .cover-meta-item .label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.35); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .cover-meta-item .value { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.85); }
+  .cover-version { position: absolute; bottom: 40px; right: 10%; font-size: 12px; color: rgba(255,255,255,0.2); }
+
+  /* ── LAYOUT ── */
+  .page { max-width: 1100px; margin: 0 auto; padding: 80px 40px; }
+
+  /* ── SECTION HEADERS ── */
+  .section-number { font-size: 11px; font-weight: 800; color: var(--primary); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+  .section-title { font-size: clamp(24px, 3vw, 36px); font-weight: 800; color: var(--n900); letter-spacing: -1px; margin-bottom: 16px; line-height: 1.2; }
+  .section-lead { font-size: 17px; color: var(--n600); max-width: 780px; line-height: 1.7; margin-bottom: 48px; }
+
+  /* ── DIVIDERS ── */
+  .section-divider { border: none; border-top: 1px solid var(--n200); margin: 80px 0; }
+  .section-divider.heavy { border-top: 3px solid var(--primary-light); }
+
+  /* ── CALLOUT BOXES ── */
+  .callout { border-radius: 16px; padding: 28px 32px; margin: 32px 0; }
+  .callout.primary { background: var(--primary-light); border-left: 4px solid var(--primary); }
+  .callout.warning { background: #FEF3DC; border-left: 4px solid var(--accent); }
+  .callout.danger { background: #FFF0EF; border-left: 4px solid var(--danger); }
+  .callout.dark { background: var(--n800); border-left: 4px solid var(--primary); }
+  .callout h4 { font-size: 13px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px; }
+  .callout.primary h4 { color: var(--primary-dark); }
+  .callout.warning h4 { color: #92590A; }
+  .callout.danger h4 { color: var(--danger); }
+  .callout.dark h4 { color: #4AE89A; }
+  .callout p { font-size: 14px; line-height: 1.7; }
+  .callout.primary p { color: var(--primary-dark); }
+  .callout.warning p { color: #7A4B08; }
+  .callout.danger p { color: #8B1E1A; }
+  .callout.dark p { color: rgba(255,255,255,0.7); }
+
+  /* ── PHASE CARDS ── */
+  .phase-header {
+    background: var(--n800);
+    border-radius: 20px;
+    padding: 36px 40px;
+    margin-bottom: 40px;
+    display: flex;
+    align-items: flex-start;
+    gap: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .phase-header::after {
+    content: '';
+    position: absolute;
+    right: -60px; top: -60px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    opacity: 0.06;
+  }
+  .phase-header.p0::after { background: var(--primary); }
+  .phase-header.p1::after { background: var(--accent); }
+  .phase-header.p2::after { background: #2B6CB0; }
+  .phase-header.p3::after { background: var(--success); }
+  .phase-header.p4::after { background: #9F7AEA; }
+  .phase-num { width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: #fff; flex-shrink: 0; }
+  .phase-header.p0 .phase-num { background: var(--primary); }
+  .phase-header.p1 .phase-num { background: var(--accent); }
+  .phase-header.p2 .phase-num { background: #2B6CB0; }
+  .phase-header.p3 .phase-num { background: var(--success); }
+  .phase-header.p4 .phase-num { background: #9F7AEA; }
+  .phase-header-info h2 { font-size: 26px; font-weight: 800; color: #fff; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .phase-header-info p { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.5; }
+  .phase-header-meta { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+  .phase-badge { border-radius: 20px; padding: 5px 16px; font-size: 12px; font-weight: 700; }
+  .phase-header.p0 .phase-badge { background: rgba(10,110,94,0.3); color: #4AE89A; }
+  .phase-header.p1 .phase-badge { background: rgba(244,168,50,0.3); color: #F4A832; }
+  .phase-header.p2 .phase-badge { background: rgba(43,108,176,0.3); color: #90CDF4; }
+  .phase-header.p3 .phase-badge { background: rgba(30,138,76,0.3); color: #68D391; }
+  .phase-header.p4 .phase-badge { background: rgba(159,122,234,0.3); color: #D6BCFA; }
+  .phase-duration { font-size: 12px; color: rgba(255,255,255,0.4); }
+
+  /* ── FEATURE BLOCKS ── */
+  .feature-block { background: var(--white); border-radius: 16px; padding: 32px; margin-bottom: 24px; border: 1px solid var(--n200); }
+  .feature-block h3 { font-size: 18px; font-weight: 800; color: var(--n900); margin-bottom: 6px; }
+  .feature-block .fb-meta { font-size: 12px; color: var(--n400); margin-bottom: 16px; display: flex; gap: 12px; align-items: center; }
+  .fb-tag { background: var(--n100); border: 1px solid var(--n300); border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 700; color: var(--n600); }
+  .fb-tag.be { background: #EBF4FF; border-color: #BEE3F8; color: #2B6CB0; }
+  .fb-tag.fe { background: var(--primary-light); border-color: #9AE6D8; color: var(--primary-dark); }
+  .fb-tag.db { background: #FAF5FF; border-color: #E9D8FD; color: #6B46C1; }
+  .fb-tag.sec { background: #FFF0EF; border-color: #FEB2B2; color: #C53030; }
+  .fb-tag.infra { background: #F0FFF4; border-color: #9AE6B4; color: #276749; }
+  .feature-block p { font-size: 14px; color: var(--n600); line-height: 1.7; margin-bottom: 16px; }
+
+  /* ── DETAIL LISTS ── */
+  .detail-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .detail-list li { font-size: 14px; color: var(--n700); padding-left: 20px; position: relative; line-height: 1.6; }
+  .detail-list li::before { content: '→'; position: absolute; left: 0; color: var(--primary); font-size: 12px; top: 3px; }
+  .detail-list li strong { color: var(--n900); font-weight: 700; }
+
+  /* ── SCREEN GRIDS ── */
+  .screen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin: 24px 0; }
+  .screen-card { background: var(--white); border: 1px solid var(--n200); border-radius: 12px; padding: 20px 22px; }
+  .screen-card .sc-code { font-size: 10px; font-weight: 800; color: var(--primary); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .screen-card h4 { font-size: 15px; font-weight: 700; color: var(--n900); margin-bottom: 8px; }
+  .screen-card p { font-size: 12px; color: var(--n600); line-height: 1.6; }
+  .screen-card .sc-tags { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .sc-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+  .sc-tag.api { background: #EBF4FF; color: #2B6CB0; }
+  .sc-tag.realtime { background: #FEF3DC; color: #92590A; }
+  .sc-tag.offline { background: #F0FFF4; color: #276749; }
+  .sc-tag.auth { background: #FFF0EF; color: var(--danger); }
+  .sc-tag.new { background: var(--primary-light); color: var(--primary-dark); }
+
+  /* ── DATA MODEL BLOCKS ── */
+  .model-block { background: var(--n800); border-radius: 14px; padding: 24px 28px; margin: 20px 0; font-family: 'Courier New', monospace; }
+  .model-block .model-name { font-size: 13px; font-weight: 700; color: #4AE89A; margin-bottom: 14px; }
+  .model-field { display: flex; gap: 16px; font-size: 12px; margin-bottom: 6px; }
+  .mf-name { color: #90CDF4; min-width: 200px; }
+  .mf-type { color: #F6AD55; min-width: 120px; }
+  .mf-note { color: rgba(255,255,255,0.45); }
+  .model-new-badge { background: rgba(74,232,154,0.2); color: #4AE89A; border-radius: 4px; padding: 1px 6px; font-size: 9px; font-weight: 800; margin-left: 6px; vertical-align: middle; }
+
+  /* ── SECURITY BLOCKS ── */
+  .security-item { display: flex; gap: 16px; align-items: flex-start; padding: 20px; background: var(--white); border-radius: 12px; border: 1px solid var(--n200); margin-bottom: 12px; }
+  .sec-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 18px; }
+  .sec-icon.critical { background: #FFF0EF; }
+  .sec-icon.high { background: #FEF3DC; }
+  .sec-icon.med { background: var(--primary-light); }
+  .si-title { font-size: 14px; font-weight: 700; color: var(--n900); margin-bottom: 4px; }
+  .si-body { font-size: 13px; color: var(--n600); line-height: 1.6; }
+
+  /* ── DESIGN SYSTEM ── */
+  .token-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin: 20px 0; }
+  .token-item { background: var(--white); border: 1px solid var(--n200); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .token-swatch { height: 48px; border-radius: 8px; }
+  .token-name { font-size: 12px; font-weight: 700; color: var(--n900); }
+  .token-value { font-size: 11px; color: var(--n600); font-family: monospace; }
+  .token-usage { font-size: 11px; color: var(--n400); }
+
+  /* ── TABLES ── */
+  .spec-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13px; }
+  .spec-table th { text-align: left; padding: 12px 16px; background: var(--n100); font-size: 11px; font-weight: 800; color: var(--n600); text-transform: uppercase; letter-spacing: 0.5px; }
+  .spec-table td { padding: 12px 16px; border-bottom: 1px solid var(--n100); color: var(--n700); vertical-align: top; }
+  .spec-table tr:last-child td { border-bottom: none; }
+  .spec-table tr:hover td { background: var(--n100); }
+
+  /* ── API ENDPOINTS ── */
+  .endpoint { display: flex; align-items: flex-start; gap: 12px; padding: 14px 18px; background: var(--white); border: 1px solid var(--n200); border-radius: 10px; margin-bottom: 8px; }
+  .ep-method { font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 6px; font-family: monospace; min-width: 56px; text-align: center; flex-shrink: 0; margin-top: 1px; }
+  .ep-method.get { background: #EBF4FF; color: #2B6CB0; }
+  .ep-method.post { background: #F0FFF4; color: #276749; }
+  .ep-method.put { background: #FEF3DC; color: #92590A; }
+  .ep-method.patch { background: #FEF3DC; color: #92590A; }
+  .ep-method.delete { background: #FFF0EF; color: var(--danger); }
+  .ep-method.ws { background: #FAF5FF; color: #6B46C1; }
+  .ep-path { font-family: monospace; font-size: 13px; font-weight: 700; color: var(--n900); flex: 1; }
+  .ep-desc { font-size: 12px; color: var(--n600); margin-top: 3px; }
+
+  /* ── COMPONENT SPECS ── */
+  .component-spec { background: var(--white); border: 1px solid var(--n200); border-radius: 14px; padding: 24px 28px; margin-bottom: 20px; }
+  .cs-name { font-size: 13px; font-weight: 800; color: var(--primary); margin-bottom: 4px; font-family: monospace; }
+  .cs-title { font-size: 17px; font-weight: 800; color: var(--n900); margin-bottom: 12px; }
+  .cs-body { font-size: 14px; color: var(--n600); line-height: 1.7; }
+  .cs-props { margin-top: 14px; }
+  .cs-props-title { font-size: 11px; font-weight: 800; color: var(--n600); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; }
+  .prop-row { display: flex; gap: 12px; font-size: 12px; padding: 6px 0; border-bottom: 1px solid var(--n100); }
+  .prop-row:last-child { border-bottom: none; }
+  .prop-name { font-family: monospace; color: #2B6CB0; min-width: 160px; }
+  .prop-type { color: #6B46C1; min-width: 100px; }
+  .prop-desc { color: var(--n600); }
+
+  /* ── MILESTONE ── */
+  .milestone { display: flex; gap: 20px; margin-bottom: 32px; }
+  .ms-line { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .ms-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--primary); flex-shrink: 0; margin-top: 4px; }
+  .ms-track { flex: 1; width: 2px; background: var(--n200); margin: 4px 0; }
+  .ms-content { flex: 1; padding-bottom: 32px; }
+  .ms-title { font-size: 16px; font-weight: 800; color: var(--n900); margin-bottom: 4px; }
+  .ms-week { font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+  .ms-body { font-size: 14px; color: var(--n600); line-height: 1.7; }
+  .ms-tasks { list-style: none; margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .ms-tasks li { font-size: 13px; color: var(--n700); padding-left: 16px; position: relative; }
+  .ms-tasks li::before { content: '✓'; position: absolute; left: 0; color: var(--success); font-size: 11px; top: 2px; }
+
+  /* ── TOC ── */
+  .toc { background: var(--white); border: 1px solid var(--n200); border-radius: 16px; padding: 32px 36px; margin-bottom: 60px; }
+  .toc h3 { font-size: 16px; font-weight: 800; margin-bottom: 20px; color: var(--n900); }
+  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 40px; }
+  .toc-item { display: flex; gap: 10px; align-items: baseline; font-size: 14px; color: var(--n700); padding: 4px 0; border-bottom: 1px dashed var(--n200); }
+  .toc-item:last-child { border-bottom: none; }
+  .toc-num { font-size: 11px; font-weight: 800; color: var(--primary); min-width: 24px; }
+  .toc-item a { color: var(--n700); text-decoration: none; }
+  .toc-item a:hover { color: var(--primary); }
+
+  /* ── PRINT / GLOBAL ── */
+  @media print { body { background: #fff; } .cover { min-height: auto; page-break-after: always; } }
+  @media(max-width: 768px) { .page { padding: 48px 20px; } .toc-grid { grid-template-columns: 1fr; } .phase-header { flex-direction: column; } .phase-header-meta { margin-left: 0; align-items: flex-start; } }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     COVER
+══════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-tag">Confidential · Internal Product Document · v2.0</div>
+  <h1>MediLink Rwanda<br><span>Full Redesign Roadmap</span></h1>
+  <p class="cover-sub">A complete, production-ready specification for rebuilding MediLink from the ground up — covering every user, every screen, every API endpoint, every data model extension, and every security layer — ready to ship.</p>
+  <div class="cover-meta">
+    <div class="cover-meta-item"><div class="label">Status</div><div class="value">Phase 0 done · Full redesign required</div></div>
+    <div class="cover-meta-item"><div class="label">Stack</div><div class="value">Django · DRF · PostgreSQL · React 18 · TypeScript · Tailwind</div></div>
+    <div class="cover-meta-item"><div class="label">Scope</div><div class="value">Patients · Clinicians · Facility staff · MoH · Admin</div></div>
+    <div class="cover-meta-item"><div class="label">Channels</div><div class="value">Web PWA · Provider web app (USSD deferred)</div></div>
+  </div>
+  <div class="cover-version">MediLink Rwanda · Redesign Roadmap 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     TABLE OF CONTENTS
+══════════════════════════════════════════════ -->
+<div class="page">
+  <div class="toc">
+    <h3>Contents</h3>
+    <div class="toc-grid">
+      <div class="toc-item"><span class="toc-num">01</span><a href="#s1">Honest Audit — What Exists & What's Broken</a></div>
+      <div class="toc-item"><span class="toc-num">07</span><a href="#s7">Phase 2 — Booking Engine</a></div>
+      <div class="toc-item"><span class="toc-num">02</span><a href="#s2">Design System — The Visual Foundation</a></div>
+      <div class="toc-item"><span class="toc-num">08</span><a href="#s8">Phase 3 — Clinical Interface (Doctors & Nurses)</a></div>
+      <div class="toc-item"><span class="toc-num">03</span><a href="#s3">System Architecture Overview</a></div>
+      <div class="toc-item"><span class="toc-num">09</span><a href="#s9">Phase 4 — AI Symptom Checker</a></div>
+      <div class="toc-item"><span class="toc-num">04</span><a href="#s4">Complete Data Model (All Phases)</a></div>
+      <div class="toc-item"><span class="toc-num">10</span><a href="#s10">Phase 5 — Admin & MoH Portals</a></div>
+      <div class="toc-item"><span class="toc-num">05</span><a href="#s5">Phase 0 — Fix What Exists</a></div>
+      <div class="toc-item"><span class="toc-num">11</span><a href="#s11">Complete API Specification</a></div>
+      <div class="toc-item"><span class="toc-num">06</span><a href="#s6">Phase 1 — Reception & Queue Engine</a></div>
+      <div class="toc-item"><span class="toc-num">12</span><a href="#s12">Security Architecture</a></div>
+    </div>
+  </div>
+
+<!-- ══════════════════════════════════════════════
+     SECTION 1 — AUDIT
+══════════════════════════════════════════════ -->
+<div id="s1">
+  <div class="section-number">Section 01</div>
+  <h2 class="section-title">Honest Audit — What Exists & What's Broken</h2>
+  <p class="section-lead">Before a single line of new code is written, we need to be completely clear about what Phase 0 delivered, what it did not, and why the system as a whole cannot be used by any real user today.</p>
+
+  <div class="callout primary">
+    <h4>What Phase 0 Actually Delivered</h4>
+    <p>The backend models for <code>Facility</code>, <code>FacilityService</code>, <code>FacilityInsurer</code>, <code>OpeningHours</code>, <code>Patient</code>, <code>Insurer</code> are correctly designed. The geo-search endpoint <code>GET /facilities/nearby</code> works. The PostGIS GIST index is correctly created. The test suite has 47 backend tests at 87% coverage and 33 frontend tests. The patient PWA renders home screen State A (no active queue) with search and facility cards. The OpenAPI schema is committed. The bundle is 69 KB gzipped, well within the 150 KB budget. This is solid engineering — do not throw it away.</p>
+  </div>
+
+  <div class="callout danger">
+    <h4>Why No Real User Can Use The System Today</h4>
+    <p>The 25 seed facilities have <strong>approximate, unverified coordinates</strong>. Distance calculations are wrong. A patient searching for facilities near them gets results that may be kilometres off. The patient app has no Auth (Phase 2), no booking (Phase 2), no queue tracking (Phase 1) — the three things that define the product's value. The provider (reception) app does not exist — meaning no receptionist can enter patients, and therefore the queue data that the patient app would read does not exist. There are no doctor profiles. Walk-in patients have no intake flow. The symptom checker is a placeholder comment. No roles except basic Django admin exist. No one can log in, book, check in, or track a queue.</p>
+  </div>
+
+  <table class="spec-table">
+    <thead><tr><th>Component</th><th>Current State</th><th>Required State</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td>Facility data (25 facilities)</td><td>Coordinates approximate</td><td>Field-verified, complete</td><td>Field work — phones + site visits</td></tr>
+      <tr><td>Patient PWA — Home A</td><td>Works, bare design</td><td>Full design system applied</td><td>Frontend redesign</td></tr>
+      <tr><td>Patient PWA — Home B/C</td><td>Designed, no live data</td><td>Live queue card</td><td>Requires Phase 1 first</td></tr>
+      <tr><td>Patient PWA — Auth</td><td>Not built</td><td>Phone + OTP, profile</td><td>Build Phase 2</td></tr>
+      <tr><td>Patient PWA — Booking</td><td>Not built</td><td>4-step wizard</td><td>Build Phase 2</td></tr>
+      <tr><td>Patient PWA — Queue</td><td>Not built</td><td>Live position screen</td><td>Build Phase 1</td></tr>
+      <tr><td>Provider web app</td><td>Folder exists, empty</td><td>Full reception + admin</td><td>Build Phase 1</td></tr>
+      <tr><td>Doctor model</td><td>StaffMember only</td><td>Doctor with multi-facility</td><td>Extend data model</td></tr>
+      <tr><td>Booking / Appointments</td><td>Model exists in docs</td><td>Fully implemented</td><td>Build Phase 2</td></tr>
+      <tr><td>Queue / Check-in</td><td>Model exists in docs</td><td>Fully implemented with WS</td><td>Build Phase 1</td></tr>
+      <tr><td>Symptom checker</td><td>Placeholder in triage app</td><td>AI inference engine</td><td>Build Phase 4</td></tr>
+      <tr><td>Notifications</td><td>Model designed</td><td>Email + push (SMS deferred)</td><td>Build Phase 2</td></tr>
+      <tr><td>Admin portal</td><td>Django admin only</td><td>Full React admin portal</td><td>Build Phase 5</td></tr>
+      <tr><td>MoH dashboard</td><td>Not specified</td><td>Read-only national stats</td><td>Build Phase 5</td></tr>
+      <tr><td>Security layer</td><td>Basic Django auth</td><td>JWT, RBAC, audit log, 2FA</td><td>Build Phase 1 onwards</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<hr class="section-divider heavy">
+
+<!-- ══════════════════════════════════════════════
+     SECTION 2 — DESIGN SYSTEM
+══════════════════════════════════════════════ -->
+<div id="s2">
+  <div class="section-number">Section 02</div>
+  <h2 class="section-title">Design System — The Visual Foundation</h2>
+  <p class="section-lead">Every pixel in this system speaks before any word is read. A high-class system is not made of more features — it is made of fewer elements, placed more precisely, with more intention. The design system below is the law. Every component, every screen, every portal inherits from it. Nothing is designed ad hoc.</p>
+
+  <div class="callout warning">
+    <h4>Design Philosophy</h4>
+    <p>MediLink serves two audiences simultaneously: a rural patient on a low-end Android in a busy waiting room, and a senior doctor or ministry official reviewing analytics on a 27-inch monitor. The design must feel expensive and trustworthy to the official, while remaining crystal-clear and fast to the patient. The answer is <strong>precise restraint</strong> — not simplicity, not minimalism. Every element is deliberate. No decoration that doesn't carry meaning. Typography does the heavy lifting. White space is generous. Colour is used to communicate state, never for aesthetic variety.</p>
+  </div>
+
+  <h3 style="font-size:20px;font-weight:800;margin-bottom:20px;margin-top:32px">Colour Tokens</h3>
+  <div class="token-row">
+    <div class="token-item"><div class="token-swatch" style="background:#0A6E5E"></div><div class="token-name">--primary</div><div class="token-value">#0A6E5E</div><div class="token-usage">Actions, links, active states, identity</div></div>
+    <div class="token-item"><div class="token-swatch" style="background:#074F44"></div><div class="token-name">--primary-dark</div><div class="token-value">#074F44</div><div class="token-usage">Hover, pressed, header background</div></div>
+    <div class="token-item"><div class="token-swatch" style="background:#E6F4F1;border:1px solid #CBD5E0"></div><div class="token-name">--primary-light</div><div class="token-value">#E6F4F1</div><div class="token-usage">Selected backgrounds, highlights, chips</div></div>
+    <div class="token-item"><div class="token-swatch" style="background:#F4A832"></div><div class="token-name">--accent</div><div class="token-value">#F4A832</div><div class="token-usage">Queue badges, ETA, urgency, CTAs</div></div>
+    <div class="token-item"><div class="token-swatch" style="background:#D93025"></div><div class="token-name">--danger</div><div class="token-value">#D93025</div><div class="token-usage">Emergency, errors, destructive actions</div></div>
+    <div class="token-item"><div class="token-swatch" style="background:#1E8A4C"></div><div class="token-name">--success</div><div class="token-value">#1E8A4C</div><div class="token-usage">Confirmed, attended, insurance active</div></div>
+    <div class="token-item"><div class="token-swatch" style="background:#E67E22"></div><div class="token-name">--warning</div><div class="token-value">#E67E22</div><div class="token-usage">No-show, expiring, pending review</div></div>
+    <div class="token-item"><div class="token-swatch" style="background:#1A1A2E"></div><div class="token-name">--n900</div><div class="token-value">#1A1A2E</div><div class="token-usage">Primary text, headings</div></div>
+    <div class="token-item"><div class="token-swatch" style="background:#4A5568"></div><div class="token-name">--n600</div><div class="token-value">#4A5568</div><div class="token-usage">Secondary text, labels</div></div>
+    <div class="token-item"><div class="token-swatch" style="background:#CBD5E0"></div><div class="token-name">--n300</div><div class="token-value">#CBD5E0</div><div class="token-usage">Borders, dividers, input outlines</div></div>
+    <div class="token-item"><div class="token-swatch" style="background:#F7FAFC;border:1px solid #CBD5E0"></div><div class="token-name">--n100</div><div class="token-value">#F7FAFC</div><div class="token-usage">Page backgrounds, inactive surfaces</div></div>
+    <div class="token-item"><div class="token-swatch" style="background:#FFFFFF;border:1px solid #CBD5E0"></div><div class="token-name">--white</div><div class="token-value">#FFFFFF</div><div class="token-usage">Card surfaces, inputs, overlays</div></div>
+  </div>
+
+  <h3 style="font-size:20px;font-weight:800;margin-bottom:20px;margin-top:40px">Typography Scale</h3>
+  <table class="spec-table">
+    <thead><tr><th>Token</th><th>Size</th><th>Weight</th><th>Line Height</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td><code>--text-display</code></td><td>48–72px</td><td>900</td><td>1.0</td><td>Queue position number — readable at arm's length</td></tr>
+      <tr><td><code>--text-h1</code></td><td>32px</td><td>800</td><td>1.2</td><td>Page titles, screen headers</td></tr>
+      <tr><td><code>--text-h2</code></td><td>24px</td><td>700</td><td>1.3</td><td>Section headers, card titles</td></tr>
+      <tr><td><code>--text-h3</code></td><td>18px</td><td>700</td><td>1.4</td><td>Card sub-sections, form group labels</td></tr>
+      <tr><td><code>--text-body-lg</code></td><td>16px</td><td>400</td><td>1.7</td><td>Primary body text, descriptions</td></tr>
+      <tr><td><code>--text-body</code></td><td>14px</td><td>400</td><td>1.6</td><td>Secondary body, table cells, form hints</td></tr>
+      <tr><td><code>--text-label</code></td><td>12px</td><td>700</td><td>1.4</td><td>Input labels, badge text, table headers</td></tr>
+      <tr><td><code>--text-micro</code></td><td>11px</td><td>700</td><td>1.3</td><td>Status pills, timestamps, legal text</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="font-size:20px;font-weight:800;margin-bottom:20px;margin-top:40px">Spacing, Radius, Shadow & Motion</h3>
+  <table class="spec-table">
+    <thead><tr><th>Category</th><th>Token</th><th>Value</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td rowspan="6">Spacing</td><td><code>--space-xs</code></td><td>4px</td><td>Icon gaps, tight inline spacing</td></tr>
+      <tr><td><code>--space-sm</code></td><td>8px</td><td>Chip gaps, tight card padding</td></tr>
+      <tr><td><code>--space-md</code></td><td>16px</td><td>Card inner padding, section gaps</td></tr>
+      <tr><td><code>--space-lg</code></td><td>24px</td><td>Card outer padding, form field gaps</td></tr>
+      <tr><td><code>--space-xl</code></td><td>40px</td><td>Section vertical rhythm</td></tr>
+      <tr><td><code>--space-2xl</code></td><td>80px</td><td>Page top/bottom padding</td></tr>
+      <tr><td rowspan="4">Radius</td><td><code>--radius-sm</code></td><td>6px</td><td>Badges, pills, tags</td></tr>
+      <tr><td><code>--radius-md</code></td><td>10px</td><td>Input fields, buttons</td></tr>
+      <tr><td><code>--radius-lg</code></td><td>16px</td><td>Cards, panels</td></tr>
+      <tr><td><code>--radius-pill</code></td><td>9999px</td><td>Primary CTA buttons</td></tr>
+      <tr><td rowspan="3">Shadow</td><td><code>--shadow-sm</code></td><td><code>0 1px 4px rgba(0,0,0,.06)</code></td><td>Subtle card lift</td></tr>
+      <tr><td><code>--shadow-md</code></td><td><code>0 4px 16px rgba(0,0,0,.10)</code></td><td>Floating elements, modals</td></tr>
+      <tr><td><code>--shadow-lg</code></td><td><code>0 12px 48px rgba(0,0,0,.16)</code></td><td>Phone shell, hero cards</td></tr>
+      <tr><td rowspan="3">Motion</td><td><code>--ease-fast</code></td><td>150ms ease</td><td>Hover states, colour transitions</td></tr>
+      <tr><td><code>--ease-base</code></td><td>200ms ease</td><td>Most interactive transitions</td></tr>
+      <tr><td><code>--ease-slow</code></td><td>350ms cubic-bezier(.4,0,.2,1)</td><td>Panel slides, modals, drawers</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="font-size:20px;font-weight:800;margin-bottom:20px;margin-top:40px">Component Library — Primitives to Build First</h3>
+  <p style="color:var(--n600);margin-bottom:20px;font-size:14px">No external UI library. Every component is hand-built to match the design system. No MUI, no Ant Design — they add 300+ KB to the bundle and force you into their visual language. The following 14 primitives are all you need.</p>
+
+  <div class="component-spec">
+    <div class="cs-name">&lt;Button /&gt;</div>
+    <div class="cs-title">Button — 4 variants, 3 sizes</div>
+    <div class="cs-body">The only interactive element on every screen. Variants: <code>primary</code> (filled green, pill radius, white text), <code>secondary</code> (outlined green, white fill), <code>ghost</code> (text only, green), <code>danger</code> (filled red). Sizes: <code>sm</code> (32px height), <code>md</code> (44px — minimum touch target), <code>lg</code> (54px — primary CTAs). All variants have hover, active (scale 0.97), focus-ring, disabled, and loading (spinner) states. Loading state replaces text with a 16px spinner and locks width to prevent layout shift.</div>
+    <div class="cs-props">
+      <div class="cs-props-title">Props</div>
+      <div class="prop-row"><span class="prop-name">variant</span><span class="prop-type">string</span><span class="prop-desc">primary | secondary | ghost | danger</span></div>
+      <div class="prop-row"><span class="prop-name">size</span><span class="prop-type">string</span><span class="prop-desc">sm | md | lg — default md</span></div>
+      <div class="prop-row"><span class="prop-name">loading</span><span class="prop-type">boolean</span><span class="prop-desc">Shows spinner, disables click</span></div>
+      <div class="prop-row"><span class="prop-name">fullWidth</span><span class="prop-type">boolean</span><span class="prop-desc">width: 100% — mobile primary CTAs</span></div>
+      <div class="prop-row"><span class="prop-name">icon</span><span class="prop-type">ReactNode</span><span class="prop-desc">Leading icon — 16px, inline before text</span></div>
+    </div>
+  </div>
+
+  <div class="component-spec">
+    <div class="cs-name">&lt;Card /&gt;</div>
+    <div class="cs-title">Card — the building block of every screen</div>
+    <div class="cs-body">White surface, 16px radius, shadow-sm border, 24px padding. Variants: <code>default</code>, <code>interactive</code> (cursor pointer, hover elevates shadow, 150ms), <code>selected</code> (primary-light background, primary border 1.5px), <code>danger</code> (danger-light background, danger border). Never use raw divs for content containers — always Card.</div>
+    <div class="cs-props">
+      <div class="cs-props-title">Props</div>
+      <div class="prop-row"><span class="prop-name">variant</span><span class="prop-type">string</span><span class="prop-desc">default | interactive | selected | danger</span></div>
+      <div class="prop-row"><span class="prop-name">padding</span><span class="prop-type">string</span><span class="prop-desc">sm (12px) | md (24px) | lg (32px) — default md</span></div>
+      <div class="prop-row"><span class="prop-name">onClick</span><span class="prop-type">function</span><span class="prop-desc">Enables interactive variant automatically</span></div>
+    </div>
+  </div>
+
+  <div class="component-spec">
+    <div class="cs-name">&lt;QueuePositionDisplay /&gt;</div>
+    <div class="cs-title">Queue Position — the centrepiece of the product</div>
+    <div class="cs-body">The single most important component in the system. Renders the patient's queue number at <strong>72px font size, weight 900</strong>, on the primary green background. Below it: the progress bar (filled = served, amber = you, grey = waiting), the ETA in minutes, and the "Leave home by HH:MM" line. This component animates when the number changes — scale 1 → 1.08 → 1, 300ms. The ETA and leave-by lines have a pulsing update indicator (last updated N minutes ago). This component must be readable from 60cm in bright outdoor light — contrast ratio minimum 7:1.</div>
+    <div class="cs-props">
+      <div class="cs-props-title">Props</div>
+      <div class="prop-row"><span class="prop-name">position</span><span class="prop-type">number</span><span class="prop-desc">Current queue position</span></div>
+      <div class="prop-row"><span class="prop-name">etaMinutes</span><span class="prop-type">number | null</span><span class="prop-desc">null = insufficient data → show "Wait unavailable"</span></div>
+      <div class="prop-row"><span class="prop-name">leaveHomeBy</span><span class="prop-type">string | null</span><span class="prop-desc">ISO time or null — hide if null, never fabricate</span></div>
+      <div class="prop-row"><span class="prop-name">totalAhead</span><span class="prop-type">number</span><span class="prop-desc">Patients ahead — used for progress bar</span></div>
+      <div class="prop-row"><span class="prop-name">totalSeen</span><span class="prop-type">number</span><span class="prop-desc">Patients already served today</span></div>
+      <div class="prop-row"><span class="prop-name">updatedAt</span><span class="prop-type">Date</span><span class="prop-desc">Last server update — shows staleness badge if >2 min</span></div>
+    </div>
+  </div>
+
+  <div class="component-spec">
+    <div class="cs-name">&lt;FacilityCard /&gt;</div>
+    <div class="cs-title">Facility Card — search result, home screen</div>
+    <div class="cs-body">Shows facility name, distance, opening hours, insurance match status, wait time, and available slot count. The insurance badge is the most prominent element — green chip with insurer name when matched. Wait time is amber when available, muted grey with "Wait time not available" text when the facility is not reporting live data. Never show a placeholder number — muted text always. The "Book" button only appears when the facility has available slots.</div>
+  </div>
+
+  <div class="component-spec">
+    <div class="cs-name">&lt;InsuranceBadge /&gt;</div>
+    <div class="cs-title">Insurance Badge — single truth about coverage</div>
+    <div class="cs-body">Three states only: <code>accepted</code> (green, "Mutuelle accepted"), <code>not-accepted</code> (red, "Mutuelle not accepted"), <code>unknown</code> (muted, "Insurance status unknown"). Never imply real-time individual coverage verification — that is a level-2 integration not yet built. The copy is always "accepts [insurer]", never "you are covered".</div>
+  </div>
+
+  <p style="color:var(--n600);font-size:14px;margin-top:8px">Additional primitives: <code>&lt;Input /&gt;</code>, <code>&lt;Select /&gt;</code>, <code>&lt;Badge /&gt;</code>, <code>&lt;Avatar /&gt;</code>, <code>&lt;Spinner /&gt;</code>, <code>&lt;EmptyState /&gt;</code>, <code>&lt;Toast /&gt;</code>, <code>&lt;Modal /&gt;</code>, <code>&lt;StatusPill /&gt;</code> — all follow the same token system. Build all 14 primitives before building any screen. They are the foundation.</p>
+</div>
+
+<hr class="section-divider heavy">
+
+<!-- ══════════════════════════════════════════════
+     SECTION 3 — SYSTEM ARCHITECTURE
+══════════════════════════════════════════════ -->
+<div id="s3">
+  <div class="section-number">Section 03</div>
+  <h2 class="section-title">System Architecture Overview</h2>
+  <p class="section-lead">The architecture does not change fundamentally — the existing Django + PostGIS + Redis + Celery + React stack is correct. What changes is the completeness: every layer from authentication to real-time WebSockets to the AI inference service must be built and connected.</p>
+
+  <table class="spec-table">
+    <thead><tr><th>Layer</th><th>Technology</th><th>Role</th><th>New in Redesign?</th></tr></thead>
+    <tbody>
+      <tr><td>Backend API</td><td>Django 5 + DRF</td><td>All business logic, REST endpoints, auth</td><td>Expand significantly</td></tr>
+      <tr><td>Database</td><td>PostgreSQL 16 + PostGIS</td><td>All persistent data, geo queries</td><td>New tables added</td></tr>
+      <tr><td>Cache + Jobs</td><td>Redis 7 + Celery</td><td>Queue ETA stats, notifications, scheduled tasks</td><td>New tasks added</td></tr>
+      <tr><td>Real-time</td><td>Django Channels + WebSocket</td><td>Live queue position updates (NEW)</td><td>Yes — new layer</td></tr>
+      <tr><td>Patient app</td><td>React 18 + Vite + TypeScript PWA</td><td>Patient-facing, installable</td><td>Full redesign</td></tr>
+      <tr><td>Provider app</td><td>React 18 + Vite + TypeScript</td><td>Reception, facility admin, clinical</td><td>Build from scratch</td></tr>
+      <tr><td>Admin portal</td><td>React 18 + Vite + TypeScript</td><td>MediLink internal operations</td><td>Build from scratch</td></tr>
+      <tr><td>MoH portal</td><td>React 18 + Vite + TypeScript</td><td>National read-only dashboard</td><td>Build from scratch</td></tr>
+      <tr><td>AI service</td><td>Python FastAPI + scikit-learn / HuggingFace</td><td>Symptom classification, specialist routing</td><td>Yes — Phase 4</td></tr>
+      <tr><td>Auth</td><td>JWT (djangorestframework-simplejwt)</td><td>All user authentication</td><td>Yes — new in Phase 1</td></tr>
+      <tr><td>File storage</td><td>AWS S3 or MinIO</td><td>Doctor profile photos, prescription uploads</td><td>Yes — Phase 3</td></tr>
+      <tr><td>Email</td><td>SendGrid or AWS SES</td><td>OTP, booking confirmations, reminders</td><td>Yes — Phase 2</td></tr>
+      <tr><td>Push notifications</td><td>Web Push (VAPID)</td><td>Queue alerts, appointment reminders</td><td>Yes — Phase 2</td></tr>
+      <tr><td>Infra</td><td>Docker Compose → Kubernetes (Phase 5)</td><td>Container orchestration</td><td>Evolves by phase</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout primary">
+    <h4>The WebSocket Layer — Why It's Critical</h4>
+    <p>Queue position cannot be polled every 30 seconds in production with 5,000 concurrent users across 100+ facilities. That is 10,000 requests per minute hitting the Django application server. The correct architecture is a WebSocket channel per queue. When a receptionist marks a patient as served, Django Channels broadcasts a <code>queue.update</code> event to all connected clients in that facility's room. The patient app receives it and re-renders the queue card in under 100ms with no polling. Django Channels with Redis as the channel layer is already partially supported by the existing Redis infrastructure.</p>
+  </div>
+
+  <div class="callout warning">
+    <h4>Walk-in Patients — The Flow That Most Systems Miss</h4>
+    <p>Not every patient books online. At a busy district hospital, the majority arrive at the door without a booking, especially elderly patients and emergency cases. The system must handle this equally well. A walk-in creates a <code>QueueEntry</code> directly through the receptionist's interface — no <code>Appointment</code> record is required. The receptionist can optionally look up a patient by phone number (linking to their profile) or create an anonymous walk-in record with a name only. The walk-in patient gets a printed or displayed ticket code (e.g. A-047). Their position in the queue is determined by <code>joined_at</code> timestamp, same as booked patients. There is no separate queue for walk-ins and booked patients — they share one queue, ordered by arrival time, with urgency overrides available to the nurse.</p>
+  </div>
+
+  <div class="callout primary">
+    <h4>Doctor Daily Capacity Limit — How It Works</h4>
+    <p>A doctor can set a maximum number of patients per day per service type. This is stored on the <code>ScheduleTemplate</code> model as <code>capacity_per_slot × number_of_slots</code>, and on a new <code>DoctorDailyLimit</code> model for overrides. When the limit is reached, the booking UI marks all remaining slots for that doctor as "Full" and directs the patient to either another doctor at the same facility or a nearby facility. The receptionist also sees a capacity warning when checking in walk-in patients beyond the doctor's daily limit, but can override it with a reason (emergencies, direct referrals). This override is logged.</p>
+  </div>
+</div>
+
+<hr class="section-divider heavy">
+
+<!-- ══════════════════════════════════════════════
+     SECTION 4 — DATA MODEL
+══════════════════════════════════════════════ -->
+<div id="s4">
+  <div class="section-number">Section 04</div>
+  <h2 class="section-title">Complete Data Model — All Phases</h2>
+  <p class="section-lead">The existing data model in doc 02 is correct for Phase 0. What follows are all the additions and extensions required for the full system. Existing models are not replaced — only extended.</p>
+
+  <div class="feature-block">
+    <h3>New: <code>doctors</code> app</h3>
+    <div class="fb-meta"><span class="fb-tag db">Database</span><span class="fb-tag be">Backend</span></div>
+    <p>The existing <code>StaffMember</code> model ties a user to a single facility. Doctors are different: one doctor may work at CHUK on Monday and Wednesday, and at a private clinic on Friday. A doctor's profile (specialisation, qualifications, accepted insurances) must be portable across facilities. This requires a new <code>Doctor</code> model separate from <code>StaffMember</code>.</p>
+    <div class="model-block">
+      <div class="model-name">Doctor <span class="model-new-badge">NEW</span></div>
+      <div class="model-field"><span class="mf-name">user</span><span class="mf-type">OneToOneField(User)</span><span class="mf-note">Django auth user</span></div>
+      <div class="model-field"><span class="mf-name">registration_number</span><span class="mf-type">CharField(40)</span><span class="mf-note">Rwanda Medical Council registration</span></div>
+      <div class="model-field"><span class="mf-name">specialisation</span><span class="mf-type">ForeignKey(ServiceType)</span><span class="mf-note">Primary specialty</span></div>
+      <div class="model-field"><span class="mf-name">bio</span><span class="mf-type">TextField</span><span class="mf-note">Short professional biography</span></div>
+      <div class="model-field"><span class="mf-name">photo</span><span class="mf-type">ImageField</span><span class="mf-note">S3/MinIO stored</span></div>
+      <div class="model-field"><span class="mf-name">years_experience</span><span class="mf-type">PositiveSmallIntegerField</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">languages</span><span class="mf-type">ArrayField(CharField)</span><span class="mf-note">rw, en, fr</span></div>
+      <div class="model-field"><span class="mf-name">verified_at</span><span class="mf-type">DateTimeField(null)</span><span class="mf-note">Medical Council verification</span></div>
+      <div class="model-field"><span class="mf-name">active</span><span class="mf-type">BooleanField</span><span class="mf-note">Can be deactivated by admin</span></div>
+    </div>
+    <div class="model-block">
+      <div class="model-name">DoctorFacility <span class="model-new-badge">NEW</span></div>
+      <div class="model-field"><span class="mf-name">doctor</span><span class="mf-type">ForeignKey(Doctor)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">facility</span><span class="mf-type">ForeignKey(Facility)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">role_at_facility</span><span class="mf-type">CharField</span><span class="mf-note">consultant | resident | visiting</span></div>
+      <div class="model-field"><span class="mf-name">department</span><span class="mf-type">ForeignKey(ServiceType)</span><span class="mf-note">Which dept at this specific facility</span></div>
+      <div class="model-field"><span class="mf-name">is_primary</span><span class="mf-type">BooleanField</span><span class="mf-note">Main base facility</span></div>
+    </div>
+    <div class="model-block">
+      <div class="model-name">DoctorInsurer <span class="model-new-badge">NEW</span></div>
+      <div class="model-field"><span class="mf-name">doctor</span><span class="mf-type">ForeignKey(Doctor)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">insurer</span><span class="mf-type">ForeignKey(Insurer)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">confirmed_at</span><span class="mf-type">DateTimeField(null)</span><span class="mf-note">Ops-verified</span></div>
+    </div>
+    <div class="model-block">
+      <div class="model-name">DoctorAvailability <span class="model-new-badge">NEW</span></div>
+      <div class="model-field"><span class="mf-name">doctor</span><span class="mf-type">ForeignKey(Doctor)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">facility</span><span class="mf-type">ForeignKey(Facility)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">weekday</span><span class="mf-type">SmallIntegerField</span><span class="mf-note">0=Mon … 6=Sun</span></div>
+      <div class="model-field"><span class="mf-name">start_time</span><span class="mf-type">TimeField</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">end_time</span><span class="mf-type">TimeField</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">max_patients_per_day</span><span class="mf-type">PositiveSmallIntegerField</span><span class="mf-note">Daily capacity limit — enforced at booking</span></div>
+      <div class="model-field"><span class="mf-name">slot_duration_minutes</span><span class="mf-type">PositiveSmallIntegerField</span><span class="mf-note">Default 15; specialist may set 30</span></div>
+    </div>
+  </div>
+
+  <div class="feature-block">
+    <h3>Extended: <code>patients</code> app</h3>
+    <div class="fb-meta"><span class="fb-tag db">Database</span><span class="fb-tag be">Backend</span></div>
+    <p>The existing <code>Patient</code> model is correct. Two additions are required: dependent profiles for caregivers managing family members, and consent tracking for PDPL compliance.</p>
+    <div class="model-block">
+      <div class="model-name">Dependent <span class="model-new-badge">NEW</span></div>
+      <div class="model-field"><span class="mf-name">guardian</span><span class="mf-type">ForeignKey(Patient)</span><span class="mf-note">The caregiver account</span></div>
+      <div class="model-field"><span class="mf-name">full_name</span><span class="mf-type">CharField(150)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">relationship</span><span class="mf-type">CharField</span><span class="mf-note">child | parent | spouse | other</span></div>
+      <div class="model-field"><span class="mf-name">date_of_birth</span><span class="mf-type">DateField(null)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">insurer</span><span class="mf-type">ForeignKey(Insurer, null)</span><span class="mf-note">Separate insurance from guardian</span></div>
+      <div class="model-field"><span class="mf-name">notes</span><span class="mf-type">TextField</span><span class="mf-note">Allergies, chronic conditions — free text</span></div>
+    </div>
+    <div class="model-block">
+      <div class="model-name">ConsentRecord <span class="model-new-badge">NEW</span></div>
+      <div class="model-field"><span class="mf-name">patient</span><span class="mf-type">ForeignKey(Patient)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">consent_type</span><span class="mf-type">CharField</span><span class="mf-note">data_storage | symptom_ai | share_with_doctor</span></div>
+      <div class="model-field"><span class="mf-name">granted</span><span class="mf-type">BooleanField</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">granted_at</span><span class="mf-type">DateTimeField</span><span class="mf-note">Immutable once set</span></div>
+      <div class="model-field"><span class="mf-name">revoked_at</span><span class="mf-type">DateTimeField(null)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">ip_address</span><span class="mf-type">GenericIPAddressField</span><span class="mf-note">Audit trail</span></div>
+    </div>
+  </div>
+
+  <div class="feature-block">
+    <h3>Extended: <code>queueing</code> app</h3>
+    <div class="fb-meta"><span class="fb-tag db">Database</span><span class="fb-tag be">Backend</span></div>
+    <p>The existing <code>QueueEntry</code> model is correct. One critical addition: the priority field for the 3-lane queue system (Emergency / Urgent / Routine). Without this, a nurse cannot escalate a deteriorating patient ahead of routine bookings.</p>
+    <div class="model-block">
+      <div class="model-name">QueueEntry — additions <span class="model-new-badge">EXTEND</span></div>
+      <div class="model-field"><span class="mf-name">priority</span><span class="mf-type">CharField</span><span class="mf-note">routine | urgent | emergency — default routine</span></div>
+      <div class="model-field"><span class="mf-name">priority_set_by</span><span class="mf-type">ForeignKey(User, null)</span><span class="mf-note">Nurse who escalated — audit</span></div>
+      <div class="model-field"><span class="mf-name">priority_reason</span><span class="mf-type">TextField(blank)</span><span class="mf-note">Free text reason for escalation</span></div>
+      <div class="model-field"><span class="mf-name">doctor</span><span class="mf-type">ForeignKey(Doctor, null)</span><span class="mf-note">Assigned doctor — set at check-in</span></div>
+      <div class="model-field"><span class="mf-name">triage_notes</span><span class="mf-type">TextField(blank)</span><span class="mf-note">Nurse-recorded vitals and observations</span></div>
+      <div class="model-field"><span class="mf-name">entry_source</span><span class="mf-type">CharField</span><span class="mf-note">booking | walk_in | referral | emergency</span></div>
+    </div>
+    <div class="model-block">
+      <div class="model-name">QueueDailyReset <span class="model-new-badge">NEW</span></div>
+      <div class="model-field"><span class="mf-name">facility</span><span class="mf-type">ForeignKey(Facility)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">service_type</span><span class="mf-type">ForeignKey(ServiceType)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">date</span><span class="mf-type">DateField</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">reset_at</span><span class="mf-type">DateTimeField</span><span class="mf-note">When the queue was reset for the day</span></div>
+      <div class="model-field"><span class="mf-name">reset_by</span><span class="mf-type">ForeignKey(User)</span><span class="mf-note">Receptionist who opened the queue</span></div>
+    </div>
+  </div>
+
+  <div class="feature-block">
+    <h3>New: <code>triage</code> app — Vitals & Clinical Notes</h3>
+    <div class="fb-meta"><span class="fb-tag db">Database</span><span class="fb-tag be">Backend</span></div>
+    <div class="model-block">
+      <div class="model-name">TriageRecord <span class="model-new-badge">NEW</span></div>
+      <div class="model-field"><span class="mf-name">queue_entry</span><span class="mf-type">OneToOneField(QueueEntry)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">recorded_by</span><span class="mf-type">ForeignKey(User)</span><span class="mf-note">Nurse</span></div>
+      <div class="model-field"><span class="mf-name">temperature_celsius</span><span class="mf-type">DecimalField(4,1, null)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">blood_pressure_systolic</span><span class="mf-type">PositiveSmallIntegerField(null)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">blood_pressure_diastolic</span><span class="mf-type">PositiveSmallIntegerField(null)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">pulse_bpm</span><span class="mf-type">PositiveSmallIntegerField(null)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">oxygen_saturation_pct</span><span class="mf-type">PositiveSmallIntegerField(null)</span><span class="mf-note">SpO2 0–100</span></div>
+      <div class="model-field"><span class="mf-name">weight_kg</span><span class="mf-type">DecimalField(5,2, null)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">notes</span><span class="mf-type">TextField</span><span class="mf-note">Free text nurse observations</span></div>
+      <div class="model-field"><span class="mf-name">recorded_at</span><span class="mf-type">DateTimeField(auto_now_add)</span><span class="mf-note"></span></div>
+    </div>
+    <div class="model-block">
+      <div class="model-name">VisitNote <span class="model-new-badge">NEW</span></div>
+      <div class="model-field"><span class="mf-name">queue_entry</span><span class="mf-type">OneToOneField(QueueEntry)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">doctor</span><span class="mf-type">ForeignKey(Doctor)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">diagnosis</span><span class="mf-type">TextField</span><span class="mf-note">Doctor's clinical note</span></div>
+      <div class="model-field"><span class="mf-name">prescription</span><span class="mf-type">TextField</span><span class="mf-note">Medication / treatment plan</span></div>
+      <div class="model-field"><span class="mf-name">follow_up_date</span><span class="mf-type">DateField(null)</span><span class="mf-note">If follow-up needed</span></div>
+      <div class="model-field"><span class="mf-name">referral_facility</span><span class="mf-type">ForeignKey(Facility, null)</span><span class="mf-note">If patient referred elsewhere</span></div>
+      <div class="model-field"><span class="mf-name">created_at</span><span class="mf-type">DateTimeField(auto_now_add)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">updated_at</span><span class="mf-type">DateTimeField(auto_now)</span><span class="mf-note">Auto-save every 10s from frontend</span></div>
+    </div>
+  </div>
+
+  <div class="feature-block">
+    <h3>New: <code>audit</code> app — Platform Audit Log</h3>
+    <div class="fb-meta"><span class="fb-tag db">Database</span><span class="fb-tag sec">Security</span></div>
+    <p>Every action taken by any staff member, admin, or system process is logged here. This table is append-only — no update or delete permissions exist for any role including super admin. Required for PDPL compliance and for operational debugging.</p>
+    <div class="model-block">
+      <div class="model-name">AuditLog <span class="model-new-badge">NEW</span></div>
+      <div class="model-field"><span class="mf-name">actor_user</span><span class="mf-type">ForeignKey(User, null)</span><span class="mf-note">null for system-generated events</span></div>
+      <div class="model-field"><span class="mf-name">actor_type</span><span class="mf-type">CharField</span><span class="mf-note">patient | staff | doctor | admin | system</span></div>
+      <div class="model-field"><span class="mf-name">action</span><span class="mf-type">CharField(80)</span><span class="mf-note">queue.serve | appointment.cancel | patient.delete …</span></div>
+      <div class="model-field"><span class="mf-name">target_model</span><span class="mf-type">CharField</span><span class="mf-note">e.g. QueueEntry</span></div>
+      <div class="model-field"><span class="mf-name">target_id</span><span class="mf-type">CharField</span><span class="mf-note">PK of affected object</span></div>
+      <div class="model-field"><span class="mf-name">delta</span><span class="mf-type">JSONField</span><span class="mf-note">Before/after snapshot of changed fields</span></div>
+      <div class="model-field"><span class="mf-name">ip_address</span><span class="mf-type">GenericIPAddressField</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">user_agent</span><span class="mf-type">CharField(300)</span><span class="mf-note"></span></div>
+      <div class="model-field"><span class="mf-name">created_at</span><span class="mf-type">DateTimeField(auto_now_add)</span><span class="mf-note">Never editable</span></div>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider heavy">
+
+<!-- ══════════════════════════════════════════════
+     SECTION 5 — PHASE 0
+══════════════════════════════════════════════ -->
+<div id="s5">
+  <div class="phase-header p0">
+    <div class="phase-num">0</div>
+    <div class="phase-header-info">
+      <h2>Phase 0 — Fix What Exists</h2>
+      <p>Field-verify facility data. Apply the design system. Make the existing patient app look and feel like the product it will become.</p>
+    </div>
+    <div class="phase-header-meta">
+      <span class="phase-badge">In Progress</span>
+      <span class="phase-duration">Weeks 1–3</span>
+    </div>
+  </div>
+
+  <div class="feature-block">
+    <h3>P0-01 — Field Verification of All 25 Facilities</h3>
+    <div class="fb-meta"><span class="fb-tag be">Backend</span><span class="fb-tag db">Data</span></div>
+    <p>This is the single hardest blocker and it is not an engineering problem — it is field work. Every one of the 25 seed facilities must be physically verified or verified by phone call. The <code>verified_at</code> and <code>verified_by</code> fields on the <code>Facility</code> model exist for exactly this purpose. A facility that is not verified must not appear in search results — this rule is already in the query but currently no facility is verified.</p>
+    <ul class="detail-list">
+      <li><strong>Coordinates:</strong> Verify GPS point using Google Maps pin drop, confirmed by calling the facility to describe their location. Never trust a geocoded address — Rwanda addresses are not precise enough.</li>
+      <li><strong>Opening hours:</strong> Call each facility. Record actual hours, not assumed ones. Include lunch breaks as a second OpeningHours row for the day.</li>
+      <li><strong>Services:</strong> Confirm which ServiceTypes are offered. A health centre does not offer all specialties.</li>
+      <li><strong>Insurance:</strong> Confirm which insurers are accepted. This changes — set a calendar reminder to re-verify quarterly.</li>
+      <li><strong>Phone number:</strong> Confirm working contact number for the facility.</li>
+      <li><strong>Photos:</strong> Take or request one exterior photo per facility for the facility detail screen.</li>
+    </ul>
+  </div>
+
+  <div class="feature-block">
+    <h3>P0-02 — Design System Implementation in web-patient</h3>
+    <div class="fb-meta"><span class="fb-tag fe">Frontend</span></div>
+    <p>Apply all design tokens from Section 2 to the existing Tailwind configuration. Rebuild the 8 primitive components. Re-implement the home screen, search screen, and facility detail screen using the new design system. The data and API calls do not change — only the visual layer.</p>
+    <ul class="detail-list">
+      <li><strong>Tailwind config:</strong> Replace the default Tailwind palette with the MediLink token set. All colors, spacing, radius, and shadow values defined as custom tokens.</li>
+      <li><strong>Font:</strong> Add Inter via Google Fonts import. Set <code>font-feature-settings: 'cv01', 'cv02'</code> for the refined numeral rendering needed on the queue number.</li>
+      <li><strong>Home screen State A:</strong> Implement the overlapping search bar (header bleeds into search bar), insurance chip with real-time status, quick action grid, and facility cards with wait time and insurance badges.</li>
+      <li><strong>Facility detail screen:</strong> Full redesign — hero section with facility photo, tabs for Overview / Departments / Doctors / Insurance, map link, and opening hours timeline.</li>
+      <li><strong>Language toggle:</strong> Move from buried settings to top-right of home screen header — always visible, three-option toggle (RW / EN / FR).</li>
+    </ul>
+  </div>
+
+  <div class="feature-block">
+    <h3>P0-03 — Performance Budget Enforcement</h3>
+    <div class="fb-meta"><span class="fb-tag fe">Frontend</span><span class="fb-tag infra">Infra</span></div>
+    <ul class="detail-list">
+      <li>Bundle remains under 150 KB gzipped. Enforce with <code>rollup-plugin-visualizer</code> in CI — fail the build if exceeded.</li>
+      <li>First Contentful Paint on simulated 3G under 2.5 seconds.</li>
+      <li>Lighthouse Performance score above 85 on mobile.</li>
+      <li>Images: all facility photos served as WebP, maximum 200 KB, lazy-loaded.</li>
+      <li>PWA manifest and service worker updated to match new design tokens (theme color, background color).</li>
+    </ul>
+  </div>
+</div>
+
+<hr class="section-divider heavy">
+
+<!-- ══════════════════════════════════════════════
+     SECTION 6 — PHASE 1: RECEPTION & QUEUE
+══════════════════════════════════════════════ -->
+<div id="s6">
+  <div class="phase-header p1">
+    <div class="phase-num">1</div>
+    <div class="phase-header-info">
+      <h2>Phase 1 — Reception & Live Queue Engine</h2>
+      <p>Build the provider web app from scratch. This is the phase that makes the product real — live queue data is created here by receptionists, and consumed by patients on their phones.</p>
+    </div>
+    <div class="phase-header-meta">
+      <span class="phase-badge">Next Build</span>
+      <span class="phase-duration">Weeks 4–9</span>
+    </div>
+  </div>
+
+  <div class="callout danger">
+    <h4>Build Order is Non-Negotiable</h4>
+    <p>The patient app queue screen shows live data that only exists when a receptionist has entered it. You cannot build or demo the patient queue screen without the reception app running first and actively managing a queue. Build the provider reception screen first — it is the foundation of the entire product.</p>
+  </div>
+
+  <div class="feature-block">
+    <h3>P1-01 — Authentication System (Both Apps)</h3>
+    <div class="fb-meta"><span class="fb-tag be">Backend</span><span class="fb-tag fe">Frontend</span><span class="fb-tag sec">Security</span></div>
+    <p>JWT-based authentication for all provider-side users. Patient authentication (OTP) is Phase 2. This phase implements staff login only.</p>
+    <ul class="detail-list">
+      <li><strong>Backend:</strong> Install <code>djangorestframework-simplejwt</code>. Configure access token lifetime 15 minutes, refresh token 7 days. Store refresh tokens in an httpOnly cookie — never localStorage. Access token sent in Authorization header for all API calls.</li>
+      <li><strong>Endpoints:</strong> <code>POST /auth/staff/login</code> (email + password → access + refresh), <code>POST /auth/refresh</code> (refresh → new access), <code>POST /auth/logout</code> (invalidate refresh), <code>GET /auth/me</code> (current user + role + facility).</li>
+      <li><strong>Roles:</strong> Implement Django custom permissions: <code>can_manage_queue</code>, <code>can_check_in_patients</code>, <code>can_view_reports</code>, <code>can_manage_facility</code>, <code>can_manage_staff</code>. Every API view checks the exact permission required — never just "is_staff".</li>
+      <li><strong>Facility scoping:</strong> Every provider-side queryset is filtered by <code>request.user.staffmember.facility</code>. Implement this as a DRF mixin applied globally to all provider views — not per-view. One line missed means a receptionist can read another facility's patients.</li>
+      <li><strong>Provider login screen:</strong> Email + password form. "Forgot password" → email reset link. No registration — accounts created by facility admin or MediLink admin only.</li>
+    </ul>
+  </div>
+
+  <div class="feature-block">
+    <h3>P1-02 — Reception Screen (The Core Screen)</h3>
+    <div class="fb-meta"><span class="fb-tag fe">Frontend</span><span class="fb-tag be">Backend</span></div>
+    <p>Target: complete a patient check-in in under 10 seconds with keyboard only. This screen is the most important screen in the system. Our competitor is a paper register and an overwhelmed receptionist.</p>
+    <ul class="detail-list">
+      <li><strong>Layout:</strong> Two-panel. Left: check-in form (full width on load). Right: current queue list. On wide screens both panels are visible simultaneously. On a tablet, tabs switch between them.</li>
+      <li><strong>Check-in form — booked patient:</strong> Single input field, auto-focused on page load. Accepts phone number or appointment reference code (e.g. ML7K2Q). Press Enter or click Check In. System looks up the matching appointment or walk-in. Displays patient name, insurance, appointment time. One more Enter confirms check-in. Total: 2 keystrokes.</li>
+      <li><strong>Check-in form — walk-in patient:</strong> Toggle "Walk-in" mode. Fields: Name (required), Phone (optional — links to patient profile if found), Department (required dropdown), Insurance (optional). Press Enter to add to queue. Total: 4 fields, one Enter.</li>
+      <li><strong>Optimistic UI:</strong> The queue list updates immediately when Enter is pressed. The backend confirmation happens in the background. If the backend rejects, show an undo toast. Never make the receptionist wait for a server round-trip.</li>
+      <li><strong>Offline mode:</strong> All check-in actions write to IndexedDB first. The queue list is maintained locally. When network returns, sync with <code>POST /queue/sync</code> using the <code>clientRecordedAt</code> timestamp to preserve order fairness. The topbar shows an offline banner with pending action count.</li>
+      <li><strong>Queue list (right panel):</strong> Shows all entries for the selected department today. Columns: position number, ticket code, patient name, entry time, wait time, priority badge, status. Action buttons: Call (marks as CALLED), Serve (marks as SERVED), No-show. Emergency/Urgent entries have a coloured left border and appear at the top of their priority lane.</li>
+      <li><strong>Department selector:</strong> Prominent tab bar at the top showing all departments the logged-in receptionist manages. Clicking a tab switches both panels to that department's queue.</li>
+      <li><strong>Printed ticket:</strong> Each check-in generates a printable ticket with: MediLink logo, facility name, ticket code (A-047), patient name, department, estimated wait, and date/time. Print dialog triggered automatically on check-in or via a manual print button on each row.</li>
+    </ul>
+  </div>
+
+  <div class="feature-block">
+    <h3>P1-03 — WebSocket Queue Engine</h3>
+    <div class="fb-meta"><span class="fb-tag be">Backend</span><span class="fb-tag infra">Infra</span></div>
+    <p>Install Django Channels with Redis channel layer. Every facility-department combination gets its own channel group. When any queue mutation occurs (check-in, serve, call, no-show, priority change), broadcast a <code>queue.update</code> event to all connected clients in that group.</p>
+    <ul class="detail-list">
+      <li><strong>Channel naming:</strong> <code>queue_{facility_slug}_{service_code}</code> — e.g. <code>queue_chuk_general</code>. All receptionists and patients with active queue entries in that department connect to this channel.</li>
+      <li><strong>Event payload:</strong> <code>{ type: "queue.update", facility: slug, service: code, entries: [...] }</code> — full queue state, not a delta. Simpler to implement correctly; at 50 patients per queue the payload is negligible.</li>
+      <li><strong>Authentication on WS:</strong> JWT token passed as query parameter on WS handshake (<code>ws://...?token=ACCESS_TOKEN</code>). Channels middleware validates the token. Unauthenticated connections are rejected for provider channels. Patient queue channels accept unauthenticated connections for read-only position viewing (ticket code as identifier).</li>
+      <li><strong>Fallback:</strong> If WebSocket is not available (corporate proxy, old browser), fall back to 30-second polling on <code>GET /queue/entries/{facility_slug}/{service_code}</code>. The patient app detects WS failure and switches automatically.</li>
+    </ul>
+  </div>
+
+  <div class="feature-block">
+    <h3>P1-04 — Patient App — Home Screen States B & C (Live)</h3>
+    <div class="fb-meta"><span class="fb-tag fe">Frontend</span></div>
+    <p>These screens only work now that Phase 1 produces live queue data. Implement the live queue card on the patient home screen.</p>
+    <ul class="detail-list">
+      <li><strong>State B — in queue:</strong> On load, call <code>GET /queue/current</code>. If an active queue entry exists, the search hero is replaced by the <code>QueuePositionDisplay</code> component. The queue number is 72px, white on primary green. Below it: progress bar, ETA, leave-home-by time. Connect to the facility's WebSocket channel. When a <code>queue.update</code> arrives, animate the position number and update ETA.</li>
+      <li><strong>State C — appointment today:</strong> If <code>GET /queue/current</code> returns a booked appointment for today but no queue entry yet (patient hasn't checked in), show the appointment card with reference code, time, facility, and directions button.</li>
+      <li><strong>Leave home by calculation:</strong> <code>now + eta_minutes - travel_to_facility_minutes - 10_minute_buffer</code>. Travel time from patient's last known location to facility using straight-line distance × 1.3 factor (road correction) ÷ average urban speed 25 km/h. If patient location is not available, hide the line entirely — never fabricate it.</li>
+      <li><strong>Staleness indicator:</strong> If the WebSocket is disconnected or the last update was more than 2 minutes ago, show "Updated 4 min ago" in amber text next to the position. A stale number that looks live destroys trust permanently.</li>
+    </ul>
+  </div>
+
+  <div class="feature-block">
+    <h3>P1-05 — Facility Admin Screen (Provider App)</h3>
+    <div class="fb-meta"><span class="fb-tag fe">Frontend</span><span class="fb-tag be">Backend</span></div>
+    <p>The facility admin has higher permissions than the receptionist. Their primary screen is a dashboard showing today's overview across all departments.</p>
+    <ul class="detail-list">
+      <li><strong>KPI cards (today):</strong> Total appointments, Total check-ins, No-show count, Average wait time, Active queue length across all departments.</li>
+      <li><strong>Department queue overview:</strong> One row per department showing: department name, patients waiting, patients seen, current wait estimate, next available slot. Click any row to drill into that department's full queue list.</li>
+      <li><strong>Staff management:</strong> Add / remove receptionist accounts. Set role permissions. Reset passwords. View last login time for each staff member.</li>
+      <li><strong>Facility settings:</strong> Edit facility profile (name, phone, address, photo). Toggle department availability (temporarily close a department). Manage insurance acceptance.</li>
+      <li><strong>Reports tab:</strong> Daily volume chart, average wait time trend (this week vs last week), no-show rate trend. Downloadable as PDF with the facility's name and date range in the header. This is the number that justifies the subscription.</li>
+    </ul>
+  </div>
+
+  <div class="feature-block">
+    <h3>P1-06 — Doctor Schedule Management</h3>
+    <div class="fb-meta"><span class="fb-tag fe">Frontend</span><span class="fb-tag be">Backend</span></div>
+    <p>Doctors manage their own availability. This screen is part of the provider app, accessible only to users with the Doctor role.</p>
+    <ul class="detail-list">
+      <li><strong>Weekly availability calendar:</strong> A 7-day × facility grid. The doctor checks which days they work at each linked facility and sets start/end time and max patients per day for each slot.</li>
+      <li><strong>Override for specific dates:</strong> Mark specific dates as unavailable (holiday, conference). These dates are blocked in the booking calendar for patients.</li>
+      <li><strong>Today's patient list:</strong> A simplified list of all queue entries assigned to this doctor today, sortable by queue position. Clicking a patient opens a brief profile card with insurance, triage notes (if recorded by nurse), and last visit summary.</li>
+    </ul>
+  </div>
+</div>
+
+<hr class="section-divider heavy">
+
+<!-- ══════════════════════════════════════════════
+     SECTION 7 — PHASE 2: BOOKING ENGINE
+══════════════════════════════════════════════ -->
+<div id="s7">
+  <div class="phase-header p2">
+    <div class="phase-num">2</div>
+    <div class="phase-header-info">
+      <h2>Phase 2 — Booking Engine & Patient Auth</h2>
+      <p>Patients can now create accounts, book appointments with specific doctors, and receive email and push notifications. The online booking flow end to end.</p>
+    </div>
+    <div class="phase-header-meta">
+      <span class="phase-badge">Planned</span>
+      <span class="phase-duration">Weeks 10–16</span>
+    </div>
+  </div>
+
+  <div class="feature-block">
+    <h3>P2-01 — Patient Authentication (Phone + OTP)</h3>
+    <div class="fb-meta"><span class="fb-tag be">Backend</span><span class="fb-tag fe">Frontend</span><span class="fb-tag sec">Security</span></div>
+    <ul class="detail-list">
+      <li><strong>Flow:</strong> Patient enters phone number in E.164 (+250XXXXXXXXX). System generates a 6-digit OTP, valid for 10 minutes, stores as <code>SHA-256(otp + phone + timestamp)</code> in Redis (never in the database). OTP sent via email (if patient has email) or displayed on screen with an instruction to note it (SMS deferred to later phase). Patient enters OTP → system issues JWT access + refresh tokens.</li>
+      <li><strong>Rate limiting:</strong> Maximum 5 OTP requests per phone number per hour. Maximum 3 OTP verification attempts before a 30-minute lockout. Store attempt counts in Redis.</li>
+      <li><strong>Anonymous browsing:</strong> Search, facility detail, and insurance check all work without auth. Auth is required only at the moment of booking — never before. Respect the design rule: "No login wall."</li>
+      <li><strong>Patient profile screen:</strong> Name, language preference, insurance, home location (opt-in), dependent profiles. Privacy section: view consent log, download data, request deletion.</li>
+    </ul>
+  </div>
+
+  <div class="feature-block">
+    <h3>P2-02 — Booking Flow (4-Step Wizard)</h3>
+    <div class="fb-meta"><span class="fb-tag fe">Frontend</span><span class="fb-tag be">Backend</span></div>
+    <p>The 4-step appointment booking flow. Can be entered from a facility card, a facility detail screen, or from the symptom checker result (Phase 4, pre-filled department).</p>
+    <ul class="detail-list">
+      <li><strong>Step 1 — Select Department:</strong> Show all service types offered by the facility. Each card shows department name, available doctor count, and today's next available slot. If arriving from symptom checker, this step is pre-filled and skipped.</li>
+      <li><strong>Step 2 — Select Date & Time:</strong> Calendar strip showing the next 14 days. Grayed dates have no availability. Selecting a date loads available time slots for that day. Slots are shown as a grid (e.g. 8:00, 8:15, 8:30). Full slots are shown struck-through. Partially full slots show remaining capacity (e.g. "2 left"). Slots refresh every 30 seconds to prevent double-booking UI issues.</li>
+      <li><strong>Step 3 — Select Doctor:</strong> List of doctors available on the selected date and time at this facility in the selected department. Each card shows: name, photo, specialisation, years of experience, insurances accepted, and average consultation duration. Patient can select any available doctor or "Any available doctor" to let the system assign.</li>
+      <li><strong>Step 4 — Confirm:</strong> Summary card showing: facility, department, date/time, doctor, insurance match, appointment reference code. A clear disclosure: "By booking you confirm you will cancel at least 2 hours in advance if you cannot attend." Tap Confirm → appointment created → confirmation screen with QR code → push notification permission request.</li>
+      <li><strong>Double-booking prevention:</strong> A <code>UniqueConstraint</code> on <code>(patient, facility, slot_start)</code> with status in (booked, arrived) prevents the same patient from double-booking. The frontend also checks on Step 2 selection, but the database constraint is the authoritative guard.</li>
+      <li><strong>Doctor daily capacity enforcement:</strong> When generating available slots, the backend checks <code>DoctorAvailability.max_patients_per_day</code> against already-booked appointments. If the doctor is full for the day, their name does not appear on Step 3. The receptionist can override this for walk-ins but the system logs the override.</li>
+    </ul>
+  </div>
+
+  <div class="feature-block">
+    <h3>P2-03 — Notifications (Email & Web Push)</h3>
+    <div class="fb-meta"><span class="fb-tag be">Backend</span><span class="fb-tag infra">Infra</span></div>
+    <ul class="detail-list">
+      <li><strong>Booking confirmation:</strong> Sent immediately via email (if available). Contains: reference code, facility, date/time, doctor name, how to cancel.</li>
+      <li><strong>Appointment reminder:</strong> Celery beat task sends 24 hours before and 2 hours before. Via push notification (if granted) and email.</li>
+      <li><strong>Queue position updates:</strong> Web push notification when patient's position drops to ≤3 ahead. Message: "You are almost up — make your way to {Facility Name} now."</li>
+      <li><strong>Cancellation:</strong> When a facility cancels an appointment (doctor unavailable, facility closed), all affected patients receive immediate notification with a rebooking deep-link.</li>
+      <li><strong>No-show follow-up:</strong> 30 minutes after a missed appointment, send a push/email: "Did you miss your appointment at {Facility}? You can rebook here." This is a courtesy, not a penalty.</li>
+      <li><strong>Duplicate prevention:</strong> The <code>UniqueConstraint</code> on <code>(queue_entry, kind)</code> in the Notification model prevents the same alert from being sent twice. Celery tasks must check before sending.</li>
+    </ul>
+  </div>
+
+  <div class="feature-block">
+    <h3>P2-04 — My Bookings & Visit History Screens</h3>
+    <div class="fb-meta"><span class="fb-tag fe">Frontend</span></div>
+    <ul class="detail-list">
+      <li><strong>My Bookings screen:</strong> Two tabs — Upcoming and Past. Upcoming shows all booked appointments in chronological order with status badges (Booked, Checked In, In Progress). Past shows completed visits with date, facility, doctor, and a "Book again" shortcut.</li>
+      <li><strong>Appointment detail:</strong> Full detail screen for each booking. Shows QR code (scannable by receptionist as alternative to code entry), directions button, cancel button (disabled if less than 2 hours away).</li>
+      <li><strong>Cancel flow:</strong> Tap cancel → confirmation dialog with reason selector (can't make it / feeling better / found another facility / other). Confirmation is required — no accidental cancellations. On cancel, slot is freed immediately and a cancellation confirmation is sent.</li>
+    </ul>
+  </div>
+</div>
+
+<hr class="section-divider heavy">
+
+<!-- ══════════════════════════════════════════════
+     SECTION 8 — PHASE 3: CLINICAL INTERFACE
+══════════════════════════════════════════════ -->
+<div id="s8">
+  <div class="phase-header p3">
+    <div class="phase-num">3</div>
+    <div class="phase-header-info">
+      <h2>Phase 3 — Clinical Interface</h2>
+      <p>The doctor's workstation and the nurse's triage panel. This is where patient care happens. Speed, clarity, and clinical information hierarchy are everything.</p>
+    </div>
+    <div class="phase-header-meta">
+      <span class="phase-badge">Planned</span>
+      <span class="phase-duration">Weeks 17–22</span>
+    </div>
+  </div>
+
+  <div class="feature-block">
+    <h3>P3-01 — Nurse Triage Panel</h3>
+    <div class="fb-meta"><span class="fb-tag fe">Frontend</span><span class="fb-tag be">Backend</span></div>
+    <p>The nurse sees the queue list and can record vitals for each patient before the doctor sees them. This screen is optimised for speed — a nurse may triage 30 patients in a morning.</p>
+    <ul class="detail-list">
+      <li><strong>Queue list with triage status:</strong> Each queue entry shows a colour-coded triage status indicator — green dot (triaged), orange dot (waiting for triage), red dot (urgent flag). The nurse works through untriaged patients in order.</li>
+      <li><strong>Triage form:</strong> Slides in as a right panel when clicking a queue entry. Fields: Temperature, Blood pressure (systolic / diastolic), Pulse, SpO2, Weight, free-text notes. All fields optional — the nurse records only what is available. One-click save. The form pre-fills from the patient's last visit if they have been before.</li>
+      <li><strong>Priority escalation:</strong> A large "Mark Urgent" button at the top of the triage form. Requires a brief reason (dropdown: deteriorating vitals / patient distress / clinical judgement / other). When marked urgent, the queue entry moves to the Urgent lane and a real-time alert appears on the receptionist and doctor screens.</li>
+      <li><strong>Emergency escalation:</strong> A separate "Emergency" button (red, prominent). Triggers the Emergency protocol: queue entry status set to Emergency, receptionist notified immediately, entry moves to the top of all lanes, an optional note to call for doctor assistance.</li>
+    </ul>
+  </div>
+
+  <div class="feature-block">
+    <h3>P3-02 — Doctor Workstation</h3>
+    <div class="fb-meta"><span class="fb-tag fe">Frontend</span><span class="fb-tag be">Backend</span></div>
+    <p>The doctor's primary screen during clinic hours. Split-panel: patient list on the left, patient detail on the right. Speed is the design constraint — the doctor spends at most 5 seconds reading the left panel before calling the next patient.</p>
+    <ul class="detail-list">
+      <li><strong>Patient list:</strong> Ordered by priority lane (Emergency → Urgent → Routine), then by queue position within each lane. Each row shows: position, patient name, age if available, insurance badge, triage status indicator, time waiting. Urgent and Emergency rows have coloured left borders (amber and red respectively).</li>
+      <li><strong>Current patient banner:</strong> A prominent banner at the top of the right panel shows the currently active patient — the one the doctor is seeing now. Large name, insurance, time started.</li>
+      <li><strong>Patient detail — right panel:</strong> Seven information blocks in a fixed layout. (1) Patient demographics: name, age, phone, insurance. (2) AI symptom summary if the patient used the symptom checker (Phase 4 — shown as a read-only card). (3) Triage vitals recorded by nurse — shown as a compact grid. (4) Visit history — last 3 visits at any facility, condensed to date + diagnosis. (5) Notes and prescription — the doctor types here. Auto-saves every 10 seconds. (6) Referral — optional, opens a facility search to select where to refer to. (7) Actions — Mark Seen, Mark No-show, Refer.</li>
+      <li><strong>Notes auto-save:</strong> The prescription / notes textarea auto-saves to <code>PATCH /triage/visit-notes/{id}/</code> every 10 seconds. A subtle "Saved" indicator appears. Draft is preserved even if the doctor accidentally closes the tab.</li>
+      <li><strong>Mark Seen:</strong> Closes the visit. The queue entry moves to SERVED status. The next patient in the queue is automatically highlighted. The doctor's daily patient count increments.</li>
+    </ul>
+  </div>
+
+  <div class="feature-block">
+    <h3>P3-03 — Referral System</h3>
+    <div class="fb-meta"><span class="fb-tag be">Backend</span><span class="fb-tag fe">Frontend</span></div>
+    <ul class="detail-list">
+      <li><strong>Doctor initiates referral:</strong> On the patient detail panel, tapping Refer opens a facility search filtered to the required specialty and the patient's insurance. The doctor selects a facility and optionally writes a referral note.</li>
+      <li><strong>Referral record:</strong> A <code>Referral</code> record is created linking the current visit note to the target facility. The patient receives a notification with the referral details and a direct booking link to the target facility pre-filled with the appropriate department.</li>
+      <li><strong>Referral context:</strong> When the patient arrives at the referred facility and a VisitNote is created, the referring doctor's note is visible to the receiving doctor — with explicit consent from the patient (recorded at referral time).</li>
+    </ul>
+  </div>
+</div>
+
+<hr class="section-divider heavy">
+
+<!-- ══════════════════════════════════════════════
+     SECTION 9 — PHASE 4: AI SYMPTOM CHECKER
+══════════════════════════════════════════════ -->
+<div id="s9">
+  <div class="phase-header p4">
+    <div class="phase-num">4</div>
+    <div class="phase-header-info">
+      <h2>Phase 4 — AI Symptom Checker</h2>
+      <p>The symptom checker that routes patients to the right specialist before they travel. Not a diagnosis tool — a routing tool. The distinction is non-negotiable.</p>
+    </div>
+    <div class="phase-header-meta">
+      <span class="phase-badge">Planned</span>
+      <span class="phase-duration">Weeks 23–30</span>
+    </div>
+  </div>
+
+  <div class="feature-block">
+    <h3>P4-01 — Symptom Checker UI</h3>
+    <div class="fb-meta"><span class="fb-tag fe">Frontend</span></div>
+    <ul class="detail-list">
+      <li><strong>Entry point:</strong> The symptom checker is NOT a primary button on the home screen. It is accessed from "Not sure which doctor?" link inside the search flow, and from the Quick Actions grid as a secondary option. This is intentional — prominence invites self-diagnosis rather than care-seeking, which is both a clinical risk and a liability.</li>
+      <li><strong>Conversational UI:</strong> A guided chat-style flow. The AI asks structured questions one at a time. The patient can select from symptom chips or type in free text. Multilingual — all prompts and responses in the patient's selected language (RW/EN/FR).</li>
+      <li><strong>Symptom input:</strong> Multi-select from a curated list of common symptoms relevant to Rwanda's disease burden (malaria, typhoid, TB, respiratory infections, hypertension, maternal symptoms, paediatric conditions). Free-text fallback for symptoms not in the list. Duration selector (1 day, 2–3 days, 1 week, 2+ weeks). Severity selector (Mild / Moderate / Severe).</li>
+      <li><strong>Result display:</strong> Ranked probability list (top 3 conditions, confidence percentage for each). Recommended specialist type. Disclaimer — always visible, never collapsible: "This is a guide to help you find the right care — it is not a medical diagnosis. Always consult a doctor."</li>
+      <li><strong>Emergency detection:</strong> Specific symptom combinations trigger immediate emergency display: chest pain + shortness of breath, loss of consciousness, severe bleeding, stroke symptoms (face drooping, arm weakness, speech difficulty), seizures, high fever in infant. When detected, the booking flow is completely bypassed. A full-screen red alert shows: "These symptoms may be an emergency. Go to the nearest Emergency Department immediately or call 912." A map showing nearest A&E facilities is displayed below.</li>
+      <li><strong>Booking integration:</strong> Below the result, a "Find a [Specialist type] near me" button triggers a facility search pre-filtered to that specialist and the patient's insurance. One tap from result to booking Step 1.</li>
+    </ul>
+  </div>
+
+  <div class="feature-block">
+    <h3>P4-02 — ML Inference Service</h3>
+    <div class="fb-meta"><span class="fb-tag be">Backend</span><span class="fb-tag infra">Infra</span></div>
+    <p>A separate Python FastAPI microservice that receives symptoms and returns a ranked list of likely conditions with confidence scores. Runs independently from the Django app — can be retrained and redeployed without touching the booking system.</p>
+    <ul class="detail-list">
+      <li><strong>Model:</strong> Phase 4 uses a fine-tuned text classification model trained on symptom-disease data specific to Rwanda's common disease burden. Initial training data: WHO AFRO disease burden statistics, Rwanda HMIS data (if accessible), and curated symptom-disease mappings from Rwandan clinical guidelines.</li>
+      <li><strong>Input:</strong> <code>{ symptoms: ["fever", "headache", "joint_pain"], duration_days: 3, severity: "moderate", patient_age_group: "adult" }</code></li>
+      <li><strong>Output:</strong> <code>{ conditions: [{ name: "Malaria", confidence: 0.74, specialist: "general_practitioner" }, ...], emergency_flags: [], disclaimer: "..." }</code></li>
+      <li><strong>Minimum confidence threshold:</strong> If no condition exceeds 40% confidence, default to recommending General Practitioner. Never display a result that sounds like a diagnosis when confidence is low.</li>
+      <li><strong>Emergency flag rules:</strong> Hard-coded rule engine (not ML) that runs before the ML model. If any emergency symptom combination is detected, return <code>emergency_flags: ["chest_pain_dyspnea"]</code> regardless of ML output. Hard-coded rules are auditable and never drift.</li>
+      <li><strong>Accuracy monitoring:</strong> Log all symptom inputs and outputs (with patient consent). Build a feedback loop: when a doctor records a confirmed diagnosis in VisitNote and the patient had used the symptom checker before booking, compare the AI prediction to the confirmed diagnosis. Report accuracy monthly. Retrain when accuracy drops below 65%.</li>
+    </ul>
+  </div>
+</div>
+
+<hr class="section-divider heavy">
+
+<!-- ══════════════════════════════════════════════
+     SECTION 10 — PHASE 5: ADMIN & MOH PORTALS
+══════════════════════════════════════════════ -->
+<div id="s10">
+  <div class="phase-header p0" style="background:linear-gradient(135deg,#1A1A2E,#2D3748)">
+    <div class="phase-num" style="background:#6B46C1">5</div>
+    <div class="phase-header-info">
+      <h2>Phase 5 — Admin Portal & MoH Dashboard</h2>
+      <p>The MediLink internal operations portal and the national oversight dashboard for the Ministry of Health. No patient data visible to MoH — only anonymised aggregates.</p>
+    </div>
+    <div class="phase-header-meta">
+      <span class="phase-badge" style="background:rgba(107,70,193,0.3);color:#D6BCFA">Planned</span>
+      <span class="phase-duration">Weeks 31–36</span>
+    </div>
+  </div>
+
+  <div class="feature-block">
+    <h3>P5-01 — MediLink Super Admin Portal</h3>
+    <div class="fb-meta"><span class="fb-tag fe">Frontend</span><span class="fb-tag be">Backend</span><span class="fb-tag sec">Security</span></div>
+    <ul class="detail-list">
+      <li><strong>Facility onboarding workflow:</strong> Facilities self-register via a public form. Submitted registrations enter a review queue. Admin reviews RDB registration number, checks coordinates, confirms insurance acceptance, and approves or rejects. Approval triggers an email to the facility admin with their login credentials.</li>
+      <li><strong>Doctor verification workflow:</strong> Doctors submit their Rwanda Medical Council registration number. Admin verifies against the public RMC registry (manual check initially, API integration if available). Approval activates the doctor's profile on the platform.</li>
+      <li><strong>Subscription management:</strong> View all active, trial, and expired facility subscriptions. Override subscription status (extend for pilot partners). View monthly recurring revenue. Trigger reminders for expiring subscriptions.</li>
+      <li><strong>Platform KPIs:</strong> Daily active facilities, total bookings, total check-ins, queue data coverage (% of facilities actively reporting live queue), no-show rate platform-wide, and new patient registrations.</li>
+      <li><strong>ML model manager:</strong> View symptom checker accuracy for the current month. Trigger model retraining (locked while training is in progress). A/B test new model versions against production. Review cases where the AI prediction diverged significantly from the confirmed diagnosis.</li>
+      <li><strong>PDPL compliance:</strong> Patient data deletion request queue. Each deletion request shows patient phone, request date, and a 7-day window before hard deletion executes (allowing the patient to reconsider). Admin confirms execution. Deletion log is permanent in the audit trail.</li>
+      <li><strong>Audit log viewer:</strong> Searchable, filterable log of all actions. Filter by user, facility, action type, date range. The audit log is read-only for all users including super admin.</li>
+    </ul>
+  </div>
+
+  <div class="feature-block">
+    <h3>P5-02 — Ministry of Health National Dashboard</h3>
+    <div class="fb-meta"><span class="fb-tag fe">Frontend</span><span class="fb-tag be">Backend</span></div>
+    <p>A read-only national analytics dashboard for MoH officers and district health officers. All data is anonymised and aggregated. No individual patient data is ever displayed. Access is controlled separately from the provider and admin portals.</p>
+    <ul class="detail-list">
+      <li><strong>National KPIs:</strong> Active facilities on platform, total registered patients (count only), total bookings this month, average wait time across all facilities, platform-wide no-show rate.</li>
+      <li><strong>District-level breakdown:</strong> All KPIs broken down by district. Filterable by district, facility type (health centre / district hospital / referral hospital), and date range.</li>
+      <li><strong>Facility performance table:</strong> Sortable table of all active facilities with columns: name, district, type, average wait time, bookings per day, no-show rate, insurance accepted. No patient names or identifiers visible.</li>
+      <li><strong>Disease/symptom trends:</strong> Anonymised aggregate of what symptoms are being reported through the symptom checker. Shows the top 10 reported conditions by district and month. This is public health intelligence, not individual health data.</li>
+      <li><strong>District health officer scoping:</strong> A MoH district health officer can only see data for their district. Enforced at the API level — the JWT contains the officer's district assignment, and every aggregate query filters by it.</li>
+      <li><strong>Data export:</strong> CSV and PDF export of all visible aggregates. PDF includes MoH letterhead and MediLink data source attribution. Export is logged in the audit trail.</li>
+    </ul>
+  </div>
+</div>
+
+<hr class="section-divider heavy">
+
+<!-- ══════════════════════════════════════════════
+     SECTION 11 — API SPECIFICATION
+══════════════════════════════════════════════ -->
+<div id="s11">
+  <div class="section-number">Section 11</div>
+  <h2 class="section-title">Complete API Specification</h2>
+  <p class="section-lead">Every endpoint the system needs, grouped by domain. The existing /facilities/nearby, /facilities/{slug}, /insurers, /service-types, and /districts endpoints from Phase 0 are not repeated here — they are correct and remain unchanged.</p>
+
+  <h3 style="font-size:18px;font-weight:800;margin:28px 0 14px">Authentication</h3>
+  <div class="endpoint"><span class="ep-method post">POST</span><div><div class="ep-path">/auth/staff/login</div><div class="ep-desc">Email + password → access token (15min) + refresh token (7 days, httpOnly cookie)</div></div></div>
+  <div class="endpoint"><span class="ep-method post">POST</span><div><div class="ep-path">/auth/patient/request-otp</div><div class="ep-desc">Phone number → sends OTP via email. Rate-limited: 5/hour per phone.</div></div></div>
+  <div class="endpoint"><span class="ep-method post">POST</span><div><div class="ep-path">/auth/patient/verify-otp</div><div class="ep-desc">Phone + OTP → access token + refresh token. Max 3 attempts.</div></div></div>
+  <div class="endpoint"><span class="ep-method post">POST</span><div><div class="ep-path">/auth/refresh</div><div class="ep-desc">Refresh token (from httpOnly cookie) → new access token</div></div></div>
+  <div class="endpoint"><span class="ep-method post">POST</span><div><div class="ep-path">/auth/logout</div><div class="ep-desc">Invalidate refresh token. Blacklist stored in Redis.</div></div></div>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/auth/me</div><div class="ep-desc">Current user profile, role, facility (for staff), insurance (for patients)</div></div></div>
+  <div class="endpoint"><span class="ep-method post">POST</span><div><div class="ep-path">/auth/staff/reset-password/request</div><div class="ep-desc">Email → sends password reset link (valid 1 hour)</div></div></div>
+  <div class="endpoint"><span class="ep-method post">POST</span><div><div class="ep-path">/auth/staff/reset-password/confirm</div><div class="ep-desc">Token + new password → updates password</div></div></div>
+
+  <h3 style="font-size:18px;font-weight:800;margin:28px 0 14px">Queue Management</h3>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/queue/current</div><div class="ep-desc">Patient: returns active queue entry or today's appointment. The home screen depends on this single call.</div></div></div>
+  <div class="endpoint"><span class="ep-method post">POST</span><div><div class="ep-path">/queue/check-in</div><div class="ep-desc">Receptionist: check in a patient by phone number, appointment reference, or QR code. Returns QueueEntry with position.</div></div></div>
+  <div class="endpoint"><span class="ep-method post">POST</span><div><div class="ep-path">/queue/walk-in</div><div class="ep-desc">Receptionist: add walk-in patient. Creates Patient record if phone provided, otherwise anonymous. Returns ticket code.</div></div></div>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/queue/{facility_slug}/{service_code}</div><div class="ep-desc">Full queue state for a department. Used as polling fallback when WebSocket is unavailable.</div></div></div>
+  <div class="endpoint"><span class="ep-method patch">PATCH</span><div><div class="ep-path">/queue/entries/{id}/call</div><div class="ep-desc">Receptionist: mark entry as CALLED. Sends push notification to patient.</div></div></div>
+  <div class="endpoint"><span class="ep-method patch">PATCH</span><div><div class="ep-path">/queue/entries/{id}/serve</div><div class="ep-desc">Receptionist/Doctor: mark as SERVED. Triggers next-patient notification.</div></div></div>
+  <div class="endpoint"><span class="ep-method patch">PATCH</span><div><div class="ep-path">/queue/entries/{id}/no-show</div><div class="ep-desc">Receptionist: mark as no-show. Frees slot. Notifies next waitlisted patient.</div></div></div>
+  <div class="endpoint"><span class="ep-method patch">PATCH</span><div><div class="ep-path">/queue/entries/{id}/priority</div><div class="ep-desc">Nurse: set priority to urgent or emergency. Requires reason. Logged to audit trail.</div></div></div>
+  <div class="endpoint"><span class="ep-method post">POST</span><div><div class="ep-path">/queue/sync</div><div class="ep-desc">Offline sync: batch of pending actions from IndexedDB, ordered by clientRecordedAt. Idempotent via action key.</div></div></div>
+  <div class="endpoint"><span class="ep-method delete">DELETE</span><div><div class="ep-path">/queue/entries/{id}</div><div class="ep-desc">Patient: cancel own queue entry. Only if status=WAITING and patient owns the entry.</div></div></div>
+  <div class="endpoint"><span class="ep-method ws">WS</span><div><div class="ep-path">ws://…/ws/queue/{facility_slug}/{service_code}/</div><div class="ep-desc">WebSocket channel. Broadcasts queue.update events to all connected clients in the room.</div></div></div>
+
+  <h3 style="font-size:18px;font-weight:800;margin:28px 0 14px">Appointments & Scheduling</h3>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/scheduling/slots</div><div class="ep-desc">Available slots. Params: facility_slug, service_code, doctor_id (optional), date_from, date_to. Returns slots with remaining capacity.</div></div></div>
+  <div class="endpoint"><span class="ep-method post">POST</span><div><div class="ep-path">/scheduling/appointments</div><div class="ep-desc">Create appointment. Auth required. Validates slot availability, doctor capacity, insurance. Returns appointment with reference code.</div></div></div>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/scheduling/appointments</div><div class="ep-desc">Patient: their own appointments. Staff: their facility's appointments. Date-filterable.</div></div></div>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/scheduling/appointments/{id}</div><div class="ep-desc">Single appointment detail. Patient owns or staff in same facility.</div></div></div>
+  <div class="endpoint"><span class="ep-method patch">PATCH</span><div><div class="ep-path">/scheduling/appointments/{id}/cancel</div><div class="ep-desc">Cancel appointment. Requires reason. Sends notification to patient (if staff cancels) or to facility (if patient cancels).</div></div></div>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/scheduling/templates</div><div class="ep-desc">Facility admin: get schedule templates for their facility. Staff-scoped.</div></div></div>
+  <div class="endpoint"><span class="ep-method post">POST</span><div><div class="ep-path">/scheduling/templates</div><div class="ep-desc">Facility admin: create/update schedule template (weekday, start, end, slot duration, capacity).</div></div></div>
+
+  <h3 style="font-size:18px;font-weight:800;margin:28px 0 14px">Doctors</h3>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/doctors</div><div class="ep-desc">Public: list doctors at a facility. Params: facility_slug, service_code, date (available on date), insurer. Returns name, photo, specialty, insurances, next available slot.</div></div></div>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/doctors/{id}</div><div class="ep-desc">Doctor profile. Public endpoint.</div></div></div>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/doctors/me</div><div class="ep-desc">Doctor: own profile and availability across all linked facilities.</div></div></div>
+  <div class="endpoint"><span class="ep-method patch">PATCH</span><div><div class="ep-path">/doctors/me</div><div class="ep-desc">Doctor: update bio, languages, photo.</div></div></div>
+  <div class="endpoint"><span class="ep-method put">PUT</span><div><div class="ep-path">/doctors/me/availability</div><div class="ep-desc">Doctor: set full availability schedule. Replaces existing availability for specified facility.</div></div></div>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/doctors/me/patients/today</div><div class="ep-desc">Doctor: today's queue entries assigned to this doctor across all facilities.</div></div></div>
+
+  <h3 style="font-size:18px;font-weight:800;margin:28px 0 14px">Patients & Profile</h3>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/patients/me</div><div class="ep-desc">Current patient profile.</div></div></div>
+  <div class="endpoint"><span class="ep-method patch">PATCH</span><div><div class="ep-path">/patients/me</div><div class="ep-desc">Update name, language, insurer, home location.</div></div></div>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/patients/me/dependents</div><div class="ep-desc">Dependent profiles linked to this patient account.</div></div></div>
+  <div class="endpoint"><span class="ep-method post">POST</span><div><div class="ep-path">/patients/me/dependents</div><div class="ep-desc">Add a dependent profile.</div></div></div>
+  <div class="endpoint"><span class="ep-method delete">DELETE</span><div><div class="ep-path">/patients/me</div><div class="ep-desc">PDPL right to erasure. Queues a deletion request. Soft-delete immediately, hard-delete after 7 days. Audit log entry is permanent.</div></div></div>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/patients/me/visits</div><div class="ep-desc">Past visit history. Returns date, facility, doctor, diagnosis (if patient consented to read it).</div></div></div>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/patients/{phone}</div><div class="ep-desc">Staff only: look up a patient by phone for check-in. Returns name, insurance, last visit. Never returns full visit history to reception — only booking-relevant fields.</div></div></div>
+
+  <h3 style="font-size:18px;font-weight:800;margin:28px 0 14px">Triage & Clinical</h3>
+  <div class="endpoint"><span class="ep-method post">POST</span><div><div class="ep-path">/triage/records</div><div class="ep-desc">Nurse: record vitals for a queue entry. One record per queue entry.</div></div></div>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/triage/records/{queue_entry_id}</div><div class="ep-desc">Doctor: get triage vitals for a patient currently in queue.</div></div></div>
+  <div class="endpoint"><span class="ep-method post">POST</span><div><div class="ep-path">/triage/visit-notes</div><div class="ep-desc">Doctor: create visit note for an active queue entry.</div></div></div>
+  <div class="endpoint"><span class="ep-method patch">PATCH</span><div><div class="ep-path">/triage/visit-notes/{id}</div><div class="ep-desc">Doctor: update visit note. Auto-called every 10s from the frontend. No explicit save required.</div></div></div>
+  <div class="endpoint"><span class="ep-method post">POST</span><div><div class="ep-path">/triage/symptom-check</div><div class="ep-desc">Patient: submit symptoms. Calls ML inference service. Returns ranked conditions, recommended specialist, emergency flags. Stores session to patient profile if consented.</div></div></div>
+
+  <h3 style="font-size:18px;font-weight:800;margin:28px 0 14px">Reports</h3>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/reports/facility/daily</div><div class="ep-desc">Facility admin: daily summary — total bookings, check-ins, no-shows, avg wait time, by department.</div></div></div>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/reports/facility/trend</div><div class="ep-desc">Facility admin: weekly/monthly trend data for charts. Params: metric, period, granularity.</div></div></div>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/reports/national</div><div class="ep-desc">MoH only: aggregate national statistics. Params: district, date_from, date_to, facility_type. Zero individual patient data.</div></div></div>
+  <div class="endpoint"><span class="ep-method get">GET</span><div><div class="ep-path">/reports/national/export</div><div class="ep-desc">MoH only: download national report as CSV or PDF. Logged to audit trail.</div></div></div>
+</div>
+
+<hr class="section-divider heavy">
+
+<!-- ══════════════════════════════════════════════
+     SECTION 12 — SECURITY
+══════════════════════════════════════════════ -->
+<div id="s12">
+  <div class="section-number">Section 12</div>
+  <h2 class="section-title">Security Architecture</h2>
+  <p class="section-lead">Security in a healthcare platform is not optional and it is not a phase — it is built in from the first line of code. The following requirements apply from Phase 1 onwards. Everything involving patient health data is subject to Rwanda Law No. 058/2021 on the Protection of Personal Data and Privacy.</p>
+
+  <h3 style="font-size:20px;font-weight:800;margin-bottom:20px">Authentication & Session Security</h3>
+  <div class="security-item"><div class="sec-icon critical">🔐</div><div><div class="si-title">JWT with Short-Lived Access Tokens</div><div class="si-body">Access tokens expire in 15 minutes. Refresh tokens expire in 7 days, stored in httpOnly cookies — never localStorage. httpOnly prevents JavaScript access, eliminating XSS token theft entirely. Refresh token rotation on every use — old refresh tokens are invalidated immediately after issuing a new one. If a token is used twice (replay attack), both the old and new tokens are invalidated and the user is logged out.</div></div></div>
+  <div class="security-item"><div class="sec-icon critical">🔒</div><div><div class="si-title">Refresh Token Blacklist in Redis</div><div class="si-body">On logout, the refresh token JTI (JWT ID) is added to a Redis blacklist with a TTL equal to the token's remaining validity. Every token refresh checks against this blacklist before issuing a new token. This is the mechanism that makes logout actually work with JWT — without it, a stolen refresh token is valid until natural expiry.</div></div></div>
+  <div class="security-item"><div class="sec-icon critical">📱</div><div><div class="si-title">OTP Security</div><div class="si-body">OTPs are stored as SHA-256(otp + phone + timestamp_minute) in Redis, never in the database. This means even if Redis is compromised, the OTPs cannot be reversed without knowing the timestamp and phone. Maximum 5 OTP send requests per phone per hour. Maximum 3 verification attempts per OTP before a 30-minute lockout. After lockout, the next OTP request resets the counter. All OTP events (request, success, failure, lockout) are logged.</div></div></div>
+  <div class="security-item"><div class="sec-icon high">🏥</div><div><div class="si-title">Role-Based Access Control (RBAC)</div><div class="si-body">Six roles in the system: Patient, Receptionist, Nurse, Doctor, Facility Admin, MediLink Admin, MoH Officer. Each has an exact permission set. No role inherits from another — permissions are explicit. Every API view has a DRF permission class that checks the exact permission. Facility-scoped roles (Receptionist, Nurse, Doctor, Facility Admin) have every queryset filtered by their facility — a nurse at CHUK cannot see a single queue entry from King Faisal Hospital, even if they know the ID.</div></div></div>
+
+  <h3 style="font-size:20px;font-weight:800;margin:32px 0 20px">Data Security & PDPL Compliance</h3>
+  <div class="security-item"><div class="sec-icon critical">🔒</div><div><div class="si-title">Encryption at Rest and in Transit</div><div class="si-body">All data encrypted at rest using PostgreSQL's filesystem-level encryption (pgcrypto) and cloud provider disk encryption. All data in transit over TLS 1.3 minimum. HTTP Strict Transport Security (HSTS) headers on all domains. TLS certificates from Let's Encrypt, auto-renewed. No TLS 1.0 or 1.1 — blocked at the load balancer level.</div></div></div>
+  <div class="security-item"><div class="sec-icon critical">🇷🇼</div><div><div class="si-title">PDPL Compliance (Law 058/2021)</div><div class="si-body">Rwanda Law No. 058/2021 requires explicit, informed, specific consent before processing personal health data. Every patient must grant a ConsentRecord for (1) data storage, (2) symptom checker AI processing, and (3) sharing visit notes with doctors. Consent can be revoked at any time from the patient profile. Revoking data_storage consent triggers the deletion request flow. No health data is processed without a valid ConsentRecord. This check is enforced at the service layer, not just the view layer.</div></div></div>
+  <div class="security-item"><div class="sec-icon critical">🗑️</div><div><div class="si-title">Right to Erasure Implementation</div><div class="si-body">When a patient requests deletion: (1) Patient record is soft-deleted immediately — removed from all search results. (2) A DeletionRequest record is created with a 7-day window. (3) On day 7, a Celery task executes hard deletion: Patient row deleted, all QueueEntry and Appointment records anonymised (patient FK set to null, walk_in_name set to "DELETED"), VisitNote content redacted, ConsentRecord marked deleted. (4) AuditLog entries are retained permanently — they are legally required records and cannot be deleted even on erasure request. The phone number is hashed in the audit log after deletion so the audit trail is preserved without identifying the individual.</div></div></div>
+  <div class="security-item"><div class="sec-icon high">📋</div><div><div class="si-title">Audit Log — Append-Only</div><div class="si-body">The AuditLog table has no UPDATE or DELETE permissions for any database user, including the Django application user. This is enforced at the PostgreSQL role level — a REVOKE statement removes UPDATE and DELETE on the audit_auditlog table from the app database role. Even if the application is fully compromised, the audit log cannot be modified. All sensitive actions are logged: patient data access, role changes, privilege escalation, failed authentication attempts, data export, deletion requests.</div></div></div>
+  <div class="security-item"><div class="sec-icon high">🩺</div><div><div class="si-title">Visit Note Access Controls</div><div class="si-body">A VisitNote can only be read by: (1) the doctor who wrote it, (2) any doctor at the same facility who is actively treating the patient (i.e. the patient has an active queue entry at that facility on that day), (3) the patient themselves if they have consented to view their records. No other staff member can read visit notes — not the receptionist, not the facility admin, not MediLink admin. This is enforced in DRF permissions, not just the frontend.</div></div></div>
+
+  <h3 style="font-size:20px;font-weight:800;margin:32px 0 20px">Network & Infrastructure Security</h3>
+  <div class="security-item"><div class="sec-icon high">🛡️</div><div><div class="si-title">Rate Limiting on All Public Endpoints</div><div class="si-body">All public endpoints rate-limited using Django REST framework's throttling. Authenticated endpoints: 1000 requests/hour per user. Anonymous endpoints (facility search): 100 requests/hour per IP. Auth endpoints (OTP request): 5 requests/hour per phone, 10 per IP. Throttle state stored in Redis. On throttle trigger: return 429 with Retry-After header.</div></div></div>
+  <div class="security-item"><div class="sec-icon high">🌐</div><div><div class="si-title">CSRF Protection</div><div class="si-body">Django's CSRF protection enabled for all session-based endpoints. For the SPA frontend using JWT in Authorization headers (not cookies), CSRF is not applicable to those endpoints. However, the refresh token is in an httpOnly cookie, which requires CSRF protection on the /auth/refresh endpoint. Implement the SameSite=Strict cookie attribute as the primary CSRF defence, with Django's CSRF middleware as the secondary defence.</div></div></div>
+  <div class="security-item"><div class="sec-icon med">🔍</div><div><div class="si-title">Security Headers</div><div class="si-body">All responses must include: Content-Security-Policy (strict — only allow scripts from own domain and Google Fonts for the font CDN), X-Frame-Options: DENY, X-Content-Type-Options: nosniff, Referrer-Policy: strict-origin-when-cross-origin, Permissions-Policy: camera=(), microphone=(), geolocation=(self). Use django-csp for automatic CSP header generation. Test with Mozilla Observatory — target grade A+.</div></div></div>
+  <div class="security-item"><div class="sec-icon med">🗄️</div><div><div class="si-title">Database Security</div><div class="si-body">Separate PostgreSQL roles: medilink_app (read/write on application tables, no UPDATE/DELETE on audit_auditlog), medilink_read (read-only, for reporting queries), medilink_admin (DDL, for migrations — never used by the running application). No application query uses raw SQL — DRF querysets and Django ORM only. All user-supplied values passed as parameterised queries — SQL injection is architecturally impossible through the ORM. National ID stored as SHA-256 hash with server-side pepper (stored in environment, never in the database or code).</div></div></div>
+
+  <h3 style="font-size:20px;font-weight:800;margin:32px 0 20px">Frontend Security</h3>
+  <div class="security-item"><div class="sec-icon high">⚠️</div><div><div class="si-title">XSS Prevention</div><div class="si-body">React's JSX automatically escapes all values interpolated into JSX — this is the primary XSS defence. Never use dangerouslySetInnerHTML unless rendering content that has been server-side sanitised with bleach (doctor notes rendered to patient in Phase 3). No eval(), no dynamic script injection. All external URLs (facility map links, directions) opened via window.open with rel="noopener noreferrer". Content Security Policy headers block inline scripts and eval at the browser level.</div></div></div>
+  <div class="security-item"><div class="sec-icon high">📦</div><div><div class="si-title">Dependency Security</div><div class="si-body">Run npm audit and pip-audit in CI on every pull request. Block merges if critical vulnerabilities exist. Use Dependabot for automated dependency update PRs. Pin all major dependency versions — avoid open version ranges like "^4.x" for security-sensitive packages. Audit the full dependency tree quarterly.</div></div></div>
+  <div class="security-item"><div class="sec-icon med">🔑</div><div><div class="si-title">Secrets Management</div><div class="si-body">No secrets in code or in the git repository. Django SECRET_KEY, database credentials, JWT signing key, VAPID keys, SendGrid API key, and all third-party credentials stored as environment variables injected at runtime. Use Docker secrets or cloud provider secret manager (AWS Secrets Manager / Google Secret Manager) in production. Rotate all secrets on a 90-day cycle. If a secret is accidentally committed, rotate it immediately — treat it as compromised regardless of whether it was accessed.</div></div></div>
+</div>
+
+<hr class="section-divider heavy">
+
+<!-- ══════════════════════════════════════════════
+     MILESTONE TIMELINE
+══════════════════════════════════════════════ -->
+<div>
+  <div class="section-number">Appendix A</div>
+  <h2 class="section-title">Build Milestone Timeline</h2>
+  <p class="section-lead">36 weeks from today to a fully operational system with all five phases live. Each milestone has a clear definition of done — partial completion does not count.</p>
+
+  <div class="milestone">
+    <div class="ms-line"><div class="ms-dot"></div><div class="ms-track"></div></div>
+    <div class="ms-content">
+      <div class="ms-week">Weeks 1–3 · Phase 0</div>
+      <div class="ms-title">Foundation & Design System</div>
+      <ul class="ms-tasks">
+        <li>All 25 seed facilities field-verified — coordinates confirmed, hours confirmed, insurance confirmed</li>
+        <li>Design tokens implemented in Tailwind config — all screens inherit from them</li>
+        <li>14 primitive components built and documented: Button, Card, Badge, Input, Select, Avatar, Spinner, Toast, Modal, EmptyState, QueuePositionDisplay, FacilityCard, InsuranceBadge, StatusPill</li>
+        <li>Patient app Home State A, Search, and Facility Detail screens rebuilt with design system</li>
+        <li>PWA manifest updated. Lighthouse score above 85.</li>
+        <li>Definition of done: A real patient can search for a nearby facility, see its insurance and opening hours, and the information is correct</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="milestone">
+    <div class="ms-line"><div class="ms-dot"></div><div class="ms-track"></div></div>
+    <div class="ms-content">
+      <div class="ms-week">Weeks 4–6 · Phase 1a</div>
+      <div class="ms-title">Staff Auth & Database Extensions</div>
+      <ul class="ms-tasks">
+        <li>JWT authentication for staff — login, refresh, logout, /auth/me working</li>
+        <li>All new database models migrated: Doctor, DoctorFacility, DoctorInsurer, DoctorAvailability, Dependent, ConsentRecord, TriageRecord, VisitNote, AuditLog, QueueEntry priority fields</li>
+        <li>Django Channels installed and configured with Redis channel layer</li>
+        <li>RBAC permissions implemented — 6 roles with explicit permission sets</li>
+        <li>Facility-scoping mixin applied to all provider views</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="milestone">
+    <div class="ms-line"><div class="ms-dot"></div><div class="ms-track"></div></div>
+    <div class="ms-content">
+      <div class="ms-week">Weeks 7–9 · Phase 1b</div>
+      <div class="ms-title">Reception App & Live Queue</div>
+      <ul class="ms-tasks">
+        <li>web-provider app scaffolded with design system applied</li>
+        <li>Reception check-in screen: keyboard-first, booked patient and walk-in flows, optimistic UI</li>
+        <li>Queue list with real-time WebSocket updates — queue.update events broadcast on every mutation</li>
+        <li>Offline mode: IndexedDB queue, sync endpoint, offline banner</li>
+        <li>Patient app Home States B and C connected to live queue data</li>
+        <li>Definition of done: A receptionist checks in a patient in under 10 seconds, and the patient's phone shows their position in the queue in real time</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="milestone">
+    <div class="ms-line"><div class="ms-dot"></div><div class="ms-track"></div></div>
+    <div class="ms-content">
+      <div class="ms-week">Weeks 10–13 · Phase 2a</div>
+      <div class="ms-title">Patient Auth & Booking Flow</div>
+      <ul class="ms-tasks">
+        <li>Patient OTP auth — phone input, OTP verify, JWT issued, profile created</li>
+        <li>4-step booking wizard — department, date/time, doctor, confirm</li>
+        <li>Slot availability API — respecting doctor daily capacity limits</li>
+        <li>Double-booking prevention enforced at database level</li>
+        <li>Appointment confirmation screen with reference code</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="milestone">
+    <div class="ms-line"><div class="ms-dot"></div><div class="ms-track"></div></div>
+    <div class="ms-content">
+      <div class="ms-week">Weeks 14–16 · Phase 2b</div>
+      <div class="ms-title">Notifications, Dependents & Visits</div>
+      <ul class="ms-tasks">
+        <li>Email notifications — booking confirmation, reminders (24h + 2h before), cancellations</li>
+        <li>Web Push notifications — queue position alerts, leave-now nudge</li>
+        <li>Dependent profiles — add, manage, book on behalf of</li>
+        <li>My Bookings screen — upcoming and past with cancel flow</li>
+        <li>Visit history screen — past visits with doctor and facility</li>
+        <li>Definition of done: A patient books an appointment online, receives a confirmation email, gets a push notification when their position reaches 3, and can see the visit in their history</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="milestone">
+    <div class="ms-line"><div class="ms-dot"></div><div class="ms-track"></div></div>
+    <div class="ms-content">
+      <div class="ms-week">Weeks 17–22 · Phase 3</div>
+      <div class="ms-title">Clinical Interface</div>
+      <ul class="ms-tasks">
+        <li>Nurse triage panel — vitals recording, priority escalation, emergency protocol</li>
+        <li>Doctor workstation — patient list, detail panel, 3-lane queue display</li>
+        <li>Visit notes with 10-second auto-save</li>
+        <li>Referral system — search and select target facility, patient notified with booking link</li>
+        <li>Doctor availability calendar — weekly schedule, date overrides</li>
+        <li>Definition of done: A nurse records vitals and escalates a patient, the doctor sees the vitals and escalation before the patient enters the room, and the visit note is saved automatically</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="milestone">
+    <div class="ms-line"><div class="ms-dot"></div><div class="ms-track"></div></div>
+    <div class="ms-content">
+      <div class="ms-week">Weeks 23–30 · Phase 4</div>
+      <div class="ms-title">AI Symptom Checker</div>
+      <ul class="ms-tasks">
+        <li>ML inference service (FastAPI) — symptom input, condition ranking, emergency flag rules</li>
+        <li>Initial model training on Rwanda disease burden data</li>
+        <li>Symptom checker UI in patient app — chip selection, severity, conversational flow</li>
+        <li>Emergency detection — full-screen alert, bypass booking, 912 and nearest A&E</li>
+        <li>Booking integration — one tap from result to booking Step 1 pre-filled</li>
+        <li>Accuracy monitoring baseline established — initial accuracy benchmarked</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="milestone">
+    <div class="ms-line"><div class="ms-dot"></div></div>
+    <div class="ms-content">
+      <div class="ms-week">Weeks 31–36 · Phase 5</div>
+      <div class="ms-title">Admin & MoH Portals — System Ready to Ship</div>
+      <ul class="ms-tasks">
+        <li>MediLink admin portal — facility onboarding approval, doctor verification, subscription management</li>
+        <li>ML model manager — accuracy dashboard, retrain trigger, A/B testing</li>
+        <li>PDPL compliance panel — consent log, deletion request queue</li>
+        <li>MoH national dashboard — district breakdown, facility performance, disease trends — zero individual patient data</li>
+        <li>Security hardening pass — penetration test simulation, CSP headers, dependency audit, rate limit verification</li>
+        <li>Load testing — simulate 500 concurrent queue updates across 10 facilities</li>
+        <li>Definition of done: Every user role can complete every task they are responsible for, end to end, without workarounds. The system passes a security review. Real facilities are onboarded and managing real queues.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══════════════════════════════════════════════
+     APPENDIX B — SCREEN INVENTORY
+══════════════════════════════════════════════ -->
+<div>
+  <div class="section-number">Appendix B</div>
+  <h2 class="section-title">Complete Screen Inventory — All Portals</h2>
+
+  <h3 style="font-size:18px;font-weight:800;margin-bottom:16px">Patient App (web-patient)</h3>
+  <div class="screen-grid">
+    <div class="screen-card"><div class="sc-code">PA-01</div><h4>Splash / Landing</h4><p>Brand, Get Started CTA. USSD dial code visible (Phase 2).</p><div class="sc-tags"><span class="sc-tag new">Phase 0</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-02</div><h4>Onboarding (3 slides)</h4><p>Find facility · Book & track · Symptom checker.</p><div class="sc-tags"><span class="sc-tag new">Phase 0</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-03</div><h4>Home — State A</h4><p>Search bar, insurance chip, nearby facility cards.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 0</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-04</div><h4>Home — State B (Queue)</h4><p>Live queue position display, ETA, leave-home-by line.</p><div class="sc-tags"><span class="sc-tag realtime">WebSocket</span><span class="sc-tag new">Phase 1</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-05</div><h4>Home — State C (Appointment)</h4><p>Today's appointment card with reference code and directions.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 1</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-06</div><h4>Search & Filter</h4><p>Service type, insurer, open now, radius, district filters.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 0</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-07</div><h4>Facility Detail</h4><p>Tabs: Overview, Departments, Doctors, Insurance. Map link.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 0</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-08</div><h4>Doctor Profile</h4><p>Photo, bio, specialisation, insurances, next available slot, Book button.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 2</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-09</div><h4>Auth — Phone Entry</h4><p>+250 prefix locked, phone number input, Send OTP.</p><div class="sc-tags"><span class="sc-tag auth">Auth</span><span class="sc-tag new">Phase 2</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-10</div><h4>Auth — OTP Verify</h4><p>6-digit OTP input, 10-min countdown, Resend option.</p><div class="sc-tags"><span class="sc-tag auth">Auth</span><span class="sc-tag new">Phase 2</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-11</div><h4>Booking — Step 1 (Department)</h4><p>Service type selection, doctor count per dept, next slot preview.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 2</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-12</div><h4>Booking — Step 2 (Date & Time)</h4><p>14-day calendar strip, time slot grid, remaining capacity.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 2</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-13</div><h4>Booking — Step 3 (Doctor)</h4><p>Doctor cards, insurance match, available flag.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 2</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-14</div><h4>Booking — Step 4 (Confirm)</h4><p>Summary, insurance match, consent disclosure, Confirm CTA.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 2</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-15</div><h4>Booking Confirmation</h4><p>Reference code, QR code, add-to-calendar, notification permission.</p><div class="sc-tags"><span class="sc-tag new">Phase 2</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-16</div><h4>My Bookings</h4><p>Upcoming + Past tabs. Cancel flow inline.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 2</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-17</div><h4>Queue Tracker (Full Screen)</h4><p>Full-screen queue view with progress bar, doctor info, cancel.</p><div class="sc-tags"><span class="sc-tag realtime">WebSocket</span><span class="sc-tag new">Phase 1</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-18</div><h4>Profile</h4><p>Name, language, insurance, home location, dependents, privacy.</p><div class="sc-tags"><span class="sc-tag auth">Auth</span><span class="sc-tag new">Phase 2</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-19</div><h4>Dependents Management</h4><p>Add, edit, remove dependent profiles. Book on behalf of.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 2</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-20</div><h4>Privacy & Data Rights</h4><p>Consent log, download data, deletion request.</p><div class="sc-tags"><span class="sc-tag auth">Auth</span><span class="sc-tag new">Phase 2</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-21</div><h4>Visit History</h4><p>Past visits, date/facility/doctor, book-again shortcut.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 2</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-22</div><h4>Symptom Checker</h4><p>Chat UI, chip selection, severity, duration, AI result.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 4</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-23</div><h4>Emergency Alert</h4><p>Full-screen red alert, 912 call button, nearest A&E map.</p><div class="sc-tags"><span class="sc-tag new">Phase 4</span></div></div>
+    <div class="screen-card"><div class="sc-code">PA-24</div><h4>Offline Fallback</h4><p>Cached facility list, "you're offline" banner, last-known queue position.</p><div class="sc-tags"><span class="sc-tag offline">Offline</span><span class="sc-tag new">Phase 1</span></div></div>
+  </div>
+
+  <h3 style="font-size:18px;font-weight:800;margin:32px 0 16px">Provider App (web-provider)</h3>
+  <div class="screen-grid">
+    <div class="screen-card"><div class="sc-code">PR-01</div><h4>Login</h4><p>Email + password. Forgot password link.</p><div class="sc-tags"><span class="sc-tag auth">Auth</span><span class="sc-tag new">Phase 1</span></div></div>
+    <div class="screen-card"><div class="sc-code">PR-02</div><h4>Reception — Check-in</h4><p>The core screen. Keyboard-first, booked + walk-in flows, offline mode.</p><div class="sc-tags"><span class="sc-tag realtime">WebSocket</span><span class="sc-tag offline">Offline</span><span class="sc-tag new">Phase 1</span></div></div>
+    <div class="screen-card"><div class="sc-code">PR-03</div><h4>Reception — Queue Board</h4><p>Full queue view, priority lanes, Call/Serve/No-show actions.</p><div class="sc-tags"><span class="sc-tag realtime">WebSocket</span><span class="sc-tag new">Phase 1</span></div></div>
+    <div class="screen-card"><div class="sc-code">PR-04</div><h4>Facility Dashboard</h4><p>Today's KPIs, department overview, hourly flow chart, no-show rate.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 1</span></div></div>
+    <div class="screen-card"><div class="sc-code">PR-05</div><h4>Appointment List</h4><p>Day view, filterable by dept/doctor/status. Mark arrived, no-show.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 2</span></div></div>
+    <div class="screen-card"><div class="sc-code">PR-06</div><h4>Nurse Triage Panel</h4><p>Queue list with triage status, vitals form, priority escalation, emergency protocol.</p><div class="sc-tags"><span class="sc-tag realtime">WebSocket</span><span class="sc-tag new">Phase 3</span></div></div>
+    <div class="screen-card"><div class="sc-code">PR-07</div><h4>Doctor Workstation</h4><p>Split panel: patient list + patient detail. 3-lane queue. Notes auto-save.</p><div class="sc-tags"><span class="sc-tag realtime">WebSocket</span><span class="sc-tag new">Phase 3</span></div></div>
+    <div class="screen-card"><div class="sc-code">PR-08</div><h4>Doctor Availability Calendar</h4><p>Weekly schedule per facility, max patients/day, date overrides.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 1</span></div></div>
+    <div class="screen-card"><div class="sc-code">PR-09</div><h4>Facility Settings</h4><p>Profile, hours, departments, insurance, photos.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 1</span></div></div>
+    <div class="screen-card"><div class="sc-code">PR-10</div><h4>Staff Management</h4><p>Add/remove staff accounts, set roles, reset passwords.</p><div class="sc-tags"><span class="sc-tag auth">Auth</span><span class="sc-tag new">Phase 1</span></div></div>
+    <div class="screen-card"><div class="sc-code">PR-11</div><h4>Schedule Templates</h4><p>Weekly slot templates per department and doctor.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 2</span></div></div>
+    <div class="screen-card"><div class="sc-code">PR-12</div><h4>Reports</h4><p>Wait time trend, volume trend, no-show rate, downloadable PDF.</p><div class="sc-tags"><span class="sc-tag api">API</span><span class="sc-tag new">Phase 3</span></div></div>
+    <div class="screen-card"><div class="sc-code">PR-13</div><h4>Subscription & Billing</h4><p>Plan, status, payment history, MTN MoMo renewal.</p><div class="sc-tags"><span class="sc-tag new">Phase 5</span></div></div>
+  </div>
+
+  <h3 style="font-size:18px;font-weight:800;margin:32px 0 16px">MediLink Admin Portal (internal)</h3>
+  <div class="screen-grid">
+    <div class="screen-card"><div class="sc-code">AD-01</div><h4>Platform Overview</h4><p>Active facilities, total patients, bookings today, MRR, system health.</p><div class="sc-tags"><span class="sc-tag new">Phase 5</span></div></div>
+    <div class="screen-card"><div class="sc-code">AD-02</div><h4>Facility Management</h4><p>List, search, approve, suspend, view details, edit.</p><div class="sc-tags"><span class="sc-tag new">Phase 5</span></div></div>
+    <div class="screen-card"><div class="sc-code">AD-03</div><h4>Facility Onboarding Queue</h4><p>Pending approval requests, review documents, approve/reject.</p><div class="sc-tags"><span class="sc-tag new">Phase 5</span></div></div>
+    <div class="screen-card"><div class="sc-code">AD-04</div><h4>Doctor Verification Queue</h4><p>Pending doctor accounts, verify RMC registration, approve/deny.</p><div class="sc-tags"><span class="sc-tag new">Phase 5</span></div></div>
+    <div class="screen-card"><div class="sc-code">AD-05</div><h4>User Management</h4><p>All users, roles, force reset, role elevation log.</p><div class="sc-tags"><span class="sc-tag auth">Auth</span><span class="sc-tag new">Phase 5</span></div></div>
+    <div class="screen-card"><div class="sc-code">AD-06</div><h4>Subscription Management</h4><p>Plans, status, payment history, revenue breakdown.</p><div class="sc-tags"><span class="sc-tag new">Phase 5</span></div></div>
+    <div class="screen-card"><div class="sc-code">AD-07</div><h4>ML Model Manager</h4><p>Accuracy dashboard, retrain trigger, A/B test results.</p><div class="sc-tags"><span class="sc-tag new">Phase 5</span></div></div>
+    <div class="screen-card"><div class="sc-code">AD-08</div><h4>PDPL Compliance</h4><p>Consent log, deletion request queue, 7-day countdown, execute.</p><div class="sc-tags"><span class="sc-tag new">Phase 5</span></div></div>
+    <div class="screen-card"><div class="sc-code">AD-09</div><h4>Audit Log Viewer</h4><p>Searchable, filterable, read-only. All actions all roles.</p><div class="sc-tags"><span class="sc-tag new">Phase 5</span></div></div>
+    <div class="screen-card"><div class="sc-code">AD-10</div><h4>Security Dashboard</h4><p>Failed logins, active sessions, API key manager, rate limit stats.</p><div class="sc-tags"><span class="sc-tag new">Phase 5</span></div></div>
+    <div class="screen-card"><div class="sc-code">AD-11</div><h4>System Health</h4><p>API latency, uptime, error rate, Redis memory, Celery queue depth.</p><div class="sc-tags"><span class="sc-tag new">Phase 5</span></div></div>
+    <div class="screen-card"><div class="sc-code">AD-12</div><h4>Disease-Symptom Curator</h4><p>Edit condition-to-specialist mappings, add new conditions.</p><div class="sc-tags"><span class="sc-tag new">Phase 5</span></div></div>
+  </div>
+
+  <h3 style="font-size:18px;font-weight:800;margin:32px 0 16px">MoH National Dashboard</h3>
+  <div class="screen-grid">
+    <div class="screen-card"><div class="sc-code">MH-01</div><h4>National Overview</h4><p>5 KPI tiles, district heat map, volume chart. Zero patient data.</p><div class="sc-tags"><span class="sc-tag new">Phase 5</span></div></div>
+    <div class="screen-card"><div class="sc-code">MH-02</div><h4>District Drill-Down</h4><p>All facilities in a district, sortable by volume and wait time.</p><div class="sc-tags"><span class="sc-tag new">Phase 5</span></div></div>
+    <div class="screen-card"><div class="sc-code">MH-03</div><h4>Facility Performance</h4><p>National ranking table, sortable, filterable by type.</p><div class="sc-tags"><span class="sc-tag new">Phase 5</span></div></div>
+    <div class="screen-card"><div class="sc-code">MH-04</div><h4>Disease/Symptom Trends</h4><p>Top reported conditions by district and month. Public health intelligence.</p><div class="sc-tags"><span class="sc-tag new">Phase 5</span></div></div>
+    <div class="screen-card"><div class="sc-code">MH-05</div><h4>Wait Time Analytics</h4><p>Monthly wait time trend by facility type and district.</p><div class="sc-tags"><span class="sc-tag new">Phase 5</span></div></div>
+    <div class="screen-card"><div class="sc-code">MH-06</div><h4>Data Export</h4><p>CSV and PDF export. Logged to audit trail. MoH-branded PDF.</p><div class="sc-tags"><span class="sc-tag new">Phase 5</span></div></div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<div style="text-align:center;padding:48px 0;color:var(--n400);font-size:13px">
+  <p>MediLink Rwanda · Full Product Redesign Roadmap · v2.0</p>
+  <p style="margin-top:6px">Confidential — Internal Product Document</p>
+  <p style="margin-top:6px">55 screens · 6 phases · 36 weeks · 5 user roles · 40+ API endpoints · Production-ready</p>
+</div>
+
+</div><!-- end .page -->
+</body>
+</html>

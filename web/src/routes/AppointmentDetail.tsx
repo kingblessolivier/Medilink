@@ -63,7 +63,7 @@ export function AppointmentDetail() {
 
   return (
     <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24 md:pb-10">
-      <Link to="/visits" className="text-small font-medium text-primary">
+      <Link to="/visits" className="text-body font-medium text-primary">
         {t("back")}
       </Link>
 
@@ -83,7 +83,7 @@ export function AppointmentDetail() {
             <h1 className="mt-1 text-h1">
               {start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </h1>
-            <p className="text-body-lg text-ink-muted">
+            <p className="text-body-lg text-n700">
               {start.toLocaleDateString(undefined, {
                 weekday: "long",
                 day: "numeric",
@@ -94,7 +94,7 @@ export function AppointmentDetail() {
           <StatusChip appointment={data} />
         </div>
 
-        <dl className="mt-5 divide-y divide-line border-t border-line">
+        <dl className="mt-5 divide-y divide-n200 border-t border-n200">
           <Line label={t("facility_information")}>
             <Link
               to={`/facility/${data.facility.slug}`}
@@ -135,7 +135,7 @@ export function AppointmentDetail() {
               )}
             </div>
 
-            <div className="mt-5 border-t border-line pt-4">
+            <div className="mt-5 border-t border-n200 pt-4">
               {cancel.isError && (
                 <div className="mb-3">
                   <ErrorState title={t("error_generic")} />
@@ -144,14 +144,14 @@ export function AppointmentDetail() {
               {/* One tap, no confirmation dialog. A booking nobody honours is
                   worse than no booking, so cancelling must be easy. */}
               <Button
-                variant="destructive"
+                variant="danger"
                 size="sm"
                 loading={cancel.isPending}
                 onClick={() => cancel.mutate()}
               >
                 {t("cancel_appointment")}
               </Button>
-              <p className="mt-2 text-caption text-ink-subtle">
+              <p className="mt-2 text-label text-n600">
                 {t("cancel_note")}
               </p>
             </div>
@@ -186,7 +186,7 @@ function Line({ label, children }: { label: string; children: React.ReactNode })
   return (
     <div className="flex items-baseline justify-between gap-4 py-3">
       <dt className="ml-label shrink-0">{label}</dt>
-      <dd className="min-w-0 text-right text-body">{children}</dd>
+      <dd className="min-w-0 text-right text-body-lg">{children}</dd>
     </div>
   )
 }

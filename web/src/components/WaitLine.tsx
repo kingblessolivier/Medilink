@@ -72,7 +72,7 @@ export function WaitLine({
         </Chip>
         {/* Staleness is never hidden. A stale number that looks live is worse
             than no number at all. */}
-        <span className="ml-2 text-caption text-ink-subtle">
+        <span className="ml-2 text-label text-n600">
           {t("updated_ago", { ago: timeAgo(wait.as_of, lang) })}
         </span>
       </div>
@@ -91,7 +91,7 @@ export function WaitLine({
 
   return (
     <p className={className}>
-      <span className="text-caption text-unknown">{t("wait_unavailable")}</span>
+      <span className="text-label text-n600">{t("wait_unavailable")}</span>
     </p>
   )
 }

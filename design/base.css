@@ -15,23 +15,23 @@
   }
 
   body {
-    @apply bg-canvas text-ink font-sans text-body antialiased;
+    @apply bg-n100 text-n900 font-sans text-body-lg antialiased;
     /* Tabular figures everywhere: queue positions, times, distances and
        counts must not shift width as they tick. */
     font-variant-numeric: tabular-nums;
   }
 
   /* Size and weight only - NOT colour.
-     `body` already sets `text-ink`, so headings inherit it on an ordinary
+     `body` already sets `text-n900`, so headings inherit it on an ordinary
      page and nothing changes there. Setting it again here was different in
      one way that mattered: an element rule beats inheritance, so a heading
      inside a dark surface kept near-black ink instead of picking up the
      white its container had set. The patient home hero was the visible
      casualty - its <h1>, the largest text in the product, sat at 2.6:1 on
      the green, under even the 3:1 large-text minimum. */
-  h1 { @apply text-h1 font-semibold; }
-  h2 { @apply text-h2 font-semibold; }
-  h3 { @apply text-h3 font-semibold; }
+  h1 { @apply text-h1; }
+  h2 { @apply text-h2; }
+  h3 { @apply text-h3; }
 
   /* The top bar is sticky, so anything scrolled to by an in-page anchor -
      or by scrollIntoView after a filter change - lands underneath it and is
@@ -44,7 +44,7 @@
      a meaningful share of users navigate by keyboard, and reception staff
      work this product without touching the mouse. */
   :focus-visible {
-    @apply outline-none shadow-focus rounded;
+    @apply outline-none shadow-focus rounded-sm;
   }
 
   /* Respect a user who has asked the OS for less motion. */
@@ -56,7 +56,7 @@
     }
   }
 
-  ::placeholder { @apply text-ink-subtle; }
+  ::placeholder { @apply text-n600; }
 }
 
 @layer components {
@@ -66,17 +66,17 @@
 
   /* A plain section divider. Reached for BEFORE a card - most groupings need
      separation, not elevation. */
-  .ml-section { @apply border-t border-line pt-6 mt-6; }
+  .ml-section { @apply border-t border-n200 pt-6 mt-6; }
 
   /* An icon sitting inside a tinted round plate. Gives a card or a stat a
      fixed visual anchor at its top-left, which is what makes a grid of them
      scan as a grid rather than as paragraphs. */
   .ml-icon-plate {
-    @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg;
+    @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md;
   }
 
   .ml-label {
-    @apply text-caption font-medium uppercase tracking-wide text-ink-subtle;
+    @apply text-label uppercase tracking-wide text-n600;
   }
 
   /* ---------------------------------------------------------------- surface */
@@ -84,7 +84,7 @@
   /* Used for facilities, doctors, appointments and summaries only.
      Everything else is a list, a table or a section. */
   .ml-card {
-    @apply rounded-xl border border-line bg-surface;
+    @apply rounded-lg border border-n200 bg-white;
   }
 
   /* Something you can click. It lifts, rather than only tinting: a flat
@@ -92,14 +92,14 @@
      scans in a hurry. Movement is 1px - enough to notice, not enough to
      shift the layout. */
   .ml-card-interactive {
-    @apply ml-card shadow-raised transition-all duration-150
-           hover:-translate-y-px hover:border-line-strong hover:shadow-raised-hover
-           focus-within:border-primary-border focus-within:shadow-raised-hover;
+    @apply ml-card shadow-sm transition-all duration-150
+           hover:-translate-y-px hover:border-n300 hover:shadow-md
+           focus-within:border-primary/30 focus-within:shadow-md;
   }
 
   /* Full-width surfaces: the hero, a page-level panel. Not a card. */
   .ml-panel {
-    @apply rounded-2xl border border-line bg-surface;
+    @apply rounded-lg border border-n200 bg-white;
   }
 
   /* The working width. `ml-page` stays the reading column. */
@@ -115,40 +115,60 @@
 
   /* ---------------------------------------------------------------- buttons */
 
+  /* These mirror the Button component exactly, variant for variant. They are
+     not a shortcut for skipping it: they exist because an <a> is not a
+     <button>, and 188 places in this product navigate rather than act. If the
+     two ever drift, the link and the button beside it stop looking like the
+     same product. Change both. */
+
   .ml-btn {
-    @apply inline-flex min-h-touch items-center justify-center gap-2 rounded-md
-           px-4 text-body font-medium transition-colors
-           disabled:cursor-not-allowed disabled:opacity-45;
+    @apply inline-flex h-control-md items-center justify-center gap-2
+           rounded-pill px-4 text-body font-medium
+           transition-colors duration-fast active:scale-[0.97]
+           disabled:cursor-not-allowed disabled:opacity-45
+           disabled:active:scale-100;
   }
   .ml-btn-primary {
-    @apply ml-btn bg-primary text-white hover:bg-primary-hover active:bg-primary-active;
+    @apply ml-btn bg-primary text-white hover:bg-primary-dark active:bg-primary-dark;
   }
   .ml-btn-secondary {
-    @apply ml-btn border border-line-strong bg-surface text-ink hover:bg-surface-sunken;
+    @apply ml-btn border border-n300 bg-white text-n900 hover:bg-n100 active:bg-n200;
   }
-  .ml-btn-tertiary {
-    @apply ml-btn text-primary hover:bg-primary-subtle;
+  .ml-btn-ghost {
+    @apply ml-btn text-primary hover:bg-primary-light active:bg-primary-light;
   }
-  .ml-btn-destructive {
-    @apply ml-btn border border-danger-border bg-surface text-danger hover:bg-danger-subtle;
+  .ml-btn-danger {
+    @apply ml-btn border border-danger/30 bg-white text-danger hover:bg-danger/10;
   }
-  /* 36px is right at a desk with a mouse - the workspace tables are dense on
-     purpose and a 44px control in every row would halve what fits on screen.
-     It is NOT right under a thumb, and the patient app uses this size for
-     real actions: "Book", "See all", "Change filters". Raised on coarse
-     pointers only, so both audiences get the size that suits their input. */
-  .ml-btn-sm { @apply min-h-0 h-9 px-3 text-small; }
+
+  /* The small control size, and the rule that keeps it honest.
+
+     32px is right at a desk with a mouse - the workspace tables are dense on
+     purpose, and a 44px control in every row would halve what a receptionist
+     fits on screen. It is NOT right under a thumb, and the patient app uses
+     this size for real actions: "Book", "See all", "Change filters". So it is
+     raised back to the full 44px target on coarse pointers, and both
+     audiences get the size that suits their input.
+
+     This is a class rather than a Tailwind size because the media query has
+     to be able to beat the height - which is also why Button reaches for
+     `ml-control-sm` instead of `h-control-sm`. */
+  .ml-control-sm { @apply h-control-sm min-h-0 px-3 text-body; }
   @media (pointer: coarse) {
-    .ml-btn-sm { @apply min-h-touch h-auto py-2; }
+    .ml-control-sm { @apply min-h-touch h-auto py-2; }
   }
+  /* Kept as an alias: `ml-btn-sm` reads better on a link than `ml-control-sm`,
+     and it is what 76 call sites already say. */
+  .ml-btn-sm { @apply ml-control-sm; }
+
   .ml-btn-icon { @apply min-h-touch w-touch px-0; }
 
   /* ----------------------------------------------------------------- inputs */
 
   .ml-field {
-    @apply min-h-touch w-full rounded-md border border-line-strong bg-surface
-           px-3 text-body text-ink transition-colors
-           hover:border-ink-subtle focus:border-primary;
+    @apply min-h-touch w-full rounded-md border border-n300 bg-white
+           px-3 text-body-lg text-n900 transition-colors
+           hover:border-n600 focus:border-primary;
   }
   /* One checkbox. There were four sizes across the app - h-4, h-5, h-6 and
      one with none at all - which is the kind of drift nobody notices on a
@@ -169,26 +189,26 @@
      is never communicated by colour alone. */
   .ml-chip {
     @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5
-           text-caption font-medium whitespace-nowrap;
+           text-label whitespace-nowrap;
   }
-  .ml-chip-success { @apply ml-chip border-success-border bg-success-subtle text-success; }
-  .ml-chip-warning { @apply ml-chip border-warning-border bg-warning-subtle text-warning; }
-  .ml-chip-danger  { @apply ml-chip border-danger-border  bg-danger-subtle  text-danger; }
-  .ml-chip-info    { @apply ml-chip border-info-border    bg-info-subtle    text-info; }
-  .ml-chip-neutral { @apply ml-chip border-line bg-surface-sunken text-ink-muted; }
+  .ml-chip-success { @apply ml-chip border-success/30 bg-success/10 text-success; }
+  .ml-chip-warning { @apply ml-chip border-warning/30 bg-warning/10 text-warning; }
+  .ml-chip-danger  { @apply ml-chip border-danger/30  bg-danger/10  text-danger; }
+  .ml-chip-info    { @apply ml-chip border-primary/30    bg-primary-light    text-primary; }
+  .ml-chip-neutral { @apply ml-chip border-n200 bg-n100 text-n700; }
   /* Unknown data. The quietest chip in the system, on purpose. */
-  .ml-chip-unknown { @apply ml-chip border-unknown-border bg-unknown-subtle text-unknown; }
+  .ml-chip-unknown { @apply ml-chip border-n200 bg-n100 text-n600; }
 
   /* ----------------------------------------------------------------- tables */
 
-  .ml-table { @apply w-full border-collapse text-body; }
+  .ml-table { @apply w-full border-collapse text-body-lg; }
   .ml-table thead th {
-    @apply border-b border-line bg-surface-sunken px-3 py-2 text-left
-           text-caption font-medium uppercase tracking-wide text-ink-subtle;
+    @apply border-b border-n200 bg-n100 px-3 py-2 text-left
+           text-label uppercase tracking-wide text-n600;
   }
-  .ml-table tbody td { @apply border-b border-line px-3 py-3 align-middle; }
+  .ml-table tbody td { @apply border-b border-n200 px-3 py-3 align-middle; }
   .ml-table tbody tr:last-child td { @apply border-b-0; }
-  .ml-table tbody tr[data-selected="true"] { @apply bg-primary-subtle; }
+  .ml-table tbody tr[data-selected="true"] { @apply bg-primary-light; }
 
   /* A container that scrolls sideways, and contains what is inside it.
 
@@ -210,14 +230,14 @@
      selected state is a size and ring change, not colour alone. */
   .ml-marker {
     @apply grid h-6 w-6 place-items-center rounded-full border-2 border-white
-           bg-primary shadow-overlay transition-transform;
+           bg-primary shadow-md transition-transform;
   }
   .ml-marker::after {
     content: "";
     @apply h-2 w-2 rounded-full bg-white;
   }
   .ml-marker[data-selected="true"] {
-    @apply h-8 w-8 scale-110 bg-primary-active ring-4 ring-primary/30;
+    @apply h-8 w-8 scale-110 bg-primary-dark ring-4 ring-primary/30;
   }
   .ml-marker:focus-visible {
     @apply ring-4 ring-primary/40;
@@ -225,34 +245,34 @@
 
   /* --------------------------------------------------------------- skeleton */
 
-  .ml-skeleton { @apply animate-pulse rounded bg-surface-sunken; }
+  .ml-skeleton { @apply animate-pulse rounded-sm bg-n100; }
 }
 
 /* ------------------------------------------------------------------- map */
 
 .maplibregl-ctrl-group {
-  border: 1px solid theme("colors.line") !important;
-  border-radius: theme("borderRadius.lg") !important;
-  box-shadow: theme("boxShadow.raised") !important;
+  border: 1px solid theme("colors.n200") !important;
+  border-radius: theme("borderRadius.md") !important;
+  box-shadow: theme("boxShadow.sm") !important;
   overflow: hidden;
 }
 
 .maplibregl-ctrl-group button {
   width: 2.25rem !important;
   height: 2.25rem !important;
-  background-color: theme("colors.surface");
-  color: theme("colors.ink-muted");
+  background-color: theme("colors.white");
+  color: theme("colors.n700");
   border: 0;
   transition: background-color 140ms, color 140ms;
 }
 
 .maplibregl-ctrl-group button + button {
-  border-top: 1px solid theme("colors.line") !important;
+  border-top: 1px solid theme("colors.n200") !important;
 }
 
 .maplibregl-ctrl-group button:hover {
-  background-color: theme("colors.surface-sunken");
-  color: theme("colors.ink");
+  background-color: theme("colors.n100");
+  color: theme("colors.n900");
 }
 
 .maplibregl-ctrl-group button:focus-visible {
@@ -263,5 +283,5 @@
 /* Required attribution, kept legible without competing with the pins. */
 .maplibregl-ctrl-attrib {
   border-radius: theme("borderRadius.md");
-  font-size: theme("fontSize.caption[0]");
+  font-size: theme("fontSize.label[0]");
 }

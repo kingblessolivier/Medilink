@@ -132,7 +132,7 @@ export function Book() {
 
   return (
     <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24 md:pb-10">
-      <Link to={`/facility/${slug}`} className="text-small font-medium text-primary">
+      <Link to={`/facility/${slug}`} className="text-body font-medium text-primary">
         {t("back")}
       </Link>
 
@@ -143,11 +143,11 @@ export function Book() {
       {/* ------------------------------------------------------- service */}
       {step === "service" && (
         <Section title={t("choose_service")}>
-          <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+          <ul className="divide-y divide-n200 rounded-lg border border-n200 bg-white">
             {facility.data.services.map((option) => (
               <li key={option.code}>
                 <button
-                  className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-surface-sunken"
+                  className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-n100"
                   onClick={() => {
                     setService(option.code)
                     setProvider(undefined)
@@ -155,8 +155,8 @@ export function Book() {
                     setStep("provider")
                   }}
                 >
-                  <span className="text-body">{label(option)}</span>
-                  <span aria-hidden="true" className="text-ink-subtle">
+                  <span className="text-body-lg">{label(option)}</span>
+                  <span aria-hidden="true" className="text-n600">
                     &rsaquo;
                   </span>
                 </button>
@@ -169,11 +169,11 @@ export function Book() {
       {/* ------------------------------------------------------ provider */}
       {step === "provider" && (
         <Section title={t("choose_doctor")}>
-          <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+          <ul className="divide-y divide-n200 rounded-lg border border-n200 bg-white">
             {/* First, and the default. */}
             <li>
               <button
-                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-surface-sunken"
+                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-n100"
                 onClick={() => {
                   setProvider(undefined)
                   setSlot(undefined)
@@ -181,14 +181,14 @@ export function Book() {
                 }}
               >
                 <span>
-                  <span className="block text-body font-medium">
+                  <span className="block text-body-lg font-medium">
                     {t("any_available")}
                   </span>
-                  <span className="block text-small text-ink-muted">
+                  <span className="block text-body text-n700">
                     {t("any_available_body")}
                   </span>
                 </span>
-                <span aria-hidden="true" className="text-ink-subtle">
+                <span aria-hidden="true" className="text-n600">
                   &rsaquo;
                 </span>
               </button>
@@ -197,7 +197,7 @@ export function Book() {
             {doctors.data?.results.map((doctor) => (
               <li key={doctor.slug}>
                 <button
-                  className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-surface-sunken"
+                  className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-n100"
                   onClick={() => {
                     setProvider(doctor.slug)
                     setSlot(undefined)
@@ -205,14 +205,14 @@ export function Book() {
                   }}
                 >
                   <span className="min-w-0">
-                    <span className="block truncate text-body">
+                    <span className="block truncate text-body-lg">
                       {doctor.display_name}
                     </span>
-                    <span className="block truncate text-small text-ink-muted">
+                    <span className="block truncate text-body text-n700">
                       {specialtyNames(doctor.specialties, lang)}
                     </span>
                   </span>
-                  <span aria-hidden="true" className="text-ink-subtle">
+                  <span aria-hidden="true" className="text-n600">
                     &rsaquo;
                   </span>
                 </button>
@@ -225,7 +225,7 @@ export function Book() {
       {/* ---------------------------------------------------------- time */}
       {step === "time" && (
         <Section title={t("choose_time")}>
-          {slots.isLoading && <Skeleton className="h-40 w-full rounded-xl" />}
+          {slots.isLoading && <Skeleton className="h-40 w-full rounded-lg" />}
 
           {slots.data && openDays.length === 0 && (
             <EmptyState icon={<IconCalendar size={20} />}
@@ -276,12 +276,12 @@ export function Book() {
                           setStep("review")
                         }}
                         className={
-                          "min-h-touch rounded-md border px-3 text-body transition-colors " +
+                          "min-h-touch rounded-md border px-3 text-body-lg transition-colors " +
                           (full
-                            ? "cursor-not-allowed border-line bg-surface-sunken text-ink-subtle line-through"
+                            ? "cursor-not-allowed border-n200 bg-n100 text-n600 line-through"
                             : slot === option.start
                               ? "border-primary bg-primary text-white"
-                              : "border-line-strong bg-surface hover:bg-surface-sunken")
+                              : "border-n300 bg-white hover:bg-n100")
                         }
                       >
                         {time}
@@ -298,7 +298,7 @@ export function Book() {
       {/* -------------------------------------------------------- review */}
       {step === "review" && (
         <Section title={t("review_booking")}>
-          <Card className="divide-y divide-line">
+          <Card className="divide-y divide-n200">
             <Line label={t("facility_information")}>{facility.data.name}</Line>
             <Line label={t("tab_services")}>
               {chosenService ? label(chosenService) : service}
@@ -321,7 +321,7 @@ export function Book() {
               {insurerName ? (
                 <Chip tone="neutral">{insurerName}</Chip>
               ) : (
-                <span className="text-ink-muted">{t("no_cover_set")}</span>
+                <span className="text-n700">{t("no_cover_set")}</span>
               )}
             </Line>
           </Card>
@@ -394,7 +394,7 @@ function Steps({ step }: { step: Step }) {
           aria-current={position === index ? "step" : undefined}
           className={
             "h-1.5 flex-1 rounded-full " +
-            (position <= index ? "bg-primary" : "bg-surface-sunken")
+            (position <= index ? "bg-primary" : "bg-n100")
           }
         />
       ))}
@@ -415,7 +415,7 @@ function Line({ label, children }: { label: string; children: React.ReactNode })
   return (
     <div className="flex items-baseline justify-between gap-4 px-4 py-3">
       <span className="ml-label shrink-0">{label}</span>
-      <span className="min-w-0 text-right text-body">{children}</span>
+      <span className="min-w-0 text-right text-body-lg">{children}</span>
     </div>
   )
 }

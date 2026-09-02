@@ -47,7 +47,7 @@ export function PlatformFacilities() {
   return (
     <div className="mx-auto w-full max-w-6xl">
       <h1 className="text-h2">Facilities</h1>
-      <p className="mt-1 text-small text-ink-muted">
+      <p className="mt-1 text-body text-n700">
         Every facility on the platform, verified or not.
       </p>
 
@@ -102,7 +102,7 @@ export function PlatformFacilities() {
         )}
 
         {rows.length > 0 && (
-          <div className="ml-scroll-x rounded-xl border border-line bg-surface">
+          <div className="ml-scroll-x rounded-lg border border-n200 bg-white">
             <table className="ml-table">
               <thead>
                 <tr>
@@ -137,19 +137,19 @@ function Row({ facility: f }: { facility: AdminFacility }) {
     <tr>
       <td>
         <span className="flex items-center gap-2.5">
-          <span className="ml-icon-plate h-8 w-8 shrink-0 bg-surface-sunken text-ink-muted">
+          <span className="ml-icon-plate h-8 w-8 shrink-0 bg-n100 text-n700">
             <IconHospital size={16} />
           </span>
           <span className="min-w-0">
             <span className="block truncate font-medium">{f.name}</span>
-            <span className="block truncate text-caption text-ink-subtle">
+            <span className="block truncate text-label text-n600">
               {f.ownership === "public" ? "Public" : "Private"}
             </span>
           </span>
         </span>
       </td>
-      <td className="text-ink-muted">{f.district}</td>
-      <td className="text-ink-muted">{LEVEL[f.level] ?? f.level}</td>
+      <td className="text-n700">{f.district}</td>
+      <td className="text-n700">{LEVEL[f.level] ?? f.level}</td>
       <td className="tabular-nums">
         {f.staff_count === 0 ? (
           <Chip tone="warning">

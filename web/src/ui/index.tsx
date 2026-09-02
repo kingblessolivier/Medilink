@@ -1,95 +1,44 @@
 /**
- * MediLink UI primitives.
+ * MediLink UI primitives - the barrel.
  *
- * Anything with behaviour or a variant lives here. Anything purely visual is a
- * class in design/base.css - dense provider tables read better as classNames
- * than as a wrapper component per cell.
+ * The fourteen primitives named in the design system each live in their own
+ * module; this file re-exports the ones that are built and keeps the composite
+ * pieces that are made out of them.
+ *
+ * Anything with behaviour or a variant is a component. Anything purely visual
+ * is a class in design/base.css - dense workspace tables read better as
+ * classNames than as a wrapper component per cell.
  *
  * Kept dependency-free on purpose: a component library would add more to the
- * bundle than the eight primitives this product actually needs, and the
- * patient app has a 150 KB budget on a 3G connection.
+ * bundle than the primitives this product actually needs, and the patient app
+ * has a 150 KB budget on a 3G connection.
+ *
+ * NOT re-exported here: Badge, Input, Avatar, Toast, Modal,
+ * QueuePositionDisplay, FacilityCard, InsuranceBadge and StatusPill. Those are
+ * scaffolds - interfaces and file structure, no implementation - and leaving
+ * them out of the barrel is what stops one from being imported by
+ * autocomplete and rendering nothing on a patient's screen. Import them by
+ * path once they are built, then add them here.
  */
 
-import { IconAlert, IconInfo, IconSearch } from "./icons"
+export { Button, type ButtonProps, type ButtonVariant, type ButtonSize } from "./Button"
+export { Card, type CardProps, type CardVariant, type CardPadding } from "./Card"
+export { EmptyState, type EmptyStateProps } from "./EmptyState"
+export { Select, type SelectProps } from "./Select"
+export { Spinner, type SpinnerProps, type SpinnerSize } from "./Spinner"
+
+import { IconAlert, IconInfo } from "./icons"
 import {
   createContext,
   useContext,
   useId,
   useState,
-  type ButtonHTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
-  type SelectHTMLAttributes,
 } from "react"
 
 const cx = (...parts: Array<string | false | null | undefined>) =>
   parts.filter(Boolean).join(" ")
-
-/* ------------------------------------------------------------------ Button */
-
-type ButtonVariant = "primary" | "secondary" | "tertiary" | "destructive"
-
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: ButtonVariant
-  size?: "md" | "sm"
-  loading?: boolean
-  iconOnly?: boolean
-  full?: boolean
-}
-
-const BUTTON_CLASS: Record<ButtonVariant, string> = {
-  primary: "ml-btn-primary",
-  secondary: "ml-btn-secondary",
-  tertiary: "ml-btn-tertiary",
-  destructive: "ml-btn-destructive",
-}
-
-export function Button({
-  variant = "secondary",
-  size = "md",
-  loading = false,
-  iconOnly = false,
-  full = false,
-  disabled,
-  children,
-  className,
-  ...rest
-}: ButtonProps) {
-  return (
-    <button
-      {...rest}
-      disabled={disabled || loading}
-      // Announce the busy state; a spinner alone tells a screen reader nothing.
-      aria-busy={loading || undefined}
-      className={cx(
-        BUTTON_CLASS[variant],
-        size === "sm" && "ml-btn-sm",
-        iconOnly && "ml-btn-icon",
-        full && "w-full",
-        className,
-      )}
-    >
-      {loading && <Spinner />}
-      {children}
-    </button>
-  )
-}
-
-export function Spinner({ className }: { className?: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={cx(
-        // inline-block matters: a bare <span> is display:inline, where h-4/w-4
-        // do nothing and this collapses to a 2px sliver. It only ever looked
-        // right because every call site so far put it inside an inline-flex
-        // button, which blockifies its children.
-        "inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent opacity-70",
-        className,
-      )}
-    />
-  )
-}
 
 /* ------------------------------------------------------------------- Field */
 
@@ -120,20 +69,20 @@ export function Field({
       <label
         htmlFor={id}
         className={cx(
-          "mb-1.5 block text-small font-medium text-ink",
+          "mb-1.5 block text-body font-medium text-n900",
           hideLabel && "sr-only",
         )}
       >
         {label}
       </label>
       {hint && (
-        <p id={hintId} className="mb-1.5 text-small text-ink-muted">
+        <p id={hintId} className="mb-1.5 text-body text-n700">
           {hint}
         </p>
       )}
       {children(id, describedBy)}
       {error && (
-        <p id={errorId} role="alert" className="mt-1.5 text-small text-danger">
+        <p id={errorId} role="alert" className="mt-1.5 text-body text-danger">
           {error}
         </p>
       )}
@@ -152,23 +101,6 @@ export function TextInput({
       aria-invalid={invalid || undefined}
       className={cx("ml-field", invalid && "ml-field-invalid", className)}
     />
-  )
-}
-
-export function Select({
-  invalid,
-  className,
-  children,
-  ...rest
-}: SelectHTMLAttributes<HTMLSelectElement> & { invalid?: boolean }) {
-  return (
-    <select
-      {...rest}
-      aria-invalid={invalid || undefined}
-      className={cx("ml-field pr-8", invalid && "ml-field-invalid", className)}
-    >
-      {children}
-    </select>
   )
 }
 
@@ -210,28 +142,6 @@ export function Chip({
 
 /* -------------------------------------------------------------------- Card */
 
-export function Card({
-  as: Tag = "div",
-  interactive = false,
-  className,
-  children,
-  ...rest
-}: {
-  as?: "div" | "article" | "section" | "li"
-  interactive?: boolean
-  className?: string
-  children: ReactNode
-} & Record<string, unknown>) {
-  return (
-    <Tag
-      {...rest}
-      className={cx(interactive ? "ml-card-interactive" : "ml-card", className)}
-    >
-      {children}
-    </Tag>
-  )
-}
-
 /* --------------------------------------------------------------- Skeletons */
 
 export function Skeleton({ className }: { className?: string }) {
@@ -268,14 +178,14 @@ export function ListSkeleton({ rows = 3 }: { rows?: number }) {
 export function TableSkeleton({ rows = 4 }: { rows?: number }) {
   return (
     <div
-      className="overflow-hidden rounded-lg border border-line bg-surface"
+      className="overflow-hidden rounded-md border border-n200 bg-white"
       role="status"
       aria-label="Loading"
     >
       {Array.from({ length: rows }, (_, i) => (
         <div
           key={i}
-          className="flex items-center gap-4 border-b border-line px-4 py-3 last:border-b-0"
+          className="flex items-center gap-4 border-b border-n200 px-4 py-3 last:border-b-0"
         >
           <Skeleton className="h-3 w-12 shrink-0" />
           <Skeleton className="h-3 flex-1" />
@@ -320,10 +230,10 @@ export function StatCard({
   chip?: ReactNode
 }) {
   const plate = {
-    neutral: "bg-surface-sunken text-ink-muted",
-    primary: "bg-primary-subtle text-primary",
-    warning: "bg-warning-subtle text-warning",
-    danger: "bg-danger-subtle text-danger",
+    neutral: "bg-n100 text-n700",
+    primary: "bg-primary-light text-primary",
+    warning: "bg-warning/10 text-warning",
+    danger: "bg-danger/10 text-danger",
   }[tone]
 
   return (
@@ -334,7 +244,7 @@ export function StatCard({
       </div>
       <p className="mt-2 text-h1 tabular-nums">{value}</p>
       {chip && <div className="mt-2">{chip}</div>}
-      {hint && <p className="mt-1.5 text-caption text-ink-subtle">{hint}</p>}
+      {hint && <p className="mt-1.5 text-label text-n600">{hint}</p>}
     </div>
   )
 }
@@ -358,13 +268,13 @@ export function BarRow({
   return (
     <li>
       <div className="flex items-baseline justify-between gap-3">
-        <span className="min-w-0 truncate text-body">{label}</span>
-        <span className="shrink-0 tabular-nums text-body font-medium text-ink-muted">
+        <span className="min-w-0 truncate text-body-lg">{label}</span>
+        <span className="shrink-0 tabular-nums text-body-lg font-medium text-n700">
           {count}
         </span>
       </div>
       <div
-        className="mt-1.5 h-2 overflow-hidden rounded-full bg-surface-sunken"
+        className="mt-1.5 h-2 overflow-hidden rounded-full bg-n100"
         role="presentation"
       >
         <span
@@ -395,42 +305,6 @@ export function BarRow({
  * to its text breaks the grid it sits in; text that runs to 1160px is
  * unreadable. Constraining the inner column fixes both.
  */
-export function EmptyState({
-  title,
-  body,
-  action,
-  icon,
-}: {
-  title: string
-  body?: string
-  action?: ReactNode
-  icon?: ReactNode
-}) {
-  return (
-    <div className="ml-card px-6 py-10 text-center">
-      <div className="mx-auto flex max-w-sm flex-col items-center">
-        <span className="ml-icon-plate h-11 w-11 bg-surface-sunken text-ink-subtle">
-          {icon ?? <IconSearch size={20} />}
-        </span>
-        <p className="mt-4 text-h3 font-semibold text-ink">{title}</p>
-        {body && <p className="mt-1.5 text-body text-ink-muted">{body}</p>}
-        {/* The action is the way OUT of a dead end, so it is full size even
-            when the caller passed `ml-btn-sm`. Callers set that for dense
-            rows; an empty state is the opposite of dense, and on a phone this
-            is often the only thing on the screen worth tapping.
-
-            Done here rather than by editing sixteen call sites, so the next
-            empty state gets it without anybody remembering. */}
-        {action && (
-          <div className="mt-5 flex flex-wrap justify-center gap-2 [&_.ml-btn-sm]:h-touch [&_.ml-btn-sm]:px-4 [&_.ml-btn-sm]:text-body">
-            {action}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 /**
  * Errors are written for a patient, not a developer. The technical detail goes
  * to the console; the screen gets a sentence and a next step.
@@ -451,12 +325,12 @@ export function ErrorState({
   return (
     <div
       role="alert"
-      className="flex gap-3 rounded-xl border border-danger-border bg-danger-subtle p-4"
+      className="flex gap-3 rounded-lg border border-danger/30 bg-danger/10 p-4"
     >
       <IconAlert size={18} className="mt-0.5 shrink-0 text-danger" />
       <div className="min-w-0 flex-1">
-        <p className="text-body font-medium text-danger">{title}</p>
-        {body && <p className="mt-1 text-small text-ink-muted">{body}</p>}
+        <p className="text-body-lg font-medium text-danger">{title}</p>
+        {body && <p className="mt-1 text-body text-n700">{body}</p>}
         {action && <div className="mt-3 flex flex-wrap gap-2">{action}</div>}
       </div>
     </div>
@@ -481,10 +355,10 @@ export function Notice({
   return (
     <div
       className={cx(
-        "flex gap-2.5 rounded-lg border px-3 py-2.5 text-small",
+        "flex gap-2.5 rounded-md border px-3 py-2.5 text-body",
         tone === "info"
-          ? "border-info-border bg-info-subtle text-info"
-          : "border-warning-border bg-warning-subtle text-warning",
+          ? "border-primary/30 bg-primary-light text-primary"
+          : "border-warning/30 bg-warning/10 text-warning",
       )}
     >
       <Glyph size={16} className="mt-0.5 shrink-0" />
@@ -516,7 +390,7 @@ export function TabList({ children }: { children: ReactNode }) {
   return (
     <div
       role="tablist"
-      className="flex gap-1 overflow-x-auto border-b border-line"
+      className="flex gap-1 overflow-x-auto border-b border-n200"
     >
       {children}
     </div>
@@ -536,10 +410,10 @@ export function Tab({ value, children }: { value: string; children: ReactNode })
       aria-controls={`${ctx.name}-panel-${value}`}
       onClick={() => ctx.setValue(value)}
       className={cx(
-        "-mb-px whitespace-nowrap border-b-2 px-3 py-2.5 text-body font-medium transition-colors",
+        "-mb-px whitespace-nowrap border-b-2 px-3 py-2.5 text-body-lg font-medium transition-colors",
         selected
           ? "border-primary text-primary"
-          : "border-transparent text-ink-muted hover:text-ink",
+          : "border-transparent text-n700 hover:text-n900",
       )}
     >
       {children}

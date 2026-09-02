@@ -18,7 +18,7 @@ export function OfflineBanner() {
   return (
     <p
       role="status"
-      className="flex items-center justify-center gap-2 bg-warning px-4 py-2 text-center text-small text-white"
+      className="flex items-center justify-center gap-2 bg-warning px-4 py-2 text-center text-body text-white"
     >
       <IconAlert size={15} className="shrink-0" />
       {t("offline_banner")}

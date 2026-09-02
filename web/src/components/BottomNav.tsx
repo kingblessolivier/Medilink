@@ -50,7 +50,7 @@ export function BottomNav() {
        the same links already in the top bar. */
     <nav
       aria-label={t("nav_primary")}
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-n200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
     >
       <ul className="mx-auto flex max-w-2xl">
         {TABS.map(({ to, key, Glyph, ...rest }) => (
@@ -60,7 +60,7 @@ export function BottomNav() {
               end={"end" in rest ? rest.end : undefined}
               className={({ isActive }) =>
                 "flex h-14 flex-col items-center justify-center gap-1 px-1 transition-colors " +
-                (isActive ? "text-primary" : "text-ink-muted active:text-ink")
+                (isActive ? "text-primary" : "text-n700 active:text-n900")
               }
             >
               {({ isActive }) => (
@@ -72,14 +72,14 @@ export function BottomNav() {
                   <span
                     className={
                       "flex h-7 w-12 items-center justify-center rounded-full transition-colors " +
-                      (isActive ? "bg-primary-subtle" : "")
+                      (isActive ? "bg-primary-light" : "")
                     }
                   >
                     <Glyph size={20} />
                   </span>
                   <span
                     className={
-                      "max-w-full truncate text-caption leading-none " +
+                      "max-w-full truncate text-label leading-none " +
                       (isActive ? "font-semibold" : "")
                     }
                   >

@@ -26,7 +26,7 @@ export function Privacy() {
     <div className="ml-shell py-10">
       <div className="max-w-prose">
         <h1 className="text-h1">{t("privacy_title")}</h1>
-        <p className="mt-2 text-body text-ink-muted">{t("privacy_version")}</p>
+        <p className="mt-2 text-body-lg text-n700">{t("privacy_version")}</p>
 
         <div className="mt-6">
           <Notice tone="warning">{t("privacy_draft_warning")}</Notice>
@@ -79,7 +79,7 @@ function Section({
   return (
     <section className="ml-section">
       <h2 className="text-h2">{title}</h2>
-      <div className="mt-3 space-y-2 text-body text-ink-muted">{children}</div>
+      <div className="mt-3 space-y-2 text-body-lg text-n700">{children}</div>
     </section>
   )
 }

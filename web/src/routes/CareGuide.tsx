@@ -78,7 +78,7 @@ export function CareGuide() {
             {status.reason || t("care_guide_unavailable")}
           </Notice>
         </div>
-        <p className="mt-4 text-body text-ink-muted">
+        <p className="mt-4 text-body-lg text-n700">
           {t("care_guide_unavailable_body")}
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
@@ -123,11 +123,11 @@ export function CareGuide() {
     return (
       <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24 md:pb-10">
         <h1 className="text-h1">{t("care_guide")}</h1>
-        <p className="mt-2 text-body text-ink-muted">{t("care_guide_intro")}</p>
+        <p className="mt-2 text-body-lg text-n700">{t("care_guide_intro")}</p>
 
         <Card className="mt-6 p-4">
           <h2 className="text-h3">{t("care_guide_what_it_does")}</h2>
-          <ul className="mt-3 space-y-2 text-body">
+          <ul className="mt-3 space-y-2 text-body-lg">
             <li>{t("care_guide_point_1")}</li>
             <li>{t("care_guide_point_2")}</li>
             <li>{t("care_guide_point_3")}</li>
@@ -152,11 +152,11 @@ export function CareGuide() {
         <div className="mt-6">
           <label
             htmlFor="symptom-text"
-            className="block text-body font-medium"
+            className="block text-body-lg font-medium"
           >
             {t("care_guide_symptom_label")}
           </label>
-          <p className="mt-1 text-small text-ink-muted">
+          <p className="mt-1 text-body text-n700">
             {t("care_guide_symptom_hint")}
           </p>
           <textarea
@@ -167,12 +167,12 @@ export function CareGuide() {
             onChange={(event) => setSymptomText(event.target.value)}
             placeholder={t("care_guide_symptom_placeholder")}
             className={
-              "mt-2 w-full rounded-xl border border-line bg-surface px-4 py-3 " +
-              "text-body placeholder:text-ink-subtle focus-visible:outline-none " +
+              "mt-2 w-full rounded-lg border border-n200 bg-white px-4 py-3 " +
+              "text-body-lg placeholder:text-n600 focus-visible:outline-none " +
               "focus-visible:ring-2 focus-visible:ring-primary"
             }
           />
-          <p className="mt-1.5 text-caption text-ink-subtle">
+          <p className="mt-1.5 text-label text-n600">
             {t("care_guide_symptom_privacy")}
           </p>
         </div>
@@ -201,7 +201,7 @@ export function CareGuide() {
 
         {start.isError && <StartError error={start.error} />}
 
-        <p className="mt-4 text-caption text-ink-subtle">
+        <p className="mt-4 text-label text-n600">
           {t("care_guide_privacy")}
         </p>
       </div>
@@ -232,7 +232,7 @@ export function CareGuide() {
       {/* Staged progress. The total is unknown - the protocol branches - so
           this counts what has been answered rather than faking a bar that
           would jump backwards when a branch turns out to be longer. */}
-      <p className="text-small text-ink-muted">
+      <p className="text-body text-n700">
         {t("care_guide_question_n", { n: answered + 1 })}
       </p>
 
@@ -260,9 +260,9 @@ export function CareGuide() {
           <li key={option.code}>
             <button
               className={
-                "group flex w-full items-center justify-between gap-3 rounded-xl " +
-                "border border-line bg-surface px-4 py-3.5 text-left text-body " +
-                "transition-colors hover:border-primary-border hover:bg-primary-subtle " +
+                "group flex w-full items-center justify-between gap-3 rounded-lg " +
+                "border border-n200 bg-white px-4 py-3.5 text-left text-body-lg " +
+                "transition-colors hover:border-primary/30 hover:bg-primary-light " +
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary " +
                 "disabled:cursor-not-allowed disabled:opacity-60"
               }
@@ -274,7 +274,7 @@ export function CareGuide() {
               <span className="min-w-0">{say(option.text)}</span>
               <span
                 aria-hidden="true"
-                className="shrink-0 text-ink-subtle transition-colors group-hover:text-primary"
+                className="shrink-0 text-n600 transition-colors group-hover:text-primary"
               >
                 <IconChevronRight size={18} />
               </span>
@@ -326,7 +326,7 @@ export function CareGuide() {
           inline, it reads as the way out rather than the way on. */}
       <div className="mt-6">
         <button
-          className="ml-btn-tertiary ml-btn-sm"
+          className="ml-btn-ghost ml-btn-sm"
           onClick={() => {
             setSession(null)
             answer.reset()
@@ -354,8 +354,8 @@ function Emergency({
       {/* The flow is over. There is deliberately no way back into it - a
           patient who has been told to seek emergency care must not be able to
           answer their way out of that advice. */}
-      <div className="rounded-xl border border-danger-border bg-danger-subtle p-5">
-        <p className="text-caption font-semibold uppercase tracking-widest text-danger">
+      <div className="rounded-lg border border-danger/30 bg-danger/10 p-5">
+        <p className="text-label uppercase tracking-widest text-danger">
           {t("care_guide_emergency_label")}
         </p>
         <p className="mt-2 text-h2 text-danger">{advice}</p>
@@ -417,11 +417,11 @@ function Result({
       {recommendation ? (
         <>
           <Card className="mt-4 p-5">
-            <p className="text-small text-ink-muted">
+            <p className="text-body text-n700">
               {t("care_guide_suggests")}
             </p>
             <p className="mt-1 text-h2">{label}</p>
-            <p className="mt-3 text-body text-ink-muted">
+            <p className="mt-3 text-body-lg text-n700">
               {t("care_guide_result_body")}
             </p>
           </Card>
@@ -443,7 +443,7 @@ function Result({
         <Link to="/doctors" className="ml-btn-secondary flex-1">
           {t("nav_doctors")}
         </Link>
-        <button className="ml-btn-tertiary flex-1" onClick={onRestart}>
+        <button className="ml-btn-ghost flex-1" onClick={onRestart}>
           {t("care_guide_start_over")}
         </button>
       </div>
@@ -460,7 +460,7 @@ function Result({
 function Disclaimer({ text }: { text: string }) {
   if (!text) return null
   return (
-    <p className="mt-6 border-t border-line pt-4 text-caption text-ink-subtle">
+    <p className="mt-6 border-t border-n200 pt-4 text-label text-n600">
       {text}
     </p>
   )

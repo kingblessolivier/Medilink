@@ -25,7 +25,7 @@ export function About() {
     <div className="ml-page py-8 pb-24 md:pb-10">
       <header className="max-w-prose">
         <h1 className="text-h1">{t("about_title")}</h1>
-        <p className="mt-3 text-body-lg text-ink-muted">{t("about_lede")}</p>
+        <p className="mt-3 text-body-lg text-n700">{t("about_lede")}</p>
       </header>
 
       <div className="mt-8 max-w-prose space-y-7">
@@ -45,11 +45,11 @@ export function About() {
         />
       </div>
 
-      <nav className="mt-10 flex flex-wrap gap-3 border-t border-line pt-6">
+      <nav className="mt-10 flex flex-wrap gap-3 border-t border-n200 pt-6">
         <Link to="/help" className="ml-btn-secondary ml-btn-sm">
           {t("help_title")}
         </Link>
-        <Link to="/privacy" className="ml-btn-tertiary ml-btn-sm">
+        <Link to="/privacy" className="ml-btn-ghost ml-btn-sm">
           {t("footer_privacy_link")}
         </Link>
       </nav>
@@ -61,7 +61,7 @@ function Section({ title, body }: { title: string; body: string }) {
   return (
     <section>
       <h2 className="text-h3">{title}</h2>
-      <p className="mt-1.5 text-body text-ink-muted">{body}</p>
+      <p className="mt-1.5 text-body-lg text-n700">{body}</p>
     </section>
   )
 }

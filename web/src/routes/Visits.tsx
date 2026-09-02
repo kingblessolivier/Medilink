@@ -44,7 +44,7 @@ export function Visits() {
         {/* Every page states where it is. Without an h1 a screen-reader user
             has nothing to jump to and no idea which screen they landed on. */}
         <h1 className="mb-2 text-h1">{t("visits_title")}</h1>
-        <p className="mb-4 text-small text-ink-muted">{t("auth_prompt")}</p>
+        <p className="mb-4 text-body text-n700">{t("auth_prompt")}</p>
         <Link to={`/sign-in?next=${encodeURIComponent("/visits")}`} className="ml-btn-primary w-full">
           {t("auth_sign_in")}
         </Link>
@@ -126,11 +126,11 @@ export function Visits() {
         <Card key={appointment.id} className="mb-2 flex justify-between p-4">
           <div>
             <p className="font-medium">{appointment.facility.name}</p>
-            <p className="text-small tabular-nums text-ink-muted">
+            <p className="text-body tabular-nums text-n700">
               {new Date(appointment.slot_start).toLocaleDateString()}
             </p>
           </div>
-          <span className="self-center text-small text-ink-muted">
+          <span className="self-center text-body text-n700">
             {t(`appt_status_${appointment.status}`)}
           </span>
         </Card>

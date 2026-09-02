@@ -33,7 +33,7 @@ export function Services() {
     <div className="ml-shell py-6 pb-24 md:pb-10">
       <header className="max-w-prose">
         <h1 className="text-h1">{t("services_title")}</h1>
-        <p className="mt-2 text-body text-ink-muted">{t("services_intro")}</p>
+        <p className="mt-2 text-body-lg text-n700">{t("services_intro")}</p>
       </header>
 
       <section className="mt-8">
@@ -43,20 +43,20 @@ export function Services() {
         {services.isError && <ErrorState title={t("error_generic")} />}
 
         {services.data && (
-          <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+          <ul className="divide-y divide-n200 rounded-lg border border-n200 bg-white">
             {services.data.results.map((service) => (
               <li key={service.code}>
                 <Link
                   to={`/service/${service.code}`}
-                  className="flex min-h-touch items-center gap-3 px-4 py-3 hover:bg-surface-sunken"
+                  className="flex min-h-touch items-center gap-3 px-4 py-3 hover:bg-n100"
                 >
-                  <span className="ml-icon-plate bg-primary-subtle text-primary">
+                  <span className="ml-icon-plate bg-primary-light text-primary">
                     <IconHospital size={17} />
                   </span>
-                  <span className="min-w-0 flex-1 text-body text-ink">
+                  <span className="min-w-0 flex-1 text-body-lg text-n900">
                     {label(service)}
                   </span>
-                  <IconChevronRight size={16} className="text-ink-subtle" />
+                  <IconChevronRight size={16} className="text-n600" />
                 </Link>
               </li>
             ))}
@@ -69,20 +69,20 @@ export function Services() {
       {specialties.data && specialties.data.results.length > 0 && (
         <section className="mt-8">
           <h2 className="text-h2 mb-3">{t("services_specialties")}</h2>
-          <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+          <ul className="divide-y divide-n200 rounded-lg border border-n200 bg-white">
             {specialties.data.results.map((specialty) => (
               <li key={specialty.code}>
                 <Link
                   to={`/search?specialty=${specialty.code}`}
-                  className="flex min-h-touch items-center gap-3 px-4 py-3 hover:bg-surface-sunken"
+                  className="flex min-h-touch items-center gap-3 px-4 py-3 hover:bg-n100"
                 >
-                  <span className="ml-icon-plate bg-primary-subtle text-primary">
+                  <span className="ml-icon-plate bg-primary-light text-primary">
                     <IconStethoscope size={17} />
                   </span>
-                  <span className="min-w-0 flex-1 text-body text-ink">
+                  <span className="min-w-0 flex-1 text-body-lg text-n900">
                     {label(specialty)}
                   </span>
-                  <IconChevronRight size={16} className="text-ink-subtle" />
+                  <IconChevronRight size={16} className="text-n600" />
                 </Link>
               </li>
             ))}

@@ -32,13 +32,13 @@ export function InsurerChip({ insurer, onChange }: Props) {
   return (
     <div className="ml-card max-w-xl p-4">
       <div className="flex items-start gap-3">
-        <span className="ml-icon-plate shrink-0 bg-primary-subtle text-primary">
+        <span className="ml-icon-plate shrink-0 bg-primary-light text-primary">
           <IconShieldCheck size={18} />
         </span>
 
         <div className="min-w-0 flex-1">
           <p className="ml-label">{t("your_cover")}</p>
-          <p className="mt-0.5 truncate text-body font-medium">
+          <p className="mt-0.5 truncate text-body-lg font-medium">
             {current ? current.name : t("no_cover_set")}
           </p>
         </div>

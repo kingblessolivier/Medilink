@@ -32,11 +32,11 @@ export function PlatformProviders() {
   return (
     <div className="mx-auto w-full max-w-6xl">
       <h1 className="text-h2">Doctors</h1>
-      <p className="mt-1 text-small text-ink-muted">
+      <p className="mt-1 text-body text-n700">
         Everyone listed to patients. Verification is on its own screen.
       </p>
 
-      <label className="mt-5 flex min-h-touch items-center gap-2 text-small">
+      <label className="mt-5 flex min-h-touch items-center gap-2 text-body">
         <input
           type="checkbox"
           className="ml-checkbox"
@@ -75,7 +75,7 @@ export function PlatformProviders() {
         )}
 
         {rows.length > 0 && (
-          <div className="ml-scroll-x rounded-xl border border-line bg-surface">
+          <div className="ml-scroll-x rounded-lg border border-n200 bg-white">
             <table className="ml-table">
               <thead>
                 <tr>
@@ -89,12 +89,12 @@ export function PlatformProviders() {
                 {rows.map((p) => (
                   <tr key={p.id}>
                     <td className="font-medium">{p.full_name}</td>
-                    <td className="text-ink-muted">
+                    <td className="text-n700">
                       {p.specialties.length > 0
                         ? p.specialties.join(" \u00b7 ")
                         : "\u2014"}
                     </td>
-                    <td className="text-ink-muted">
+                    <td className="text-n700">
                       {p.facilities.length > 0 ? (
                         p.facilities.join(", ")
                       ) : (
@@ -118,7 +118,7 @@ export function PlatformProviders() {
         )}
 
         {unplaced > 0 && !unverifiedOnly && (
-          <p className="mt-3 text-caption text-ink-subtle">
+          <p className="mt-3 text-label text-n600">
             {unplaced} {unplaced === 1 ? "doctor is" : "doctors are"} listed
             without a facility, so patients cannot book with them.
           </p>

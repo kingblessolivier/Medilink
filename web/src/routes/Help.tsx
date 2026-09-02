@@ -52,7 +52,7 @@ export function Help() {
         <Section title={t("help_data_title")} body={t("help_data_body")}>
           <Link
             to="/profile"
-            className="mt-2 inline-flex text-body font-medium text-primary underline"
+            className="mt-2 inline-flex text-body-lg font-medium text-primary underline"
           >
             {t("nav_profile")}
           </Link>
@@ -63,11 +63,11 @@ export function Help() {
         />
       </div>
 
-      <nav className="mt-10 flex flex-wrap gap-3 border-t border-line pt-6">
+      <nav className="mt-10 flex flex-wrap gap-3 border-t border-n200 pt-6">
         <Link to="/about" className="ml-btn-secondary ml-btn-sm">
           {t("about_title")}
         </Link>
-        <Link to="/privacy" className="ml-btn-tertiary ml-btn-sm">
+        <Link to="/privacy" className="ml-btn-ghost ml-btn-sm">
           {t("footer_privacy_link")}
         </Link>
       </nav>
@@ -87,7 +87,7 @@ function Section({
   return (
     <section>
       <h2 className="text-h3">{title}</h2>
-      <p className="mt-1.5 text-body text-ink-muted">{body}</p>
+      <p className="mt-1.5 text-body-lg text-n700">{body}</p>
       {children}
     </section>
   )

@@ -48,8 +48,8 @@ function Row({
   return (
     <tr
       className={
-        "border-t border-line " +
-        (called ? "bg-primary-subtle/50" : "hover:bg-surface-sunken/50")
+        "border-t border-n200 " +
+        (called ? "bg-primary-light/50" : "hover:bg-n100/50")
       }
     >
       <td className="py-2.5 pr-3">
@@ -63,7 +63,7 @@ function Row({
               (called ? "bg-primary" : "bg-transparent")
             }
           />
-          <span className="font-mono text-small tabular-nums">
+          <span className="font-mono text-body tabular-nums">
             {row.ticket_code}
           </span>
         </span>
@@ -72,31 +72,31 @@ function Row({
       <td className="py-2.5 pr-3">
         <span className="block truncate">{row.display_name}</span>
         {called && (
-          <span className="mt-0.5 block text-caption font-medium text-primary">
+          <span className="mt-0.5 block text-label text-primary">
             With a clinician
           </span>
         )}
       </td>
 
-      <td className="py-2.5 pr-3 text-small tabular-nums text-ink-muted">
+      <td className="py-2.5 pr-3 text-body tabular-nums text-n700">
         {row.phone || "—"}
       </td>
 
-      <td className="py-2.5 pr-3 text-small tabular-nums text-ink-muted">
+      <td className="py-2.5 pr-3 text-body tabular-nums text-n700">
         {new Date(row.joined_at).toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         })}
       </td>
 
-      <td className="py-2.5 pr-3 text-small tabular-nums">
+      <td className="py-2.5 pr-3 text-body tabular-nums">
         {stale ? (
           <Chip tone="warning">
             <IconClock size={13} />
             {formatWaited(row.waited_minutes)}
           </Chip>
         ) : (
-          <span className="text-ink-muted">
+          <span className="text-n700">
             {formatWaited(row.waited_minutes)}
           </span>
         )}
@@ -134,7 +134,7 @@ function Row({
             )}
 
             <button
-              className="ml-btn-tertiary ml-btn-sm text-ink-muted hover:text-danger"
+              className="ml-btn-ghost ml-btn-sm text-n700 hover:text-danger"
               onClick={() => onAction(row.id, "skip")}
             >
               {called ? "No show" : "Left"}
@@ -152,10 +152,10 @@ export function QueueTable({ group, canManage, onAction }: Props) {
 
   return (
     <section className="ml-card mb-4 overflow-hidden">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line px-4 py-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-n200 px-4 py-3">
         <h3 className="text-h3">{group.service_name_en}</h3>
-        <span className="flex items-center gap-1.5 text-small text-ink-muted">
-          <IconUser size={14} className="text-ink-subtle" />
+        <span className="flex items-center gap-1.5 text-body text-n700">
+          <IconUser size={14} className="text-n600" />
           <span className="tabular-nums">{group.waiting.length}</span> waiting
         </span>
         {group.called.length > 0 && (
@@ -168,7 +168,7 @@ export function QueueTable({ group, canManage, onAction }: Props) {
       <div className="ml-scroll-x px-4 pb-3">
         <table className="w-full min-w-[38rem] text-left">
           <thead>
-            <tr className="text-caption uppercase tracking-wide text-ink-subtle">
+            <tr className="text-label uppercase tracking-wide text-n600">
               <th className="py-2 pr-3 font-medium">Ticket</th>
               <th className="py-2 pr-3 font-medium">Patient</th>
               <th className="py-2 pr-3 font-medium">Phone</th>

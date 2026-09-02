@@ -62,7 +62,7 @@ export function PlatformInsurers() {
       <div className="ml-section-head">
         <div>
           <h1 className="text-h2">Insurers</h1>
-          <p className="mt-1 text-small text-ink-muted">
+          <p className="mt-1 text-body text-n700">
             The list every facility chooses from, and every patient filters by.
           </p>
         </div>
@@ -79,7 +79,7 @@ export function PlatformInsurers() {
       )}
 
       <form
-        className="mb-6 flex flex-wrap items-end gap-3 rounded-lg border border-line bg-surface p-4"
+        className="mb-6 flex flex-wrap items-end gap-3 rounded-md border border-n200 bg-white p-4"
         onSubmit={(e) => {
           e.preventDefault()
           add.mutate()
@@ -147,7 +147,7 @@ export function PlatformInsurers() {
               {rows.map((insurer) => (
                 <tr key={insurer.code}>
                   <td>{insurer.name}</td>
-                  <td className="font-mono text-small text-ink-muted">
+                  <td className="font-mono text-body text-n700">
                     {insurer.code}
                   </td>
                   <td className="tabular-nums">{insurer.facilities}</td>

@@ -55,7 +55,7 @@ export function CheckInForm({ services, onCheckIn }: Props) {
     <form onSubmit={submit} className="ml-card p-4">
       <div className="flex flex-wrap items-end gap-3">
         <label className="min-w-48 flex-1">
-          <span className="mb-1 block text-small text-ink-muted">Service</span>
+          <span className="mb-1 block text-body text-n700">Service</span>
           <select
             className="ml-field"
             value={service}
@@ -70,7 +70,7 @@ export function CheckInForm({ services, onCheckIn }: Props) {
         </label>
 
         <label className="min-w-64 flex-[2]">
-          <span className="mb-1 block text-small text-ink-muted">
+          <span className="mb-1 block text-body text-n700">
             {walkIn ? "Patient name" : "Phone number"}
           </span>
           <input
@@ -89,7 +89,7 @@ export function CheckInForm({ services, onCheckIn }: Props) {
         </button>
       </div>
 
-      <label className="mt-3 flex items-center gap-2 text-small">
+      <label className="mt-3 flex items-center gap-2 text-body">
         <input
           type="checkbox"
           className="ml-checkbox"

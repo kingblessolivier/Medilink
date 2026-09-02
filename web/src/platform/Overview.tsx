@@ -45,7 +45,7 @@ export function Overview() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-h2">Overview</h1>
-          <p className="mt-1 text-small text-ink-muted">
+          <p className="mt-1 text-body text-n700">
             Counts across every facility. No patient records are shown here.
           </p>
         </div>
@@ -71,7 +71,7 @@ export function Overview() {
       {query.isLoading && (
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {Array.from({ length: 6 }, (_, i) => (
-            <div key={i} className="rounded-lg border border-line bg-surface p-4">
+            <div key={i} className="rounded-md border border-n200 bg-white p-4">
               <Skeleton className="h-3 w-24" />
               <Skeleton className="mt-3 h-6 w-16" />
             </div>
@@ -167,7 +167,7 @@ function Body({ data }: { data: AdminOverview }) {
       <section className="mt-8">
         <h2 className="text-h3 mb-3">How people booked</h2>
         {data.activity.by_channel.length === 0 ? (
-          <p className="text-body text-ink-muted">
+          <p className="text-body-lg text-n700">
             No appointments booked in this period.
           </p>
         ) : (
@@ -175,7 +175,7 @@ function Body({ data }: { data: AdminOverview }) {
         )}
       </section>
 
-      <p className="mt-8 text-caption text-ink-subtle">
+      <p className="mt-8 text-label text-n600">
         As of{" "}
         {new Date(data.as_of).toLocaleString([], {
           day: "numeric",

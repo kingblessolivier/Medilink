@@ -45,13 +45,13 @@ export function DoctorCard({ doctor }: { doctor: Provider }) {
             on that: an unguarded `.length` here is what proved the app had no
             error boundary, by blanking every route at once. */}
         {doctor.specialties?.length ? (
-          <p className="mt-0.5 truncate text-small text-ink-muted">
+          <p className="mt-0.5 truncate text-body text-n700">
             {specialtyNames(doctor.specialties, lang)}
           </p>
         ) : null}
 
         {placement && (
-          <p className="mt-1 truncate text-small text-ink-muted">
+          <p className="mt-1 truncate text-body text-n700">
             {placement.facility_name}
           </p>
         )}
@@ -67,10 +67,10 @@ export function DoctorCard({ doctor }: { doctor: Provider }) {
           {doctor.verified ? (
             <Chip tone="success">{t("verified")}</Chip>
           ) : (
-            <span className="text-caption text-unknown">{t("not_yet_verified")}</span>
+            <span className="text-label text-n600">{t("not_yet_verified")}</span>
           )}
           {doctor.languages.length > 0 && (
-            <span className="text-caption text-ink-subtle">
+            <span className="text-label text-n600">
               {doctor.languages.map((l) => l.toUpperCase()).join(" · ")}
             </span>
           )}
@@ -85,7 +85,7 @@ export function DoctorCard({ doctor }: { doctor: Provider }) {
             card gives a screen reader two targets for one destination. */}
         <span
           aria-hidden="true"
-          className="mt-2 block text-small font-medium text-primary"
+          className="mt-2 block text-body font-medium text-primary"
         >
           {t("view_profile")}
         </span>
@@ -102,7 +102,7 @@ function Avatar({ doctor }: { doctor: Provider }) {
         src={doctor.photo_url}
         alt=""
         loading="lazy"
-        className="h-12 w-12 shrink-0 rounded-full border border-line object-cover"
+        className="h-12 w-12 shrink-0 rounded-full border border-n200 object-cover"
       />
     )
   }
@@ -110,7 +110,7 @@ function Avatar({ doctor }: { doctor: Provider }) {
   return (
     <span
       aria-hidden="true"
-      className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-primary-border bg-primary-subtle text-body font-semibold text-primary"
+      className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-primary/30 bg-primary-light text-body-lg font-semibold text-primary"
     >
       {doctor.initials}
     </span>

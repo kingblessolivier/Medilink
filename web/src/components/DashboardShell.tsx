@@ -49,12 +49,12 @@ export function DashboardShell({
       {/* ---------------------------------------------------------- side */}
       <aside
         aria-label={t("nav_sections")}
-        className="border-b border-line bg-surface lg:sticky lg:top-[var(--topnav-h,4.25rem)] lg:h-[calc(100vh-var(--topnav-h,4.25rem))] lg:overflow-y-auto lg:border-b-0 lg:border-r"
+        className="border-b border-n200 bg-white lg:sticky lg:top-[var(--topnav-h,4.25rem)] lg:h-[calc(100vh-var(--topnav-h,4.25rem))] lg:overflow-y-auto lg:border-b-0 lg:border-r"
       >
         <div className="hidden px-5 pb-2 pt-5 lg:block">
           <p className="text-h3">{title}</p>
           {subtitle && (
-            <p className="mt-0.5 truncate text-small text-ink-muted">
+            <p className="mt-0.5 truncate text-body text-n700">
               {subtitle}
             </p>
           )}
@@ -80,10 +80,10 @@ export function DashboardShell({
                     to={to}
                     end={end}
                     className={({ isActive }) =>
-                      "group flex min-h-touch items-center gap-2.5 whitespace-nowrap rounded-md px-2.5 text-body transition-colors lg:min-h-0 lg:py-2 " +
+                      "group flex min-h-touch items-center gap-2.5 whitespace-nowrap rounded-md px-2.5 text-body-lg transition-colors lg:min-h-0 lg:py-2 " +
                       (isActive
-                        ? "bg-primary-subtle font-medium text-primary"
-                        : "text-ink-muted hover:bg-surface-sunken hover:text-ink")
+                        ? "bg-primary-light font-medium text-primary"
+                        : "text-n700 hover:bg-n100 hover:text-n900")
                     }
                   >
                     <span className="shrink-0">{icon}</span>

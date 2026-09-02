@@ -70,7 +70,7 @@ export function SignIn() {
   return (
     <div className="mx-auto w-full max-w-sm px-4 py-10">
       <h1 className="text-h1">{t("auth_sign_in")}</h1>
-      <p className="mt-1 text-small text-ink-muted">{t("auth_subtitle")}</p>
+      <p className="mt-1 text-body text-n700">{t("auth_subtitle")}</p>
 
       <Card className="mt-6 space-y-3 p-4">
         <form onSubmit={submit} className="space-y-3">
@@ -103,7 +103,7 @@ export function SignIn() {
           </Field>
 
           {error && (
-            <p role="alert" className="text-small text-danger">
+            <p role="alert" className="text-body text-danger">
               {error}
             </p>
           )}
@@ -117,7 +117,7 @@ export function SignIn() {
         </form>
       </Card>
 
-      <p className="mt-4 text-center text-body">
+      <p className="mt-4 text-center text-body-lg">
         {t("auth_no_account")}{" "}
         <Link to="/register" className="font-medium text-primary underline">
           {t("auth_create_account")}

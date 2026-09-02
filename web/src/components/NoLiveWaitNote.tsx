@@ -27,7 +27,7 @@ export function NoLiveWaitNote({
   if (facilities.some((f) => f.wait.status === "available")) return null
 
   return (
-    <p className={"text-small text-ink-muted " + (className ?? "")}>
+    <p className={"text-body text-n700 " + (className ?? "")}>
       {t("wait_unavailable_list")}
     </p>
   )

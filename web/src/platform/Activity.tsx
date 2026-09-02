@@ -72,7 +72,7 @@ export function PlatformActivity() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-h2">Activity</h1>
-          <p className="mt-1 text-small text-ink-muted">
+          <p className="mt-1 text-body text-n700">
             Across every facility. Counts only — no patient is named here.
           </p>
         </div>
@@ -166,7 +166,7 @@ export function PlatformActivity() {
         )}
 
         {facilities.length > 0 && (
-          <div className="ml-scroll-x rounded-xl border border-line bg-surface">
+          <div className="ml-scroll-x rounded-lg border border-n200 bg-white">
             <table className="ml-table">
               <thead>
                 <tr>
@@ -182,12 +182,12 @@ export function PlatformActivity() {
                 {facilities.map((f) => (
                   <tr key={f.name}>
                     <td className="font-medium">{f.name}</td>
-                    <td className="text-ink-muted">{f.district}</td>
+                    <td className="text-n700">{f.district}</td>
                     <td className="tabular-nums">
                       {f.waiting > 0 ? (
                         <Chip tone="warning">{f.waiting}</Chip>
                       ) : (
-                        <span className="text-ink-subtle">0</span>
+                        <span className="text-n600">0</span>
                       )}
                     </td>
                     <td className="tabular-nums">{f.seen}</td>
@@ -196,7 +196,7 @@ export function PlatformActivity() {
                       {f.reports_queue ? (
                         <Chip tone="success">Published</Chip>
                       ) : (
-                        <span className="text-small text-ink-subtle">
+                        <span className="text-body text-n600">
                           Not reported
                         </span>
                       )}
@@ -212,7 +212,7 @@ export function PlatformActivity() {
       {/* ---------------------------------------------------- messages */}
       <section className="ml-section">
         <h2 className="text-h3 mb-1">Messages</h2>
-        <p className="mb-4 max-w-prose text-small text-ink-muted">
+        <p className="mb-4 max-w-prose text-body text-n700">
           A &ldquo;time to leave&rdquo; message that never sent is a patient
           still sitting at home.
         </p>
@@ -248,7 +248,7 @@ export function PlatformActivity() {
         </div>
 
         {(delivery.data?.by_kind.length ?? 0) > 0 && (
-          <div className="mt-4 ml-scroll-x rounded-xl border border-line bg-surface">
+          <div className="mt-4 ml-scroll-x rounded-lg border border-n200 bg-white">
             <table className="ml-table">
               <thead>
                 <tr>
@@ -266,7 +266,7 @@ export function PlatformActivity() {
                       {k.failed > 0 ? (
                         <Chip tone="danger">{k.failed}</Chip>
                       ) : (
-                        <span className="text-ink-subtle">0</span>
+                        <span className="text-n600">0</span>
                       )}
                     </td>
                   </tr>
@@ -276,7 +276,7 @@ export function PlatformActivity() {
           </div>
         )}
 
-        <p className="mt-3 text-caption text-ink-subtle">
+        <p className="mt-3 text-label text-n600">
           Message contents are never shown. Several carry a queue position and
           one carries a sign-in code.
         </p>

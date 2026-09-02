@@ -35,7 +35,7 @@ export function SiteFooter() {
     // `mt-auto` is not used: the page is not a flex column, and a footer that
     // floats to the bottom of a short viewport reads as a fixed bar. It ends
     // the content instead.
-    <footer className="mt-12 border-t border-line bg-surface-sunken">
+    <footer className="mt-12 border-t border-n200 bg-n100">
       {/* `pb-24` on a phone, not `py-8`. The bottom nav is fixed and floats
           OVER this - and the pb-24 that routes carry is on the route content,
           which the footer sits outside of. Without its own clearance the last
@@ -50,16 +50,16 @@ export function SiteFooter() {
             and most contrasting thing in the footer. */}
         <a
           href={`tel:${emergency}`}
-          className="inline-flex w-full max-w-sm items-center gap-3 rounded-xl border border-danger-border bg-danger-subtle p-3 text-ink no-underline transition-colors hover:bg-danger-subtle/70"
+          className="inline-flex w-full max-w-sm items-center gap-3 rounded-lg border border-danger/30 bg-danger/10 p-3 text-n900 no-underline transition-colors hover:bg-danger/10/70"
         >
           <span className="ml-icon-plate bg-danger text-white">
             <IconPhone size={18} />
           </span>
           <span className="min-w-0">
-            <span className="block text-small text-ink-muted">
+            <span className="block text-body text-n700">
               {t("footer_emergency_label")}
             </span>
-            <span className="block text-body font-semibold text-danger">
+            <span className="block text-body-lg font-semibold text-danger">
               {t("footer_emergency_action", { number: emergency })}
             </span>
           </span>
@@ -67,14 +67,14 @@ export function SiteFooter() {
 
         <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="text-h3 font-semibold text-primary">MediLink</p>
-            <p className="mt-1 max-w-prose text-small text-ink-muted">
+            <p className="text-h3 text-primary">MediLink</p>
+            <p className="mt-1 max-w-prose text-body text-n700">
               {t("footer_tagline")}
             </p>
           </div>
 
           <nav aria-label={t("footer_explore")}>
-            <p className="text-caption font-semibold uppercase tracking-wide text-ink-subtle">
+            <p className="text-label uppercase tracking-wide text-n600">
               {t("footer_explore")}
             </p>
             <ul className="mt-3 space-y-2">
@@ -90,7 +90,7 @@ export function SiteFooter() {
           </nav>
 
           <nav aria-label={t("footer_your_account")}>
-            <p className="text-caption font-semibold uppercase tracking-wide text-ink-subtle">
+            <p className="text-label uppercase tracking-wide text-n600">
               {t("footer_your_account")}
             </p>
             <ul className="mt-3 space-y-2">
@@ -104,7 +104,7 @@ export function SiteFooter() {
               the footer with a single sentence in it. Four columns of roughly
               equal weight read as a structure rather than as leftovers. */}
           <nav aria-label={t("footer_support")}>
-            <p className="text-caption font-semibold uppercase tracking-wide text-ink-subtle">
+            <p className="text-label uppercase tracking-wide text-n600">
               {t("footer_support")}
             </p>
             <ul className="mt-3 space-y-2">
@@ -116,7 +116,7 @@ export function SiteFooter() {
         </div>
 
         {/* Says what this is and, more importantly, what it is not. */}
-        <p className="mt-8 border-t border-line pt-6 text-small text-ink-muted">
+        <p className="mt-8 border-t border-n200 pt-6 text-body text-n700">
           {t("footer_not_medical_advice")}
         </p>
       </div>
@@ -131,7 +131,7 @@ function FooterLink({ to, children }: { to: string; children: React.ReactNode })
           is where mis-taps happen. */}
       <Link
         to={to}
-        className="inline-flex min-h-touch items-center text-body text-ink-muted hover:text-primary hover:underline"
+        className="inline-flex min-h-touch items-center text-body-lg text-n700 hover:text-primary hover:underline"
       >
         {children}
       </Link>

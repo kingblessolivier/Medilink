@@ -95,7 +95,7 @@ const Gallery = lazy(() =>
 
 function Loading() {
   const { t } = useI18n()
-  return <p className="p-6 text-body text-ink-muted">{t("loading")}</p>
+  return <p className="p-6 text-body-lg text-n700">{t("loading")}</p>
 }
 
 const queryClient = new QueryClient({
@@ -127,7 +127,7 @@ function Require({
   const location = useLocation()
 
   if (session.state === "loading") {
-    return <p className="p-6 text-body text-ink-muted">{t("loading")}</p>
+    return <p className="p-6 text-body-lg text-n700">{t("loading")}</p>
   }
 
   if (session.state === "anonymous") {

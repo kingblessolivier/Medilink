@@ -44,11 +44,11 @@ export function Gallery() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-6 pb-24 md:pb-10">
       <h1 className="text-h1">Component gallery</h1>
-      <p className="mt-1 text-body text-ink-muted">
+      <p className="mt-1 text-body-lg text-n700">
         One of everything, in every state. If something here looks unstyled,
         the design system is not reaching the app.
       </p>
-      <p className="mt-2 text-caption text-ink-subtle">
+      <p className="mt-2 text-label text-n600">
         Language: {lang.toUpperCase()} —{" "}
         <button className="underline" onClick={() => setLang(lang === "rw" ? "en" : "rw")}>
           switch
@@ -62,11 +62,11 @@ export function Gallery() {
         <p className="text-h2">Heading 2 — Amavuriro hafi yawe</p>
         <p className="text-h3">Heading 3 — Dr Uwase Alice</p>
         <p className="text-body-lg">Body large — about 25 minutes</p>
-        <p className="text-body">Body — the ordinary paragraph size.</p>
-        <p className="text-small text-ink-muted">Small, muted — 2.4 km away</p>
-        <p className="text-caption text-ink-subtle">Caption, subtle — updated 3 min ago</p>
+        <p className="text-body-lg">Body — the ordinary paragraph size.</p>
+        <p className="text-body text-n700">Small, muted — 2.4 km away</p>
+        <p className="text-label text-n600">Caption, subtle — updated 3 min ago</p>
         <p className="ml-label">Label — uppercase section heading</p>
-        <p className="text-queue tabular-nums">8</p>
+        <p className="text-display tabular-nums">8</p>
       </Section>
 
       {/* --------------------------------------------------------- buttons */}
@@ -74,8 +74,8 @@ export function Gallery() {
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="primary">Primary</Button>
           <Button variant="secondary">Secondary</Button>
-          <Button variant="tertiary">Tertiary</Button>
-          <Button variant="destructive">Destructive</Button>
+          <Button variant="ghost">Tertiary</Button>
+          <Button variant="danger">Destructive</Button>
           <Button>No variant (defaults to secondary)</Button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -84,7 +84,7 @@ export function Gallery() {
           <button className="ml-btn-primary ml-btn-sm">Small (36px)</button>
           <button className="ml-btn-secondary ml-btn-sm">Small secondary</button>
         </div>
-        <p className="text-caption text-ink-subtle">
+        <p className="text-label text-n600">
           `variant` defaults to <strong>secondary</strong>, not primary: a
           button nobody thought about should not claim the emphasis of the
           one action on the screen. Full-size buttons are 44px. `ml-btn-sm` is
@@ -128,7 +128,7 @@ export function Gallery() {
         </Field>
         <label className="flex min-h-touch items-center gap-2">
           <input type="checkbox" className="ml-checkbox" />
-          <span className="text-body">Checkbox in a 44px label row</span>
+          <span className="text-body-lg">Checkbox in a 44px label row</span>
         </label>
       </Section>
 
@@ -142,7 +142,7 @@ export function Gallery() {
           <Chip tone="neutral">Mutuelle de Sante</Chip>
           <Chip tone="unknown">Not confirmed</Chip>
         </div>
-        <p className="text-caption text-ink-subtle">
+        <p className="text-label text-n600">
           `unknown` must be the quietest thing on the screen. If it draws the
           eye more than `neutral`, the palette has drifted.
         </p>
@@ -156,7 +156,7 @@ export function Gallery() {
           <WaitLine wait={{ status: "not_reported", minutes: null, people_waiting: null, as_of: new Date().toISOString() }} />
           <WaitLine wait={{ status: "closed", minutes: null, people_waiting: null, as_of: new Date().toISOString() }} />
         </div>
-        <p className="text-caption text-ink-subtle">
+        <p className="text-label text-n600">
           Only the first of these is a number. The other three must never look
           like an estimate a patient could act on.
         </p>
@@ -165,15 +165,15 @@ export function Gallery() {
       {/* ----------------------------------------------------------- cards */}
       <Section title="Cards">
         <Card className="p-4">
-          <p className="text-body font-medium">Static card</p>
-          <p className="mt-1 text-small text-ink-muted">
+          <p className="text-body-lg font-medium">Static card</p>
+          <p className="mt-1 text-body text-n700">
             Cards are for facilities, doctors, appointments and summaries. Not
             for laying out a page.
           </p>
         </Card>
         <Card interactive className="p-4">
-          <p className="text-body font-medium">Interactive card</p>
-          <p className="mt-1 text-small text-ink-muted">Hover me.</p>
+          <p className="text-body-lg font-medium">Interactive card</p>
+          <p className="mt-1 text-body text-n700">Hover me.</p>
         </Card>
       </Section>
 
@@ -214,20 +214,20 @@ export function Gallery() {
             <Tab value="insurance">Insurance</Tab>
           </TabList>
           <TabPanel value="services">
-            <p className="pt-3 text-body">Services panel.</p>
+            <p className="pt-3 text-body-lg">Services panel.</p>
           </TabPanel>
           <TabPanel value="hours">
-            <p className="pt-3 text-body">Hours panel.</p>
+            <p className="pt-3 text-body-lg">Hours panel.</p>
           </TabPanel>
           <TabPanel value="insurance">
-            <p className="pt-3 text-body">Insurance panel.</p>
+            <p className="pt-3 text-body-lg">Insurance panel.</p>
           </TabPanel>
         </Tabs>
       </Section>
 
       {/* ----------------------------------------------------------- table */}
       <Section title="Table">
-        <div className="ml-scroll-x rounded-lg border border-line bg-surface">
+        <div className="ml-scroll-x rounded-md border border-n200 bg-white">
           <table className="ml-table">
             <thead>
               <tr>
@@ -256,15 +256,15 @@ export function Gallery() {
       <Section title="Colour — green is not the interface">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <Swatch className="bg-primary text-white" label="primary" />
-          <Swatch className="bg-primary-subtle text-primary" label="primary-subtle" />
-          <Swatch className="bg-surface text-ink" label="surface" />
-          <Swatch className="bg-surface-sunken text-ink" label="surface-sunken" />
-          <Swatch className="bg-success-subtle text-success" label="success" />
-          <Swatch className="bg-warning-subtle text-warning" label="warning" />
-          <Swatch className="bg-danger-subtle text-danger" label="danger" />
-          <Swatch className="bg-unknown-subtle text-unknown" label="unknown" />
+          <Swatch className="bg-primary-light text-primary" label="primary-subtle" />
+          <Swatch className="bg-white text-n900" label="surface" />
+          <Swatch className="bg-n100 text-n900" label="surface-sunken" />
+          <Swatch className="bg-success/10 text-success" label="success" />
+          <Swatch className="bg-warning/10 text-warning" label="warning" />
+          <Swatch className="bg-danger/10 text-danger" label="danger" />
+          <Swatch className="bg-n100 text-n600" label="unknown" />
         </div>
-        <p className="text-caption text-ink-subtle">
+        <p className="text-label text-n600">
           Green carries availability, verification, success and the primary
           action. Nothing else. If a green thing here means none of those, it
           is wrong.
@@ -286,7 +286,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Swatch({ className, label }: { className: string; label: string }) {
   return (
     <div
-      className={`flex h-16 items-center justify-center rounded-lg border border-line text-caption ${className}`}
+      className={`flex h-16 items-center justify-center rounded-md border border-n200 text-label ${className}`}
     >
       {label}
     </div>

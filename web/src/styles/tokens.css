@@ -1,0 +1,247 @@
+/**
+ * MediLink design tokens.
+ *
+ * The single source of truth for every colour, size, radius, shadow and
+ * duration in the product. Values are transcribed from the `:root` block in
+ * docs/MEDILINK_ROADMAP.html - that block, not the summary table in Section 2,
+ * is authoritative, because it is the only place all sixteen colours carry a
+ * value.
+ *
+ * Nothing below is decorative. A token exists here so that no component ever
+ * writes a literal hex, and so that changing the product's colour is one edit
+ * rather than five hundred.
+ *
+ * ORDER MATTERS: this file is imported before `@tailwind base` so the custom
+ * properties exist by the time Tailwind's generated utilities reference them.
+ */
+
+:root {
+  /* ------------------------------------------------------------------ colour
+   *
+   * Each colour is declared twice, and both declarations are required:
+   *
+   *   --primary        #0A6E5E     for hand-written CSS, and anywhere a plain
+   *                                colour value is what is wanted
+   *   --primary-rgb    10 110 94   space-separated channels, so Tailwind can
+   *                                emit `rgb(var(--primary-rgb) / <alpha>)`
+   *                                and opacity modifiers keep working
+   *
+   * Without the channel form, `bg-primary/25` silently produces no colour at
+   * all - the utility compiles, the element renders transparent, and nothing
+   * warns you. The app already leans on that syntax in nine places.
+   *
+   * The two forms must stay in sync. `npm run verify:tokens` re-derives the
+   * channels from the hexes and fails if any pair has drifted.
+   */
+
+  /* Brand. Actions, links, active states, identity. */
+  --primary: #0A6E5E;
+  --primary-rgb: 10 110 94;
+  /* Hover, pressed, header backgrounds. */
+  --primary-dark: #074F44;
+  --primary-dark-rgb: 7 79 68;
+  /* Selected rows, chips, highlighted backgrounds. A surface, never text. */
+  --primary-light: #E6F4F1;
+  --primary-light-rgb: 230 244 241;
+
+  /* Queue badges, ETA, urgency.
+   *
+   * A FILL, never a text colour and never a border on its own. #F4A832
+   * measures 2.0:1 against white - under the 4.5:1 body text needs, and under
+   * even the 3:1 a non-text control needs. Amber this bright only works
+   * carrying dark text on top of it: use --n900 on an accent fill, and pair
+   * the fill with a border where it has to read as an edge. This is the
+   * colour on the one number a patient actually has to read, so the
+   * constraint is not a style preference. */
+  --accent: #F4A832;
+  --accent-rgb: 244 168 50;
+
+  /* Emergency, errors, destructive actions. 4.77:1 on white - the only status
+     colour here that clears AA as text unaided. */
+  --danger: #D93025;
+  --danger-rgb: 217 48 37;
+  /* Confirmed, attended, insurance active. 4.38:1 on white: fine on a chip or
+     an icon, fine at 18px and above, short of AA for 14px body text. Reach for
+     --primary where the word itself has to carry the meaning. */
+  --success: #1E8A4C;
+  --success-rgb: 30 138 76;
+  /* No-show, expiring, pending review. 2.85:1 - like --accent, a fill and an
+     icon colour, not a text colour on white. */
+  --warning: #E67E22;
+  --warning-rgb: 230 126 34;
+
+  /* Neutrals. Most of the product is built from these. */
+  --n900: #0F1117; /* primary text, headings */
+  --n900-rgb: 15 17 23;
+  --n800: #1A1A2E; /* dark surfaces: inverted panels, code blocks, footers */
+  --n800-rgb: 26 26 46;
+  --n700: #2D3748; /* body copy on light surfaces */
+  --n700-rgb: 45 55 72;
+  --n600: #4A5568; /* secondary text, labels - 7.53:1, the muted text colour */
+  --n600-rgb: 74 85 104;
+  /* 4.02:1 on white. Placeholders, disabled text, decorative icons. NOT
+     captions or timestamps a patient needs to read - those take --n600. */
+  --n400: #718096;
+  --n400-rgb: 113 128 150;
+  --n300: #CBD5E0; /* borders that must read: inputs, dividers */
+  --n300-rgb: 203 213 224;
+  --n200: #E2E8F0; /* default border, hairline separators */
+  --n200-rgb: 226 232 240;
+  --n100: #F7FAFC; /* page background */
+  --n100-rgb: 247 250 252;
+  --white: #FFFFFF; /* card surfaces, inputs, overlays */
+  --white-rgb: 255 255 255;
+
+  /* -------------------------------------------------------------- typography
+   *
+   * Sizes are in rem so a reader who has raised their browser's default font
+   * size actually gets larger text. The px equivalent at a 16px root is noted
+   * alongside, because the roadmap specifies px and the two have to stay
+   * checkable against each other.
+   */
+
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Ticket codes and reference codes: read aloud across a reception desk, or
+     typed off a paper slip. The glyphs must not be confusable. */
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* The queue position, and nothing else. 72px is the floor on mobile, not a
+     target - it has to be legible at arm's length, held by someone who is
+     unwell, in a waiting room. */
+  --text-display: 4.5rem; /* 72px */
+  --text-display-weight: 900;
+  --text-display-lh: 1;
+
+  --text-h1: 2rem; /* 32px - page titles, screen headers */
+  --text-h1-weight: 800;
+  --text-h1-lh: 1.2;
+
+  --text-h2: 1.5rem; /* 24px - section headers, card titles */
+  --text-h2-weight: 700;
+  --text-h2-lh: 1.3;
+
+  --text-h3: 1.125rem; /* 18px - card sub-sections, form group labels */
+  --text-h3-weight: 700;
+  --text-h3-lh: 1.4;
+
+  --text-body-lg: 1rem; /* 16px - primary body text, descriptions */
+  --text-body-lg-weight: 400;
+  --text-body-lg-lh: 1.7;
+
+  --text-body: 0.875rem; /* 14px - secondary body, table cells, form hints */
+  --text-body-weight: 400;
+  --text-body-lh: 1.6;
+
+  --text-label: 0.75rem; /* 12px - input labels, badge text, table headers */
+  --text-label-weight: 700;
+  --text-label-lh: 1.4;
+
+  --text-micro: 0.6875rem; /* 11px - status pills, timestamps, legal text */
+  --text-micro-weight: 700;
+  --text-micro-lh: 1.3;
+
+  /* ----------------------------------------------------------------- spacing
+   *
+   * One scale, addressed two ways. The numeric steps are the scale itself; the
+   * named steps are the roadmap's vocabulary mapped onto it, so `--space-lg`
+   * and `--space-24` are guaranteed to be the same 24px rather than two
+   * independent decisions that drift apart.
+   */
+
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-40: 40px;
+  --space-48: 48px;
+  --space-80: 80px;
+
+  --space-xs: var(--space-4); /* icon gaps, tight inline spacing */
+  --space-sm: var(--space-8); /* chip gaps, tight card padding */
+  --space-md: var(--space-16); /* card inner padding, section gaps */
+  --space-lg: var(--space-24); /* card outer padding, form field gaps */
+  --space-xl: var(--space-40); /* section vertical rhythm */
+  --space-2xl: var(--space-80); /* page top and bottom padding */
+
+  /* The minimum comfortable touch target, and the height every interactive
+     control snaps to. WCAG 2.5.8 asks for 24px; 44px is what a thumb on a
+     phone held in one hand actually needs. Non-negotiable, so it is a token
+     and not a number somebody types. */
+  --touch-target: 44px;
+
+  /* Control heights. `md` is the touch target itself - that is the default,
+     and the one a patient's thumb lands on.
+
+     `sm` at 32px is below the 44px floor, and that is deliberate rather than
+     an oversight: the workspace tables are dense on purpose, and a 44px
+     control in every row would halve what a receptionist fits on screen. It
+     is raised back to the full target on coarse pointers, so a phone never
+     gets a 32px control. See `.ml-control-sm` in design/base.css - the size
+     is a token, but the rule that protects it is a media query. */
+  --control-sm: 32px;
+  --control-md: var(--touch-target);
+  --control-lg: 54px;
+
+  /* ------------------------------------------------------------------ radius
+   *
+   * The shape carries meaning. A pill is a call to action or a status chip; a
+   * 16px corner is a card. Rounding a card to a pill, or a chip to a card,
+   * removes the only cue that says which is which.
+   */
+
+  --radius-sm: 6px; /* badges, pills, tags */
+  --radius-md: 10px; /* input fields, buttons */
+  --radius-lg: 16px; /* cards, panels */
+  --radius-pill: 9999px; /* primary CTA buttons */
+
+  /* ------------------------------------------------------------------ shadow
+   *
+   * Three steps, each doing one job. Borders separate things; shadows only
+   * ever say "this is interactive" or "this is above the page".
+   */
+
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.06); /* subtle card lift */
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1); /* floating elements, modals */
+  --shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.16); /* phone shell, hero cards */
+
+  /* Focus ring, carried as a shadow so it survives `overflow: hidden` on a
+     scrolling table or a clipped card. Reception staff work the workspace
+     entirely from the keyboard - this is how they know where they are, so it
+     is sized to be seen rather than hinted at. */
+  --shadow-focus: 0 0 0 3px rgba(10, 110, 94, 0.4);
+  /* The tighter, tinted ring an input takes on focus, per the Input spec. */
+  --shadow-input-focus: 0 0 0 3px rgba(10, 110, 94, 0.12);
+
+  /* ------------------------------------------------------------------ motion
+   *
+   * Fast enough to feel instant, slow enough to be seen. Anything that moves a
+   * panel gets the eased curve; anything that only changes colour does not.
+   */
+
+  --ease-fast: 150ms ease; /* hover states, colour transitions */
+  --ease-base: 200ms ease; /* most interactive transitions */
+  --ease-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1); /* panels, modals, drawers */
+
+  /* Split forms, for the cases where a rule needs the duration or the curve on
+     its own - a keyframe animation, or a transition on a single property. */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 350ms;
+  --curve-standard: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* A reader who has asked their OS for less motion gets none of it. This lives
+   with the tokens rather than in the component layer so that it holds even for
+   a component that forgets to ask. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ease-fast: 0ms linear;
+    --ease-base: 0ms linear;
+    --ease-slow: 0ms linear;
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}

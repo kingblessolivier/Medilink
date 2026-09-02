@@ -75,7 +75,7 @@ export function Doctors() {
   return (
     <div className="ml-page py-6 pb-24 md:pb-10">
       <h1 className="text-h1">{t("doctors_title")}</h1>
-      <p className="mt-1 max-w-prose text-body text-ink-muted">
+      <p className="mt-1 max-w-prose text-body-lg text-n700">
         {t("doctors_body")}
       </p>
 
@@ -168,7 +168,7 @@ export function Doctors() {
         {(specialty || language || search) && (
           <Button
             size="sm"
-            variant="tertiary"
+            variant="ghost"
             onClick={() => setParams(new URLSearchParams(), { replace: true })}
           >
             {t("clear_filters")}

@@ -116,7 +116,7 @@ export function Home() {
       {!queue.data && (
         <section
           className={
-            "relative overflow-hidden border-b border-line bg-hero-wash text-ink " +
+            "relative overflow-hidden border-b border-n200 bg-hero-wash text-n900 " +
             (nextAppointment ? "mt-4" : "")
           }
         >
@@ -138,13 +138,13 @@ export function Home() {
                 headline is short enough not to care; the sentence under it
                 is not. */}
             <div className="max-w-xl">
-              <p className="text-small font-medium uppercase tracking-wide text-primary">
+              <p className="text-body font-medium uppercase tracking-wide text-primary">
                 {patient?.full_name
                   ? t("greeting_named", { name: patient.full_name })
                   : t("greeting")}
               </p>
-              <h1 className="mt-2 text-h1 sm:text-display">{t("hero_title")}</h1>
-              <p className="mt-3 max-w-prose text-body-lg text-ink-muted">
+              <h1 className="mt-2 text-h1 sm:text-h1">{t("hero_title")}</h1>
+              <p className="mt-3 max-w-prose text-body-lg text-n700">
                 {t("hero_body")}
               </p>
 
@@ -186,15 +186,15 @@ export function Home() {
                 right-hand column on a wide screen - which is what stops a
                 1440px viewport being half empty green - and fall back to a
                 strip underneath the copy on anything narrower. */}
-            <ul className="grid gap-5 border-t border-line pt-6 sm:grid-cols-3 lg:grid-cols-1 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+            <ul className="grid gap-5 border-t border-n200 pt-6 sm:grid-cols-3 lg:grid-cols-1 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
               {VALUE_POINTS.map(({ Glyph, title, body }) => (
                 <li key={title} className="flex gap-3">
-                  <span className="ml-icon-plate bg-primary-subtle text-primary">
+                  <span className="ml-icon-plate bg-primary-light text-primary">
                     <Glyph size={18} />
                   </span>
                   <span>
-                    <span className="block text-body font-medium">{t(title)}</span>
-                    <span className="mt-0.5 block text-small text-ink-muted">
+                    <span className="block text-body-lg font-medium">{t(title)}</span>
+                    <span className="mt-0.5 block text-body text-n700">
                       {t(body)}
                     </span>
                   </span>
@@ -234,7 +234,7 @@ export function Home() {
           title={t("nearby_open")}
           action={
             nearby.data && nearby.data.count > 3 ? (
-              <Link to="/search" className="text-small font-medium text-primary">
+              <Link to="/search" className="text-body font-medium text-primary">
                 {t("see_all")}
               </Link>
             ) : null
@@ -316,7 +316,7 @@ export function Home() {
           <Section
             title={t("doctors_near_you")}
             action={
-              <Link to="/doctors" className="text-small font-medium text-primary">
+              <Link to="/doctors" className="text-body font-medium text-primary">
                 {t("see_all")}
               </Link>
             }
@@ -344,15 +344,15 @@ export function Home() {
                 to={`/search?service=${service.code}`}
                 className="ml-card-interactive group flex items-center gap-3 p-3.5"
               >
-                <span className="ml-icon-plate bg-primary-subtle text-primary">
+                <span className="ml-icon-plate bg-primary-light text-primary">
                   <IconStethoscope size={18} />
                 </span>
-                <span className="min-w-0 flex-1 truncate text-body font-medium">
+                <span className="min-w-0 flex-1 truncate text-body-lg font-medium">
                   {serviceLabel(service)}
                 </span>
                 <IconChevronRight
                   size={16}
-                  className="shrink-0 text-ink-subtle transition-transform group-hover:translate-x-0.5"
+                  className="shrink-0 text-n600 transition-transform group-hover:translate-x-0.5"
                 />
               </Link>
             ))}
@@ -363,11 +363,11 @@ export function Home() {
         <Section title={t("insurance_title")}>
           <div className="ml-panel overflow-hidden">
             <div className="flex flex-col gap-6 p-5 sm:flex-row sm:items-start sm:p-6">
-              <span className="ml-icon-plate h-11 w-11 bg-primary-subtle text-primary">
+              <span className="ml-icon-plate h-11 w-11 bg-primary-light text-primary">
                 <IconShieldCheck size={22} />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="max-w-prose text-body text-ink-muted">
+                <p className="max-w-prose text-body-lg text-n700">
                   {t("insurance_body")}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
@@ -383,7 +383,7 @@ export function Home() {
                 </div>
                 {/* Rule 6, on the screen rather than only in the docs: we say
                     what a facility ACCEPTS, never that a patient is covered. */}
-                <p className="mt-4 text-caption text-ink-subtle">
+                <p className="mt-4 text-label text-n600">
                   {t("insurance_accepts_note")}
                 </p>
               </div>
@@ -395,17 +395,17 @@ export function Home() {
         {triage.available && (
           <Section title={t("care_guide_title")}>
             <div className="ml-panel flex flex-col gap-6 p-5 sm:flex-row sm:items-start sm:p-6">
-              <span className="ml-icon-plate h-11 w-11 bg-primary-subtle text-primary">
+              <span className="ml-icon-plate h-11 w-11 bg-primary-light text-primary">
                 <IconHeart size={22} />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="max-w-prose text-body text-ink-muted">
+                <p className="max-w-prose text-body-lg text-n700">
                   {t("care_guide_body")}
                 </p>
                 <Link to="/care-guide" className="ml-btn-primary mt-4">
                   {t("start_care_guide")}
                 </Link>
-                <p className="mt-3 text-caption text-ink-subtle">
+                <p className="mt-3 text-label text-n600">
                   {t("care_guide_disclaimer")}
                 </p>
               </div>

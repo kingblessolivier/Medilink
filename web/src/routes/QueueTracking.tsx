@@ -102,14 +102,14 @@ export function QueueTracking() {
           it is - the position and the departure time below carry the weight,
           so the heading stays small rather than competing with them. */}
       <h1 className="sr-only">{t("queue_title")}</h1>
-      <p className="text-center text-body text-ink-muted">
+      <p className="text-center text-body-lg text-n700">
         {entry.facility.name}
       </p>
 
       <Card className="mt-3 px-6 py-8 text-center">
         {called ? <Called entry={entry} /> : <Waiting entry={entry} />}
 
-        <p className="mt-6 text-caption text-ink-subtle">
+        <p className="mt-6 text-label text-n600">
           {t("updated_ago", { ago: timeAgo(entry.as_of, lang) })}
         </p>
       </Card>
@@ -151,8 +151,8 @@ function Waiting({ entry }: { entry: QueueEntryPublic }) {
 
   return (
     <>
-      <p className="text-body text-ink-muted">{t("you_are_number")}</p>
-      <p className="mt-1 text-queue font-semibold tabular-nums">
+      <p className="text-body-lg text-n700">{t("you_are_number")}</p>
+      <p className="mt-1 text-display tabular-nums">
         {entry.position}
       </p>
 
@@ -179,7 +179,7 @@ function Waiting({ entry }: { entry: QueueEntryPublic }) {
             ))}
             <span aria-hidden="true" className="h-2 w-2 rounded-full bg-primary" />
           </div>
-          <p className="mt-2.5 text-small text-ink-muted">
+          <p className="mt-2.5 text-body text-n700">
             {t("people_ahead", { n: ahead })}
           </p>
         </div>
@@ -192,7 +192,7 @@ function Waiting({ entry }: { entry: QueueEntryPublic }) {
         </p>
       )}
 
-      <p className="mt-4 text-body-lg text-ink-muted">
+      <p className="mt-4 text-body-lg text-n700">
         {entry.eta_minutes === null
           ? t("wait_unavailable")
           : entry.eta_confidence === "low"

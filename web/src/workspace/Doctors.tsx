@@ -30,7 +30,7 @@ export function WorkspaceDoctors() {
   return (
     <div className="mx-auto w-full max-w-4xl">
       <h1 className="text-h2">Doctors</h1>
-      <p className="mt-1 text-small text-ink-muted">
+      <p className="mt-1 text-body text-n700">
         As patients see them on your facility page.
       </p>
 
@@ -70,15 +70,15 @@ export function WorkspaceDoctors() {
           {rows.map((provider) => (
             <li
               key={provider.slug}
-              className="flex items-start gap-3 rounded-lg border border-line bg-surface p-4"
+              className="flex items-start gap-3 rounded-md border border-n200 bg-white p-4"
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-sunken text-small font-medium text-ink-muted">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-n100 text-body font-medium text-n700">
                 {provider.initials}
               </span>
 
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-center gap-2">
-                  <span className="text-body font-medium">
+                  <span className="text-body-lg font-medium">
                     {provider.display_name}
                   </span>
                   {provider.verified ? (
@@ -90,7 +90,7 @@ export function WorkspaceDoctors() {
                   )}
                 </span>
 
-                <span className="mt-1 block text-small text-ink-muted">
+                <span className="mt-1 block text-body text-n700">
                   {/* .join() on the old string[] compiled fine after the API
                       started sending objects, and would have rendered
                       "[object Object]" at a facility manager. */}
@@ -102,7 +102,7 @@ export function WorkspaceDoctors() {
                 </span>
 
                 {provider.languages.length > 0 && (
-                  <span className="mt-0.5 block text-caption text-ink-subtle">
+                  <span className="mt-0.5 block text-label text-n600">
                     Speaks {provider.languages.join(", ")}
                   </span>
                 )}

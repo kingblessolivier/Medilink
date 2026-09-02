@@ -33,7 +33,7 @@ export function TriageMonitor() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-h2">Care Guide monitoring</h1>
-          <p className="mt-1 text-small text-ink-muted">
+          <p className="mt-1 text-body text-n700">
             Anonymous outcomes only. Answers are never stored.
           </p>
         </div>
@@ -59,7 +59,7 @@ export function TriageMonitor() {
       {query.isLoading && (
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {Array.from({ length: 3 }, (_, i) => (
-            <div key={i} className="rounded-lg border border-line bg-surface p-4">
+            <div key={i} className="rounded-md border border-n200 bg-white p-4">
               <Skeleton className="h-3 w-24" />
               <Skeleton className="mt-3 h-6 w-16" />
             </div>
@@ -139,7 +139,7 @@ function Body({ data }: { data: TriageMonitoring }) {
       <section className="mt-8">
         <h2 className="text-h3 mb-3">Where sessions were sent</h2>
         {data.by_service.length === 0 ? (
-          <p className="text-body text-ink-muted">
+          <p className="text-body-lg text-n700">
             No service recommendations in this period.
           </p>
         ) : (
@@ -154,10 +154,10 @@ function Body({ data }: { data: TriageMonitoring }) {
 
       <section className="mt-8">
         <h2 className="text-h3 mb-3">By protocol version</h2>
-        <p className="mb-3 text-small text-ink-muted">
+        <p className="mb-3 text-body text-n700">
           A rule change has to be traceable to what it did to these numbers.
         </p>
-        <div className="ml-scroll-x rounded-lg border border-line bg-surface">
+        <div className="ml-scroll-x rounded-md border border-n200 bg-white">
           <table className="ml-table">
             <thead>
               <tr>
@@ -173,7 +173,7 @@ function Body({ data }: { data: TriageMonitoring }) {
                   <td className="font-mono">{row.protocol_version}</td>
                   <td className="tabular-nums">{row.sessions}</td>
                   <td className="tabular-nums">{row.escalations}</td>
-                  <td className="tabular-nums text-ink-muted">
+                  <td className="tabular-nums text-n700">
                     {/* Per-version rates are held to the same floor as the
                         headline one. */}
                     {row.sessions >= data.minimum_sessions
@@ -187,7 +187,7 @@ function Body({ data }: { data: TriageMonitoring }) {
         </div>
       </section>
 
-      <p className="mt-8 text-caption text-ink-subtle">
+      <p className="mt-8 text-label text-n600">
         Outcomes carry no patient, no session and no answers, and are bucketed
         by hour so a row cannot be matched to a visit.
       </p>

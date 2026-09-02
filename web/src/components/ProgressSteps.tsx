@@ -49,7 +49,7 @@ export function ProgressSteps({
       role="status"
       aria-live="polite"
     >
-      <p className="flex items-center gap-2 text-body text-ink">
+      <p className="flex items-center gap-2 text-body-lg text-n900">
         <Spinner />
         {current}
       </p>
@@ -59,7 +59,7 @@ export function ProgressSteps({
       {reached > 0 && (
         <ol className="mt-2 space-y-0.5">
           {steps.slice(0, reached).map((step) => (
-            <li key={step} className="text-small text-ink-subtle">
+            <li key={step} className="text-body text-n600">
               {step}
             </li>
           ))}
