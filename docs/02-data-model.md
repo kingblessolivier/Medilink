@@ -464,3 +464,31 @@ a receptionist at one clinic must never be able to read another clinic's patient
 
 Facility data collection is the critical path for Phase 0, and it is field work,
 not engineering. Start it in parallel with development, not after.
+
+---
+
+## 12. Entities this document does not model
+
+Audited 2026-09-02 against `backend/apps/*/models.py`. Nothing described above
+is missing from the code - but nine tables exist that are described nowhere in
+this document. Two of them carry a whole feature, and one is a compliance
+control, so the gap is worth naming rather than leaving to be discovered.
+
+| Model | App | What it holds |
+|---|---|---|
+| `Specialty` | `providers` | Clinical specialty, `code` plus `name_rw/en/fr` and descriptions |
+| `Provider` | `providers` | A named clinician: `slug`, `title`, languages, verification state |
+| `ProviderFacility` | `providers` | Which clinicians practise where - the many-to-many, and the reason a doctor is only reachable through a facility |
+| `OTPCode` | `patients` | Phone sign-in codes. Stores `code_hash`, never the code; carries `attempts`, `expires_at`, `consumed_at` |
+| `PatientAccessLog` | `patients` | Who read whose record. See doc 08 §6 |
+| `NotificationPreference` | `notifications` | Per-patient channel choices |
+| `FacilityServiceInsurer` | `insurance` | Insurer acceptance at the service level, not just the facility level |
+| `PlatformSettings` | `platform_admin` | Singleton of MediLink-wide settings |
+| `TriageOutcome` | `triage` | Recorded result of a triage session. Gated - see doc 09 |
+
+`PatientAccessLog` is worth reading in full before touching anything that
+reads patient data. Its `patient` field is deliberately nullable: a queue
+board is a *bulk* read, so one row records that a staff member listed N
+patients at once. One row per patient would drown the signal this table
+exists to surface - a receptionist viewing hundreds of records outside their
+shift.
