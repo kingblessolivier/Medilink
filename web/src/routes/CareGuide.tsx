@@ -87,12 +87,18 @@ export function CareGuide() {
         <p className="mt-4 text-body-lg text-n700">
           {t("care_guide_unavailable_body")}
         </p>
+        {/* This screen carries more weight than it used to. The Care Guide now
+            holds a primary tab unconditionally, so while the gate is shut this
+            is where that tap lands - and it is standing in for the doctor list
+            that used to be there. Offering the doctor list as the second action
+            gives that tap somewhere real to go. Home was the old second
+            action, and it is already one tap away in the nav. */}
         <div className="mt-6 flex flex-wrap gap-2">
           <Link to="/search" className="ml-btn-primary">
             {t("find_care")}
           </Link>
-          <Link to="/" className="ml-btn-secondary">
-            {t("nav_home")}
+          <Link to="/doctors" className="ml-btn-secondary">
+            {t("nav_doctors")}
           </Link>
         </div>
       </div>
