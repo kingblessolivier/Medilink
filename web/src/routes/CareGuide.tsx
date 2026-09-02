@@ -74,9 +74,15 @@ export function CareGuide() {
           {/* Not an error. Nothing is broken - the feature is waiting on a
               clinician, and saying so plainly is more trustworthy than a
               spinner or a "try again later". */}
-          <Notice tone="info">
-            {status.reason || t("care_guide_unavailable")}
-          </Notice>
+          {/* The translated sentence, not `status.reason`.
+
+              `reason` is a settings string written for whoever operates the
+              deployment - it is English, it is never translated, and it was
+              winning over the key that says the same thing in the reader's
+              language. On a Kinyarwanda page a patient got "Awaiting review
+              and sign-off by a licensed clinician" in English. The operator
+              detail still has a home: the platform triage-monitoring screen. */}
+          <Notice tone="info">{t("care_guide_unavailable")}</Notice>
         </div>
         <p className="mt-4 text-body-lg text-n700">
           {t("care_guide_unavailable_body")}
