@@ -75,7 +75,6 @@ export default {
       warning: token("warning"), // no-show, expiring, pending - a fill only
 
       n900: token("n900"), // primary text, headings
-      n800: token("n800"), // dark surfaces: inverted panels, footers
       n700: token("n700"), // body copy
       n600: token("n600"), // secondary text, labels, captions
       n400: token("n400"), // placeholders, disabled text, decorative icons

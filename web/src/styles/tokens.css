@@ -71,10 +71,19 @@
   --warning-rgb: 230 126 34;
 
   /* Neutrals. Most of the product is built from these. */
-  --n900: #0F1117; /* primary text, headings */
-  --n900-rgb: 15 17 23;
-  --n800: #1A1A2E; /* dark surfaces: inverted panels, code blocks, footers */
-  --n800-rgb: 26 26 46;
+  /* Primary text and headings.
+   *
+   * #1A1A2E, not #0F1117. Both of the specification documents that carry a
+   * token TABLE agree on this one - the swatch in docs/01_patient_app.html
+   * labels it "Neutral 900", and so does Section 2 of the roadmap. #0F1117
+   * came from the roadmap HTML's own :root block, which is the styling for
+   * that document rather than a statement about the product.
+   *
+   * The 16th token, --n800, went with it: it existed only because that :root
+   * block needed a second dark for its own callouts, nothing in this codebase
+   * ever referenced it, and the design system has one darkest neutral. */
+  --n900: #1A1A2E;
+  --n900-rgb: 26 26 46;
   --n700: #2D3748; /* body copy on light surfaces */
   --n700-rgb: 45 55 72;
   --n600: #4A5568; /* secondary text, labels - 7.53:1, the muted text colour */

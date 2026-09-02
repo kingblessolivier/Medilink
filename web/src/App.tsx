@@ -18,6 +18,7 @@ import { Doctors } from "./routes/Doctors"
 
 
 import { ErrorBoundary } from "./components/ErrorBoundary"
+import { hasSeenWelcome } from "./lib/welcomeSeen"
 import { SiteFooter } from "./components/SiteFooter"
 import { OfflineBanner } from "./components/OfflineBanner"
 import { BottomNav } from "./components/BottomNav"
@@ -69,6 +70,9 @@ const SignIn = lazy(() =>
 )
 const Register = lazy(() =>
   import("./routes/Register").then((m) => ({ default: m.Register })),
+)
+const Welcome = lazy(() =>
+  import("./routes/Welcome").then((m) => ({ default: m.Welcome })),
 )
 const Privacy = lazy(() =>
   import("./routes/Privacy").then((m) => ({ default: m.Privacy })),
@@ -189,7 +193,10 @@ function Chrome() {
   const { pathname } = useLocation()
   const { session } = useAuth()
 
-  const onAuthScreen = pathname === "/sign-in" || pathname === "/register"
+  const onAuthScreen =
+    pathname === "/sign-in" ||
+    pathname === "/register" ||
+    pathname === "/welcome"
   const onStaffSurface =
     pathname.startsWith("/workspace") || pathname.startsWith("/platform")
 
@@ -216,7 +223,12 @@ function Shell() {
   return (
     <>
       <OfflineBanner />
-      <TopNav session={current} onSignOut={signOut} />
+      {/* The splash is full-bleed green and carries its own language
+          selector; a top bar above it would break the one screen whose whole
+          job is to introduce the product. */}
+      {pathname !== "/welcome" && (
+        <TopNav session={current} onSignOut={signOut} />
+      )}
 
       {/* Keyed on the path so navigating away from a broken screen
           recovers, instead of staying stuck until a reload. */}
@@ -224,7 +236,22 @@ function Shell() {
       <Suspense fallback={<Loading />}>
       <Routes>
         {/* ---------------------------------------------------- patient */}
-        <Route path="/" element={<Home />} />
+        {/* S-01 is labelled "Splash / Landing", and this is how it gets to
+            be the landing without costing everyone else. Only the bare "/"
+            redirects, so a WhatsApp link straight to a facility or a queue
+            still opens where it points; only a first-time visitor sees it,
+            because the flag is written on the way out; and a signed-in
+            patient never does, because they are past being introduced. */}
+        <Route
+          path="/"
+          element={
+            current === null && !hasSeenWelcome() ? (
+              <Navigate to="/welcome" replace />
+            ) : (
+              <Home />
+            )
+          }
+        />
         <Route path="/search" element={<FindCare />} />
         {/* Reachable by URL even when the clinical gate is shut - the screen
             explains why rather than 404ing on a feature that exists. */}
@@ -249,6 +276,10 @@ function Shell() {
         {/* Linked from the consent checkbox. Consenting to a notice that
             does not exist is not consent. */}
         <Route path="/privacy" element={<Privacy />} />
+        {/* S-01 splash and S-02 onboarding. Not the landing route: somebody
+            arriving from a WhatsApp link, or reopening the app while waiting
+            in a queue, needs the product rather than an introduction. */}
+        <Route path="/welcome" element={<Welcome />} />
         <Route path="/about" element={<About />} />
         <Route path="/help" element={<Help />} />
 
