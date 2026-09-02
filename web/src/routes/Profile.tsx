@@ -1,6 +1,13 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { IconUser } from "../ui/icons"
+import {
+  IconBell,
+  IconCalendar,
+  IconChevronRight,
+  IconShield,
+  IconShieldCheck,
+} from "../ui/icons"
+import { Avatar } from "../ui/Avatar"
 import { useMutation } from "@tanstack/react-query"
 import { api } from "../api/client"
 import { useI18n, LANGUAGES, LANGUAGE_LABELS, type Language } from "../i18n"
@@ -9,10 +16,26 @@ import { ErrorState } from "../ui"
 import { useGeolocation } from "../hooks/useGeolocation"
 import { useInsurers } from "../hooks/useNearbyFacilities"
 
+/**
+ * The account rows, limited to destinations that exist. The spec also lists
+ * Dependents and Health records; neither is built, and a menu row that leads
+ * nowhere is worse than a shorter menu.
+ */
+const ACCOUNT_LINKS = [
+  { to: "/visits", key: "nav_visits", Glyph: IconCalendar },
+  { to: "/insurance", key: "nav_insurance", Glyph: IconShieldCheck },
+  { to: "/notifications", key: "nav_notifications", Glyph: IconBell },
+  { to: "/privacy", key: "privacy_title", Glyph: IconShield },
+] as const
+
 export function Profile() {
   const { t, setLang } = useI18n()
   const { session, setPatient, signOut } = useAuth()
   const { data: insurerData } = useInsurers()
+  const insurerName =
+    insurerData?.results.find(
+      (i) => i.code === (session.state === "signed_in" ? session.patient?.insurer : null),
+    )?.name ?? null
   const { state: geo, locate } = useGeolocation()
   const [saved, setSaved] = useState(false)
 
@@ -46,26 +69,67 @@ export function Profile() {
   const patient = session.patient
 
   return (
-    <div className="mx-auto max-w-md px-4 pb-24 md:pb-10 pt-4">
-      <h1 className="mb-4 text-h1">{t("profile_title")}</h1>
+    <div className="pb-24 md:pb-10">
+      <h1 className="sr-only">{t("profile_title")}</h1>
 
-      {/* Who you are, before what you can change. The phone is the identity
-          in this product - it is what USSD, WhatsApp and every SMS key on -
-          so it gets stated rather than tucked into a line of body text. */}
-      <div className="ml-card mb-4 flex items-center gap-3 p-4">
-        <span className="ml-icon-plate h-11 w-11 bg-primary-light text-primary">
-          <IconUser size={20} />
-        </span>
-        <div className="min-w-0">
-          <p className="truncate text-body-lg font-medium">
-            {patient.full_name || t("profile_no_name")}
+      {/* S-08 per docs/01_patient_app.html: a green header carrying the
+          avatar, the name, the phone and an insurer chip.
+
+          The phone is the identity in this product - it is what USSD,
+          WhatsApp and every SMS key on - so it is stated plainly rather than
+          tucked into a line of body text.
+
+          The chip names the insurer and stops, as everywhere else. The mock
+          reads "Mutuelle - Active"; MediLink knows which insurer was chosen,
+          not whether the membership is paid up. */}
+      <section className="bg-primary px-4 pb-8 pt-8 text-center text-white">
+        <Avatar
+          name={patient.full_name || patient.phone}
+          size="lg"
+          className="!bg-white/20 !text-white"
+        />
+        <p className="mt-3 text-h2 font-semibold">
+          {patient.full_name || t("profile_no_name")}
+        </p>
+        <p className="mt-1 text-body tabular-nums text-white/80">
+          {patient.phone}
+        </p>
+        {insurerName && (
+          <p className="mt-3 inline-flex items-center gap-1.5 rounded-pill bg-white/15 px-3 py-1 text-label">
+            <IconShieldCheck size={14} />
+            {insurerName}
           </p>
-          <p className="truncate text-body tabular-nums text-n700">
-            {patient.phone}
+        )}
+      </section>
+
+      {/* The account menu. Dependents and Health records are in the spec and
+          are NOT here: neither feature exists, and a row that leads nowhere
+          is worse than a shorter list. They go in when they are built. */}
+      <div className="mx-auto -mt-4 max-w-md px-4">
+        <nav aria-label={t("my_account")} className="ml-card overflow-hidden">
+          <p className="ml-label border-b border-n200 px-4 py-3">
+            {t("my_account")}
           </p>
-        </div>
+          <ul>
+            {ACCOUNT_LINKS.map(({ to, key, Glyph }) => (
+              <li key={to}>
+                <Link
+                  to={to}
+                  className="flex min-h-touch items-center gap-3 border-b border-n200 px-4 py-3 last:border-b-0 hover:bg-n100"
+                >
+                  <span className="ml-icon-plate bg-primary-light text-primary">
+                    <Glyph size={18} />
+                  </span>
+                  <span className="flex-1 text-body-lg">{t(key)}</span>
+                  <IconChevronRight size={16} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </div>
 
+      <div className="mx-auto mt-6 max-w-md px-4">
       <h2 className="text-h3 mb-2">{t("profile_details")}</h2>
       <div className="ml-card space-y-4 p-4">
 
@@ -179,12 +243,13 @@ export function Profile() {
       {/* Not full-width secondary: that is the same weight as "use my current
           location" directly above it, and leaving is not a neighbouring
           choice to setting a preference. */}
-      <button
-        className="ml-btn-ghost mt-8 text-n700 hover:text-danger"
-        onClick={signOut}
-      >
-        {t("auth_sign_out")}
-      </button>
+        <button
+          className="ml-btn-ghost mt-8 text-n700 hover:text-danger"
+          onClick={signOut}
+        >
+          {t("auth_sign_out")}
+        </button>
+      </div>
     </div>
   )
 }
