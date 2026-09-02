@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediLink Rwanda — Patient App UI Specification</title>
+<style>
+  :root {
+    --primary: #0A6E5E;
+    --primary-dark: #074F44;
+    --primary-light: #E6F4F1;
+    --accent: #F4A832;
+    --danger: #D93025;
+    --success: #1E8A4C;
+    --warning: #E67E22;
+    --n900: #1A1A2E;
+    --n600: #4A5568;
+    --n300: #CBD5E0;
+    --n100: #F7FAFC;
+    --white: #FFFFFF;
+    --radius-card: 16px;
+    --radius-input: 10px;
+    --radius-pill: 24px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.09);
+    --transition: 200ms ease;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',system-ui,sans-serif; background:#E8EDF2; color:var(--n900); min-height:100vh; }
+
+  .spec-header {
+    background: var(--primary); color:#fff; padding:24px 32px;
+    display:flex; align-items:center; gap:16px;
+  }
+  .spec-header h1 { font-size:22px; font-weight:700; }
+  .spec-header p { font-size:13px; opacity:0.8; margin-top:2px; }
+  .badge { background:rgba(255,255,255,0.2); padding:4px 12px; border-radius:20px; font-size:12px; }
+
+  .spec-body { max-width:1400px; margin:0 auto; padding:32px 24px; }
+
+  .screen-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:32px; margin-bottom:48px; }
+
+  .screen-wrap { display:flex; flex-direction:column; gap:12px; }
+  .screen-label { font-size:13px; font-weight:600; color:var(--n600); letter-spacing:0.5px; text-transform:uppercase; }
+  .screen-desc { font-size:12px; color:var(--n600); }
+
+  /* Phone shell */
+  .phone { width:320px; min-height:640px; background:#fff; border-radius:36px; overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.12);
+    border:8px solid #1A1A2E; position:relative; }
+  .phone-notch { height:28px; background:#1A1A2E; display:flex; align-items:center; justify-content:center; }
+  .phone-notch::after { content:''; width:80px; height:10px; background:#000; border-radius:10px; }
+  .phone-status { display:flex; justify-content:space-between; align-items:center; padding:6px 18px;
+    font-size:11px; font-weight:600; color:var(--n900); background:#fff; }
+  .phone-screen { background:var(--n100); min-height:560px; }
+
+  /* ── DESIGN TOKENS ── */
+  .tokens-section { background:#fff; border-radius:var(--radius-card); padding:28px; margin-bottom:32px; box-shadow:var(--shadow); }
+  .tokens-section h2 { font-size:18px; font-weight:700; margin-bottom:20px; color:var(--n900); }
+  .token-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px; }
+  .token-item { display:flex; flex-direction:column; gap:6px; }
+  .token-swatch { height:44px; border-radius:8px; border:1px solid rgba(0,0,0,0.08); }
+  .token-name { font-size:11px; font-weight:600; color:var(--n600); }
+  .token-val { font-size:10px; color:var(--n600); font-family:monospace; }
+
+  .section-title { font-size:20px; font-weight:700; color:var(--n900); margin-bottom:20px; padding-bottom:10px;
+    border-bottom:2px solid var(--primary-light); }
+
+  /* ── SPEC ANNOTATIONS ── */
+  .spec-box { background:#fff; border-radius:var(--radius-card); padding:20px; margin-top:12px; box-shadow:var(--shadow); }
+  .spec-box h4 { font-size:13px; font-weight:700; color:var(--primary); margin-bottom:10px; }
+  .spec-box ul { list-style:none; display:flex; flex-direction:column; gap:5px; }
+  .spec-box ul li { font-size:12px; color:var(--n600); padding-left:14px; position:relative; }
+  .spec-box ul li::before { content:'→'; position:absolute; left:0; color:var(--primary); font-size:10px; top:1px; }
+
+  /* ──────────────── SCREENS ──────────────── */
+
+  /* Splash */
+  .splash { background:var(--primary); min-height:560px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:20px; padding:40px 24px; }
+  .splash-logo { width:80px; height:80px; background:#fff; border-radius:20px;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 8px 24px rgba(0,0,0,0.2); }
+  .splash-logo svg { width:48px; height:48px; }
+  .splash h2 { color:#fff; font-size:28px; font-weight:700; letter-spacing:-0.5px; }
+  .splash p { color:rgba(255,255,255,0.75); font-size:14px; text-align:center; line-height:1.5; }
+  .splash-btn { background:#fff; color:var(--primary); border:none; border-radius:var(--radius-pill);
+    padding:14px 40px; font-size:15px; font-weight:700; cursor:pointer; width:100%; }
+  .splash-link { color:rgba(255,255,255,0.7); font-size:13px; text-decoration:underline; cursor:pointer; }
+
+  /* Onboarding */
+  .onboard { min-height:560px; background:#fff; display:flex; flex-direction:column; }
+  .onboard-progress { display:flex; gap:6px; padding:20px 20px 0; }
+  .onboard-progress span { flex:1; height:3px; background:var(--n300); border-radius:2px; }
+  .onboard-progress span.active { background:var(--primary); }
+  .onboard-img { background:var(--primary-light); height:200px; display:flex; align-items:center;
+    justify-content:center; margin:20px 20px 0; border-radius:16px; }
+  .onboard-img svg { width:80px; height:80px; color:var(--primary); }
+  .onboard-content { padding:24px 20px; flex:1; display:flex; flex-direction:column; gap:12px; }
+  .onboard-content h3 { font-size:20px; font-weight:700; }
+  .onboard-content p { font-size:14px; color:var(--n600); line-height:1.6; }
+  .onboard-nav { display:flex; justify-content:space-between; align-items:center; padding:0 20px 24px; }
+  .btn-outline { background:transparent; border:2px solid var(--primary); color:var(--primary);
+    border-radius:var(--radius-pill); padding:10px 24px; font-size:14px; font-weight:600; cursor:pointer; }
+  .btn-primary { background:var(--primary); color:#fff; border:none; border-radius:var(--radius-pill);
+    padding:10px 24px; font-size:14px; font-weight:600; cursor:pointer; }
+
+  /* Auth */
+  .auth { min-height:560px; background:#fff; padding:32px 20px; display:flex; flex-direction:column; gap:20px; }
+  .auth-header { display:flex; flex-direction:column; gap:6px; }
+  .auth-header h3 { font-size:22px; font-weight:700; }
+  .auth-header p { font-size:13px; color:var(--n600); }
+  .input-group { display:flex; flex-direction:column; gap:6px; }
+  .input-group label { font-size:12px; font-weight:600; color:var(--n600); letter-spacing:0.3px; }
+  .input-field { border:1.5px solid var(--n300); border-radius:var(--radius-input); padding:13px 14px;
+    font-size:15px; outline:none; transition:var(--transition); }
+  .input-field:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(10,110,94,0.12); }
+  .input-field.has-icon { padding-left:42px; }
+  .input-wrap { position:relative; }
+  .input-icon { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--n600); }
+  .auth-divider { display:flex; align-items:center; gap:10px; }
+  .auth-divider span { flex:1; height:1px; background:var(--n300); }
+  .auth-divider p { font-size:12px; color:var(--n600); }
+  .whatsapp-btn { display:flex; align-items:center; justify-content:center; gap:8px; border:1.5px solid var(--n300);
+    border-radius:var(--radius-input); padding:12px; font-size:14px; font-weight:600; cursor:pointer;
+    background:#fff; color:var(--n900); }
+  .whatsapp-icon { width:20px; height:20px; background:#25D366; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+  .ussd-hint { background:var(--primary-light); border-radius:10px; padding:12px; font-size:12px; color:var(--primary-dark); }
+
+  /* Home */
+  .home { min-height:560px; background:var(--n100); }
+  .home-header { background:var(--primary); padding:20px 16px 32px; }
+  .home-greeting { display:flex; justify-content:space-between; align-items:flex-start; }
+  .greeting-text p { color:rgba(255,255,255,0.75); font-size:13px; }
+  .greeting-text h3 { color:#fff; font-size:18px; font-weight:700; }
+  .avatar { width:40px; height:40px; background:rgba(255,255,255,0.2); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; font-weight:700; }
+  .insurance-chip { background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3);
+    border-radius:20px; padding:6px 12px; font-size:12px; color:#fff; margin-top:10px; display:inline-flex; align-items:center; gap:6px; }
+  .ins-dot { width:8px; height:8px; background:#4AE89A; border-radius:50%; }
+  .search-bar { background:#fff; border-radius:14px; margin:0 16px; margin-top:-16px;
+    padding:12px 14px; display:flex; align-items:center; gap:10px; box-shadow:0 4px 16px rgba(0,0,0,0.12); }
+  .search-bar input { border:none; outline:none; flex:1; font-size:14px; color:var(--n900); background:transparent; }
+  .search-icon { color:var(--n600); }
+  .filter-btn { background:var(--primary-light); border-radius:8px; padding:6px 10px; font-size:12px;
+    color:var(--primary); font-weight:600; border:none; cursor:pointer; }
+  .home-body { padding:16px; display:flex; flex-direction:column; gap:14px; }
+  .section-hdr { display:flex; justify-content:space-between; align-items:center; }
+  .section-hdr h4 { font-size:14px; font-weight:700; }
+  .section-hdr a { font-size:12px; color:var(--primary); font-weight:600; }
+  .quick-actions { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .qa-item { background:#fff; border-radius:12px; padding:12px 6px; display:flex; flex-direction:column;
+    align-items:center; gap:6px; box-shadow:0 1px 4px rgba(0,0,0,0.06); cursor:pointer; }
+  .qa-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; }
+  .qa-icon.green { background:var(--primary-light); color:var(--primary); }
+  .qa-icon.amber { background:#FEF3DC; color:var(--accent); }
+  .qa-icon.blue { background:#EBF4FF; color:#2B6CB0; }
+  .qa-icon.red { background:#FFF0EF; color:var(--danger); }
+  .qa-item span { font-size:10px; font-weight:600; color:var(--n600); text-align:center; line-height:1.3; }
+  .facility-card { background:#fff; border-radius:14px; padding:14px; box-shadow:0 1px 6px rgba(0,0,0,0.07);
+    display:flex; gap:12px; cursor:pointer; }
+  .fac-img { width:54px; height:54px; background:var(--primary-light); border-radius:10px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:20px; }
+  .fac-info { flex:1; }
+  .fac-info h5 { font-size:14px; font-weight:700; margin-bottom:2px; }
+  .fac-meta { font-size:11px; color:var(--n600); display:flex; gap:10px; margin-bottom:6px; }
+  .fac-tags { display:flex; gap:6px; flex-wrap:wrap; }
+  .tag { font-size:10px; padding:3px 8px; border-radius:10px; font-weight:600; }
+  .tag-ins { background:var(--primary-light); color:var(--primary); }
+  .tag-wait { background:#FEF3DC; color:#92590A; }
+  .tag-avail { background:#E6F6ED; color:var(--success); }
+  .fac-distance { font-size:12px; color:var(--n600); display:flex; align-items:center; gap:3px; }
+
+  /* Symptom Checker */
+  .symptom { min-height:560px; background:#fff; display:flex; flex-direction:column; }
+  .screen-topbar { display:flex; align-items:center; gap:10px; padding:14px 16px;
+    border-bottom:1px solid var(--n100); }
+  .back-btn { width:32px; height:32px; border-radius:8px; background:var(--n100);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; border:none; }
+  .topbar-title { font-size:16px; font-weight:700; }
+  .symptom-body { padding:16px; flex:1; display:flex; flex-direction:column; gap:14px; }
+  .ai-avatar { width:40px; height:40px; background:var(--primary); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .ai-bubble { background:var(--primary-light); border-radius:0 14px 14px 14px;
+    padding:12px 14px; font-size:13px; color:var(--n900); line-height:1.5; flex:1; }
+  .chat-row { display:flex; gap:10px; align-items:flex-start; }
+  .sym-chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .sym-chip { background:var(--n100); border:1.5px solid var(--n300); border-radius:20px;
+    padding:7px 14px; font-size:12px; font-weight:600; color:var(--n900); cursor:pointer;
+    transition:var(--transition); }
+  .sym-chip.selected { background:var(--primary-light); border-color:var(--primary); color:var(--primary); }
+  .severity-row { display:flex; gap:8px; }
+  .sev-btn { flex:1; border-radius:10px; padding:8px; font-size:12px; font-weight:600; cursor:pointer; border:1.5px solid; }
+  .sev-mild { border-color:#1E8A4C; color:#1E8A4C; background:#E6F6ED; }
+  .sev-mod { border-color:var(--accent); color:#92590A; background:#FEF3DC; }
+  .sev-sev { border-color:var(--danger); color:var(--danger); background:#FFF0EF; }
+  .sym-input-row { display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--n100); }
+  .sym-input { flex:1; border:1.5px solid var(--n300); border-radius:24px; padding:10px 16px;
+    font-size:13px; outline:none; }
+  .sym-send { background:var(--primary); border:none; border-radius:50%; width:38px; height:38px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; flex-shrink:0; }
+
+  /* AI Result */
+  .ai-result-card { background:#fff; border:1.5px solid var(--n300); border-radius:14px; padding:14px; }
+  .result-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .condition-main { font-size:16px; font-weight:700; }
+  .confidence-pill { background:var(--primary-light); color:var(--primary); border-radius:20px;
+    padding:3px 10px; font-size:11px; font-weight:700; margin-left:auto; }
+  .result-condition-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .cond-bar { height:4px; background:var(--n100); border-radius:2px; overflow:hidden; }
+  .cond-bar-fill { height:100%; background:var(--primary); border-radius:2px; }
+  .specialist-rec { background:var(--primary-light); border-radius:10px; padding:12px;
+    display:flex; align-items:center; gap:10px; margin-top:10px; }
+  .specialist-rec p { font-size:12px; color:var(--primary-dark); }
+  .specialist-rec strong { font-size:13px; color:var(--primary); display:block; }
+  .emergency-banner { background:var(--danger); border-radius:12px; padding:14px 16px;
+    display:flex; gap:10px; align-items:center; }
+  .emergency-banner p { color:#fff; font-size:13px; font-weight:600; }
+  .emergency-banner span { color:rgba(255,255,255,0.85); font-size:11px; display:block; margin-top:2px; }
+
+  /* Queue tracker */
+  .queue { min-height:560px; background:var(--n100); }
+  .queue-hero { background:var(--primary); padding:24px 16px; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .queue-num { font-size:72px; font-weight:800; color:#fff; line-height:1; }
+  .queue-label { color:rgba(255,255,255,0.8); font-size:13px; }
+  .queue-facility { color:#fff; font-size:14px; font-weight:700; margin-top:4px; }
+  .queue-status-pill { background:rgba(255,255,255,0.2); border-radius:20px; padding:5px 14px;
+    font-size:12px; color:#fff; font-weight:600; }
+  .queue-cards { padding:16px; display:flex; flex-direction:column; gap:12px; }
+  .qcard { background:#fff; border-radius:14px; padding:14px 16px; box-shadow:0 1px 6px rgba(0,0,0,0.06); }
+  .qcard-row { display:flex; justify-content:space-between; align-items:center; }
+  .qcard-label { font-size:12px; color:var(--n600); }
+  .qcard-val { font-size:20px; font-weight:700; color:var(--n900); }
+  .qcard-val.accent { color:var(--accent); }
+  .qcard-val.success { color:var(--success); }
+  .eta-progress { margin-top:10px; background:var(--n100); border-radius:4px; height:6px; overflow:hidden; }
+  .eta-fill { height:100%; background:var(--accent); border-radius:4px; width:65%; }
+  .notify-btn { background:var(--primary-light); color:var(--primary); border:none; border-radius:10px;
+    padding:10px 16px; font-size:13px; font-weight:700; cursor:pointer; width:100%; text-align:center; }
+  .notify-btn.active { background:var(--primary); color:#fff; }
+
+  /* Booking */
+  .booking { min-height:560px; background:var(--n100); }
+  .booking-fac-header { background:#fff; padding:16px; display:flex; gap:12px; border-bottom:1px solid var(--n100); }
+  .booking-fac-icon { width:52px; height:52px; background:var(--primary-light); border-radius:12px;
+    display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+  .booking-fac-info h4 { font-size:15px; font-weight:700; }
+  .booking-fac-info p { font-size:12px; color:var(--n600); margin-top:2px; }
+  .ins-match { display:inline-flex; align-items:center; gap:5px; background:var(--primary-light);
+    border-radius:8px; padding:4px 10px; font-size:11px; color:var(--primary); font-weight:600; margin-top:6px; }
+  .booking-body { padding:16px; display:flex; flex-direction:column; gap:14px; }
+  .step-indicator { display:flex; align-items:center; gap:0; }
+  .step-dot { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; border:2px solid var(--n300); color:var(--n600); background:#fff; }
+  .step-dot.done { background:var(--primary); border-color:var(--primary); color:#fff; }
+  .step-dot.active { border-color:var(--primary); color:var(--primary); }
+  .step-line { flex:1; height:2px; background:var(--n300); }
+  .step-line.done { background:var(--primary); }
+  .calendar-strip { display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; }
+  .cal-day { display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 10px;
+    border-radius:10px; cursor:pointer; border:1.5px solid var(--n300); min-width:44px; flex-shrink:0; background:#fff; }
+  .cal-day.selected { background:var(--primary); border-color:var(--primary); }
+  .cal-day .day-name { font-size:10px; color:var(--n600); text-transform:uppercase; }
+  .cal-day .day-num { font-size:16px; font-weight:700; }
+  .cal-day.selected .day-name, .cal-day.selected .day-num { color:#fff; }
+  .cal-day.unavail { opacity:0.4; cursor:default; }
+  .time-slots { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .time-slot { background:#fff; border:1.5px solid var(--n300); border-radius:10px; padding:10px;
+    text-align:center; font-size:13px; font-weight:600; cursor:pointer; transition:var(--transition); }
+  .time-slot.selected { background:var(--primary); border-color:var(--primary); color:#fff; }
+  .time-slot.full { background:var(--n100); color:var(--n300); cursor:default; text-decoration:line-through; }
+  .doctor-card { background:#fff; border-radius:14px; padding:12px; display:flex; gap:12px;
+    border:1.5px solid var(--n300); cursor:pointer; }
+  .doctor-card.selected { border-color:var(--primary); background:var(--primary-light); }
+  .doc-avatar { width:44px; height:44px; background:var(--primary); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; font-weight:700; flex-shrink:0; }
+  .doc-info h5 { font-size:14px; font-weight:700; }
+  .doc-info p { font-size:11px; color:var(--n600); }
+  .doc-ins { font-size:10px; color:var(--primary); background:var(--primary-light); padding:2px 8px;
+    border-radius:8px; font-weight:600; margin-top:4px; display:inline-block; }
+  .confirm-btn { background:var(--primary); color:#fff; border:none; border-radius:var(--radius-pill);
+    padding:15px; font-size:15px; font-weight:700; cursor:pointer; width:100%; }
+
+  /* Bottom Nav */
+  .bottom-nav { position:sticky; bottom:0; background:#fff; border-top:1px solid var(--n100);
+    display:flex; justify-content:space-around; padding:10px 0 20px; }
+  .nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; }
+  .nav-item svg { width:22px; height:22px; color:var(--n600); }
+  .nav-item span { font-size:10px; color:var(--n600); }
+  .nav-item.active svg { color:var(--primary); }
+  .nav-item.active span { color:var(--primary); font-weight:700; }
+
+  /* Profile */
+  .profile { min-height:560px; background:var(--n100); }
+  .profile-hero { background:var(--primary); padding:28px 16px 40px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .profile-avatar { width:72px; height:72px; background:rgba(255,255,255,0.2); border:3px solid rgba(255,255,255,0.4);
+    border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:700; color:#fff; }
+  .profile-name { color:#fff; font-size:18px; font-weight:700; }
+  .profile-phone { color:rgba(255,255,255,0.75); font-size:13px; }
+  .profile-card { background:#fff; border-radius:16px; margin:0 16px; margin-top:-20px;
+    padding:16px; box-shadow:0 4px 16px rgba(0,0,0,0.1); }
+  .profile-section-items { margin-top:16px; display:flex; flex-direction:column; }
+  .profile-item { display:flex; align-items:center; justify-content:space-between; padding:12px 0;
+    border-bottom:1px solid var(--n100); cursor:pointer; }
+  .profile-item:last-child { border-bottom:none; }
+  .profile-item-left { display:flex; align-items:center; gap:12px; }
+  .pitem-icon { width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; }
+  .pitem-icon.green { background:var(--primary-light); color:var(--primary); }
+  .pitem-icon.amber { background:#FEF3DC; color:var(--accent); }
+  .pitem-icon.blue { background:#EBF4FF; color:#2B6CB0; }
+  .pitem-icon.red { background:#FFF0EF; color:var(--danger); }
+  .pitem-title { font-size:14px; font-weight:600; }
+  .pitem-sub { font-size:11px; color:var(--n600); }
+  .chevron { color:var(--n300); }
+
+  /* Spacing */
+  .gap-section { margin-bottom:48px; }
+  .row-wrap { display:flex; gap:32px; flex-wrap:wrap; }
+
+  /* Spec table */
+  .spec-table { width:100%; border-collapse:collapse; margin-top:12px; font-size:12px; }
+  .spec-table th { background:var(--n100); padding:8px 12px; text-align:left; font-weight:700;
+    color:var(--n600); font-size:11px; letter-spacing:0.3px; text-transform:uppercase; }
+  .spec-table td { padding:8px 12px; border-bottom:1px solid var(--n100); color:var(--n900); }
+  .spec-table tr:last-child td { border-bottom:none; }
+
+  hr.spec-divider { border:none; border-top:1px solid var(--n100); margin:32px 0; }
+
+  @media(max-width:768px){.screen-grid{grid-template-columns:1fr;}.row-wrap{flex-direction:column;}}
+</style>
+</head>
+<body>
+
+<div class="spec-header">
+  <div>
+    <h1>MediLink Rwanda — Patient App</h1>
+    <p>UI/UX Specification Document · Screen-by-screen design · v1.0</p>
+  </div>
+  <div class="badge">Healthcare</div>
+  <div class="badge">Mobile First</div>
+  <div class="badge">WCAG 2.1 AA</div>
+</div>
+
+<div class="spec-body">
+
+  <!-- TOKENS -->
+  <div class="tokens-section">
+    <h2>Design System Tokens</h2>
+    <div class="token-grid">
+      <div class="token-item"><div class="token-swatch" style="background:#0A6E5E"></div><div class="token-name">Primary</div><div class="token-val">#0A6E5E</div></div>
+      <div class="token-item"><div class="token-swatch" style="background:#074F44"></div><div class="token-name">Primary Dark</div><div class="token-val">#074F44</div></div>
+      <div class="token-item"><div class="token-swatch" style="background:#E6F4F1;border:1px solid #CBD5E0"></div><div class="token-name">Primary Light</div><div class="token-val">#E6F4F1</div></div>
+      <div class="token-item"><div class="token-swatch" style="background:#F4A832"></div><div class="token-name">Accent</div><div class="token-val">#F4A832</div></div>
+      <div class="token-item"><div class="token-swatch" style="background:#D93025"></div><div class="token-name">Danger</div><div class="token-val">#D93025</div></div>
+      <div class="token-item"><div class="token-swatch" style="background:#1E8A4C"></div><div class="token-name">Success</div><div class="token-val">#1E8A4C</div></div>
+      <div class="token-item"><div class="token-swatch" style="background:#E67E22"></div><div class="token-name">Warning</div><div class="token-val">#E67E22</div></div>
+      <div class="token-item"><div class="token-swatch" style="background:#1A1A2E"></div><div class="token-name">Neutral 900</div><div class="token-val">#1A1A2E</div></div>
+      <div class="token-item"><div class="token-swatch" style="background:#F7FAFC;border:1px solid #CBD5E0"></div><div class="token-name">Background</div><div class="token-val">#F7FAFC</div></div>
+    </div>
+    <div style="margin-top:20px; display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px;">
+      <div><div class="token-name" style="margin-bottom:4px">Typography</div><div class="token-val">Inter — Heading 700, Body 400/500</div></div>
+      <div><div class="token-name" style="margin-bottom:4px">Border Radius</div><div class="token-val">Cards 16px · Inputs 10px · Pills 24px</div></div>
+      <div><div class="token-name" style="margin-bottom:4px">Spacing Scale</div><div class="token-val">4 / 8 / 12 / 16 / 24 / 32 / 48px</div></div>
+      <div><div class="token-name" style="margin-bottom:4px">Transition</div><div class="token-val">200ms ease — all interactive states</div></div>
+      <div><div class="token-name" style="margin-bottom:4px">Shadow Card</div><div class="token-val">0 2px 12px rgba(0,0,0,0.09)</div></div>
+      <div><div class="token-name" style="margin-bottom:4px">Min Touch Target</div><div class="token-val">44×44px — accessibility requirement</div></div>
+    </div>
+  </div>
+
+  <!-- SCREENS ROW 1: Splash + Onboard + Auth -->
+  <p class="section-title">Patient App — All Screens</p>
+  <div class="screen-grid gap-section">
+
+    <!-- S1: Splash -->
+    <div class="screen-wrap">
+      <div class="screen-label">S-01 · Splash / Landing</div>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-status"><span>9:41</span><span>●●●</span></div>
+        <div class="phone-screen">
+          <div class="splash">
+            <div class="splash-logo">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M24 4C13 4 4 13 4 24s9 20 20 20 20-9 20-20S35 4 24 4z" fill="#0A6E5E" opacity="0.15"/>
+                <path d="M24 8a16 16 0 100 32A16 16 0 0024 8z" stroke="#0A6E5E" stroke-width="2"/>
+                <path d="M24 14v10l6 4" stroke="#0A6E5E" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="24" cy="24" r="2" fill="#0A6E5E"/>
+              </svg>
+            </div>
+            <h2>MediLink</h2>
+            <p>Healthcare access, simplified.<br>Find care, book, track — in minutes.</p>
+            <button class="splash-btn">Get started</button>
+            <span class="splash-link">Already have an account? Sign in</span>
+            <div style="margin-top:8px; background:rgba(255,255,255,0.12); border-radius:10px; padding:10px 14px; width:100%;">
+              <p style="color:rgba(255,255,255,0.7); font-size:11px; text-align:center;">No smartphone? Dial <strong style="color:#fff;">*182*1#</strong> on any phone</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="spec-box">
+        <h4>Specs</h4>
+        <ul>
+          <li>Logo: 80×80px white card, 20px radius, primary green icon</li>
+          <li>Background: Primary green #0A6E5E full bleed</li>
+          <li>CTA button: white fill, green text, 24px radius, 100% width, 14px weight 700</li>
+          <li>USSD hint always visible — never hidden for low-tech users</li>
+          <li>Language selector icon top-right: EN / FR / RW</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- S2: Onboarding -->
+    <div class="screen-wrap">
+      <div class="screen-label">S-02 · Onboarding (3 slides)</div>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-status"><span>9:41</span><span>●●●</span></div>
+        <div class="phone-screen">
+          <div class="onboard">
+            <div class="onboard-progress">
+              <span class="active"></span><span class="active"></span><span></span>
+            </div>
+            <div class="onboard-img">
+              <svg viewBox="0 0 80 80" width="80" height="80" fill="none">
+                <rect x="10" y="20" width="60" height="45" rx="8" stroke="#0A6E5E" stroke-width="2.5"/>
+                <path d="M25 38h30M25 48h20" stroke="#0A6E5E" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="58" cy="28" r="12" fill="#E6F4F1" stroke="#0A6E5E" stroke-width="2"/>
+                <path d="M54 28h8M58 24v8" stroke="#0A6E5E" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="onboard-content">
+              <h3>Find the right doctor near you</h3>
+              <p>Search public and private facilities, check insurance coverage, and confirm appointment availability — all before you leave home.</p>
+            </div>
+            <div class="onboard-nav">
+              <button class="btn-outline">Skip</button>
+              <button class="btn-primary">Next →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="spec-box">
+        <h4>Specs</h4>
+        <ul>
+          <li>3 slides: Find facility · Book & track queue · AI symptom checker</li>
+          <li>Progress bar: 3 segments, active = primary green, 3px height</li>
+          <li>Illustration area: 200px, primary-light background, no raster images</li>
+          <li>Skip goes directly to Auth. Next advances slide.</li>
+          <li>Slide 3 Next → becomes "Get started" leading to Auth</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- S3: Auth -->
+    <div class="screen-wrap">
+      <div class="screen-label">S-03 · Registration / Sign In</div>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-status"><span>9:41</span><span>●●●</span></div>
+        <div class="phone-screen">
+          <div class="auth">
+            <div class="auth-header">
+              <h3>Create account</h3>
+              <p>We'll send a one-time code to verify your number</p>
+            </div>
+            <div class="input-group">
+              <label>Full name</label>
+              <div class="input-wrap">
+                <div class="input-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                </div>
+                <input class="input-field has-icon" placeholder="Amahoro Uwimana" style="width:100%">
+              </div>
+            </div>
+            <div class="input-group">
+              <label>Phone number</label>
+              <div style="display:flex;gap:8px;">
+                <div style="border:1.5px solid var(--n300);border-radius:10px;padding:13px 10px;font-size:13px;font-weight:600;color:var(--n900);display:flex;align-items:center;gap:4px;">🇷🇼 +250</div>
+                <input class="input-field" style="flex:1" placeholder="078 000 0000">
+              </div>
+            </div>
+            <div class="input-group">
+              <label>Insurance (optional)</label>
+              <select class="input-field" style="width:100%;appearance:none;">
+                <option>Mutuelle de Santé</option>
+                <option>RAMA</option>
+                <option>MMI</option>
+                <option>None / Pay out of pocket</option>
+              </select>
+            </div>
+            <button class="confirm-btn" style="margin-top:4px">Send verification code</button>
+            <div class="auth-divider"><span></span><p>or continue with</p><span></span></div>
+            <button class="whatsapp-btn">
+              <div class="whatsapp-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.96 9.96 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg></div>
+              Continue via WhatsApp
+            </button>
+            <div class="ussd-hint">📱 No smartphone? Dial <strong>*182*1#</strong> to register via USSD</div>
+          </div>
+        </div>
+      </div>
+      <div class="spec-box">
+        <h4>Specs</h4>
+        <ul>
+          <li>OTP verification: 6-digit code, 60s countdown, resend option</li>
+          <li>Rwanda flag + +250 prefix locked — only last 9 digits editable</li>
+          <li>Insurance field optional on register, editable in profile later</li>
+          <li>WhatsApp flow: redirects to wa.me/MediLink bot with pre-filled text</li>
+          <li>Sign-in tab uses same layout with phone + OTP only (no name field)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- S4: Home -->
+    <div class="screen-wrap">
+      <div class="screen-label">S-04 · Home Dashboard</div>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-status"><span>9:41</span><span>●●●</span></div>
+        <div class="phone-screen">
+          <div class="home">
+            <div class="home-header">
+              <div class="home-greeting">
+                <div class="greeting-text">
+                  <p>Good morning 👋</p>
+                  <h3>Amahoro Uwimana</h3>
+                </div>
+                <div class="avatar">AU</div>
+              </div>
+              <div class="insurance-chip">
+                <div class="ins-dot"></div>
+                Mutuelle de Santé · Active
+              </div>
+            </div>
+            <div class="search-bar">
+              <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input placeholder="Search facility, doctor, or symptom…">
+              <button class="filter-btn">Filter</button>
+            </div>
+            <div class="home-body">
+              <div>
+                <div class="section-hdr"><h4>Quick actions</h4></div>
+                <div class="quick-actions" style="margin-top:8px">
+                  <div class="qa-item">
+                    <div class="qa-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div>
+                    <span>Book appt</span>
+                  </div>
+                  <div class="qa-item">
+                    <div class="qa-icon amber"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>
+                    <span>Track queue</span>
+                  </div>
+                  <div class="qa-item">
+                    <div class="qa-icon blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+                    <span>Check symptoms</span>
+                  </div>
+                  <div class="qa-item">
+                    <div class="qa-icon red"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+                    <span>My records</span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div class="section-hdr"><h4>Nearby facilities</h4><a href="#">See all</a></div>
+                <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+                  <div class="facility-card">
+                    <div class="fac-img">🏥</div>
+                    <div class="fac-info">
+                      <h5>CHUK — Kigali</h5>
+                      <div class="fac-meta"><span>2.1 km</span><span>Open now</span></div>
+                      <div class="fac-tags">
+                        <span class="tag tag-ins">Mutuelle ✓</span>
+                        <span class="tag tag-wait">~45 min wait</span>
+                        <span class="tag tag-avail">Slots open</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="facility-card">
+                    <div class="fac-img">🏨</div>
+                    <div class="fac-info">
+                      <h5>King Faisal Hospital</h5>
+                      <div class="fac-meta"><span>3.8 km</span><span>Open now</span></div>
+                      <div class="fac-tags">
+                        <span class="tag tag-ins">RAMA ✓</span>
+                        <span class="tag tag-wait">~20 min wait</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item active">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+              <span>Home</span>
+            </div>
+            <div class="nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <span>Search</span>
+            </div>
+            <div class="nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>Bookings</span>
+            </div>
+            <div class="nav-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+              <span>Profile</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="spec-box">
+        <h4>Specs</h4>
+        <ul>
+          <li>Header overlaps search bar by 16px (search floats up) — creates depth</li>
+          <li>Insurance badge shows real-time active/expired status from RSSB API</li>
+          <li>Facility cards sorted by: distance → wait time → insurance match</li>
+          <li>Wait time badge updates every 5 minutes from live queue data</li>
+          <li>Bottom nav: 44px touch targets, active tab uses primary green</li>
+          <li>Notification bell top-right when active appointment exists</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- S5: Symptom Checker -->
+    <div class="screen-wrap">
+      <div class="screen-label">S-05 · AI Symptom Checker</div>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-status"><span>9:41</span><span>●●●</span></div>
+        <div class="phone-screen">
+          <div class="symptom">
+            <div class="screen-topbar">
+              <button class="back-btn">←</button>
+              <span class="topbar-title">Symptom checker</span>
+              <div style="margin-left:auto;font-size:11px;color:var(--n600);">AI-guided</div>
+            </div>
+            <div class="symptom-body">
+              <div class="chat-row">
+                <div class="ai-avatar">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M9 11l3 3L22 4"/><circle cx="12" cy="12" r="10"/></svg>
+                </div>
+                <div class="ai-bubble">Hello! I'm here to help you find the right care. What symptoms are you experiencing today?</div>
+              </div>
+              <div>
+                <p style="font-size:12px;color:var(--n600);margin-bottom:8px;font-weight:600;">Select all that apply:</p>
+                <div class="sym-chips">
+                  <span class="sym-chip selected">Headache</span>
+                  <span class="sym-chip selected">Fever</span>
+                  <span class="sym-chip">Cough</span>
+                  <span class="sym-chip">Fatigue</span>
+                  <span class="sym-chip">Chest pain</span>
+                  <span class="sym-chip">Nausea</span>
+                  <span class="sym-chip">Joint pain</span>
+                  <span class="sym-chip">Rash</span>
+                </div>
+              </div>
+              <div>
+                <p style="font-size:12px;color:var(--n600);margin-bottom:8px;font-weight:600;">How severe?</p>
+                <div class="severity-row">
+                  <button class="sev-btn sev-mild">Mild</button>
+                  <button class="sev-btn sev-mod" style="border-color:var(--accent);background:#FEF3DC;color:#92590A;font-weight:700">Moderate</button>
+                  <button class="sev-btn sev-sev">Severe</button>
+                </div>
+              </div>
+              <div class="ai-result-card">
+                <div class="result-header">
+                  <div>
+                    <div style="font-size:11px;color:var(--n600);margin-bottom:2px">Most likely condition</div>
+                    <div class="condition-main">Malaria</div>
+                  </div>
+                  <div class="confidence-pill">74% match</div>
+                </div>
+                <div style="margin-bottom:6px">
+                  <div class="result-condition-row"><span style="font-size:12px">Malaria</span><span style="font-size:12px;font-weight:700">74%</span></div>
+                  <div class="cond-bar"><div class="cond-bar-fill" style="width:74%"></div></div>
+                </div>
+                <div style="margin-bottom:6px">
+                  <div class="result-condition-row"><span style="font-size:12px">Typhoid</span><span style="font-size:12px;font-weight:700">18%</span></div>
+                  <div class="cond-bar"><div class="cond-bar-fill" style="width:18%;background:var(--accent)"></div></div>
+                </div>
+                <div class="specialist-rec">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0A6E5E" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                  <div>
+                    <p>Recommended specialist</p>
+                    <strong>General Practitioner</strong>
+                  </div>
+                </div>
+              </div>
+              <button class="confirm-btn">Find GP near me →</button>
+              <p style="font-size:11px;color:var(--n600);text-align:center">This is a guide only — not a medical diagnosis</p>
+            </div>
+            <div class="sym-input-row">
+              <input class="sym-input" placeholder="Type a symptom or describe how you feel…">
+              <button class="sym-send">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="spec-box">
+        <h4>Specs</h4>
+        <ul>
+          <li>Conversational chat UI — AI messages left-aligned, patient messages right-aligned</li>
+          <li>Symptom chips: scrollable grid, multi-select, selected = primary green border + fill</li>
+          <li>Severity: mutual exclusive — selecting one deselects others</li>
+          <li>Confidence bars animate on first render (500ms ease-out)</li>
+          <li>Emergency pattern detected → hide result card, show red emergency banner with 912 CTA</li>
+          <li>Duration input: stepper (1 day to 4+ weeks) appears after severity selected</li>
+          <li>Disclaimer always visible below result card, never behind a toggle</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- S6: Queue Tracker -->
+    <div class="screen-wrap">
+      <div class="screen-label">S-06 · Live Queue Tracker</div>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-status"><span>9:41</span><span>●●●</span></div>
+        <div class="phone-screen">
+          <div class="queue">
+            <div class="screen-topbar" style="background:#fff">
+              <button class="back-btn">←</button>
+              <span class="topbar-title">Queue tracker</span>
+              <div style="margin-left:auto;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--n600)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+              </div>
+            </div>
+            <div class="queue-hero">
+              <div class="queue-facility">CHUK — OPD · General</div>
+              <div class="queue-num">4</div>
+              <div class="queue-label">patients ahead of you</div>
+              <div class="queue-status-pill">🟢 Active · Your ticket: #A-047</div>
+            </div>
+            <div class="queue-cards">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="qcard">
+                  <div class="qcard-label">Est. wait time</div>
+                  <div class="qcard-val accent">~28 min</div>
+                  <div class="eta-progress"><div class="eta-fill"></div></div>
+                </div>
+                <div class="qcard">
+                  <div class="qcard-label">Your position</div>
+                  <div class="qcard-val">4 of 47</div>
+                </div>
+              </div>
+              <div class="qcard">
+                <div class="qcard-row">
+                  <div>
+                    <div class="qcard-label">Doctor assigned</div>
+                    <div style="font-size:15px;font-weight:700;margin-top:2px">Dr. Mutesi Claire</div>
+                    <div style="font-size:11px;color:var(--n600)">General Practitioner</div>
+                  </div>
+                  <div style="background:var(--primary-light);border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--primary)">MC</div>
+                </div>
+              </div>
+              <div class="qcard">
+                <div class="qcard-label" style="margin-bottom:8px">Queue progress</div>
+                <div style="display:flex;gap:4px;">
+                  <div style="flex:1;height:8px;background:var(--success);border-radius:3px;"></div>
+                  <div style="flex:1;height:8px;background:var(--success);border-radius:3px;"></div>
+                  <div style="flex:1;height:8px;background:var(--success);border-radius:3px;"></div>
+                  <div style="flex:1;height:8px;background:var(--accent);border-radius:3px;"></div>
+                  <div style="flex:1;height:8px;background:var(--n300);border-radius:3px;opacity:0.5"></div>
+                  <div style="flex:1;height:8px;background:var(--n300);border-radius:3px;opacity:0.5"></div>
+                  <div style="flex:1;height:8px;background:var(--n300);border-radius:3px;opacity:0.5"></div>
+                  <div style="flex:1;height:8px;background:var(--n300);border-radius:3px;opacity:0.5"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-top:6px">
+                  <span style="font-size:10px;color:var(--success);font-weight:600">3 seen</span>
+                  <span style="font-size:10px;color:var(--accent);font-weight:600">You (#4)</span>
+                  <span style="font-size:10px;color:var(--n600)">44 remaining</span>
+                </div>
+              </div>
+              <button class="notify-btn active">🔔 Notify me when I'm next</button>
+              <button style="background:transparent;color:var(--danger);border:1.5px solid var(--danger);border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;width:100%">Cancel appointment</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="spec-box">
+        <h4>Specs</h4>
+        <ul>
+          <li>Queue position number: 72px font, animates on update (scale 1→1.1→1, 300ms)</li>
+          <li>Position refreshes every 30 seconds via WebSocket / long-poll</li>
+          <li>Progress bar: filled = success green (seen), active = accent amber (you), empty = grey</li>
+          <li>Push notification at position ≤2: "You're almost up — head to the waiting area"</li>
+          <li>Cancel shows confirmation dialog with reason selector (can't make it / feeling better / other)</li>
+          <li>3-lane queue: Emergency patients skip this view entirely — routed to A&E</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- S7: Booking Flow -->
+    <div class="screen-wrap">
+      <div class="screen-label">S-07 · Appointment Booking</div>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-status"><span>9:41</span><span>●●●</span></div>
+        <div class="phone-screen">
+          <div class="booking">
+            <div class="screen-topbar" style="background:#fff">
+              <button class="back-btn">←</button>
+              <span class="topbar-title">Book appointment</span>
+            </div>
+            <div class="booking-fac-header">
+              <div class="booking-fac-icon">🏥</div>
+              <div class="booking-fac-info">
+                <h4>CHUK — Kigali</h4>
+                <p>Centre Hospitalier Universitaire de Kigali</p>
+                <div class="ins-match">✓ Mutuelle de Santé accepted</div>
+              </div>
+            </div>
+            <div class="booking-body">
+              <div class="step-indicator">
+                <div class="step-dot done">✓</div>
+                <div class="step-line done"></div>
+                <div class="step-dot active">2</div>
+                <div class="step-line"></div>
+                <div class="step-dot">3</div>
+                <div class="step-line"></div>
+                <div class="step-dot">4</div>
+              </div>
+              <div>
+                <p style="font-size:12px;font-weight:700;color:var(--n600);margin-bottom:8px">SELECT DATE</p>
+                <div class="calendar-strip">
+                  <div class="cal-day unavail"><div class="day-name">Mon</div><div class="day-num">2</div></div>
+                  <div class="cal-day"><div class="day-name">Tue</div><div class="day-num">3</div></div>
+                  <div class="cal-day selected"><div class="day-name">Wed</div><div class="day-num">4</div></div>
+                  <div class="cal-day"><div class="day-name">Thu</div><div class="day-num">5</div></div>
+                  <div class="cal-day"><div class="day-name">Fri</div><div class="day-num">6</div></div>
+                </div>
+              </div>
+              <div>
+                <p style="font-size:12px;font-weight:700;color:var(--n600);margin-bottom:8px">AVAILABLE TIMES</p>
+                <div class="time-slots">
+                  <div class="time-slot full">8:00 AM</div>
+                  <div class="time-slot full">9:00 AM</div>
+                  <div class="time-slot selected">10:00 AM</div>
+                  <div class="time-slot">11:00 AM</div>
+                  <div class="time-slot">2:00 PM</div>
+                  <div class="time-slot">3:00 PM</div>
+                </div>
+              </div>
+              <div>
+                <p style="font-size:12px;font-weight:700;color:var(--n600);margin-bottom:8px">CHOOSE DOCTOR</p>
+                <div class="doctor-card selected">
+                  <div class="doc-avatar">MC</div>
+                  <div class="doc-info">
+                    <h5>Dr. Mutesi Claire</h5>
+                    <p>General Practitioner · 8 yrs</p>
+                    <div class="doc-ins">Mutuelle · RAMA · MMI</div>
+                  </div>
+                </div>
+              </div>
+              <button class="confirm-btn">Confirm booking</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="spec-box">
+        <h4>Steps (4-step wizard)</h4>
+        <ul>
+          <li>Step 1: Choose department (specialty — pre-filled if from symptom checker)</li>
+          <li>Step 2: Select date + time slot (this screen)</li>
+          <li>Step 3: Choose doctor (shows insurance + availability)</li>
+          <li>Step 4: Confirm summary → booking confirmed screen with ticket number</li>
+          <li>Struck-through slots = fully booked. Greyed dates = unavailable / past</li>
+          <li>Confirmation: SMS + in-app notification with calendar invite option</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- S8: Profile -->
+    <div class="screen-wrap">
+      <div class="screen-label">S-08 · Patient Profile</div>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-status"><span>9:41</span><span>●●●</span></div>
+        <div class="phone-screen">
+          <div class="profile">
+            <div class="profile-hero">
+              <div class="profile-avatar">AU</div>
+              <div class="profile-name">Amahoro Uwimana</div>
+              <div class="profile-phone">+250 788 123 456</div>
+              <div style="display:flex;gap:8px;margin-top:6px">
+                <div style="background:rgba(255,255,255,0.2);border-radius:8px;padding:5px 12px;font-size:11px;color:#fff">Mutuelle ✓</div>
+                <div style="background:rgba(255,255,255,0.2);border-radius:8px;padding:5px 12px;font-size:11px;color:#fff">12 visits</div>
+              </div>
+            </div>
+            <div style="padding:16px">
+              <div class="profile-card">
+                <div style="font-size:12px;font-weight:700;color:var(--n600)">MY ACCOUNT</div>
+                <div class="profile-section-items">
+                  <div class="profile-item">
+                    <div class="profile-item-left"><div class="pitem-icon green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div><div><div class="pitem-title">My appointments</div><div class="pitem-sub">2 upcoming</div></div></div><div class="chevron">›</div>
+                  </div>
+                  <div class="profile-item">
+                    <div class="profile-item-left"><div class="pitem-icon amber"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div><div><div class="pitem-title">Dependents</div><div class="pitem-sub">Add family members</div></div></div><div class="chevron">›</div>
+                  </div>
+                  <div class="profile-item">
+                    <div class="profile-item-left"><div class="pitem-icon blue"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg></div><div><div class="pitem-title">Insurance</div><div class="pitem-sub">Mutuelle de Santé · Active</div></div></div><div class="chevron">›</div>
+                  </div>
+                  <div class="profile-item">
+                    <div class="profile-item-left"><div class="pitem-icon green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg></div><div><div class="pitem-title">Health records</div><div class="pitem-sub">Symptom history, visits</div></div></div><div class="chevron">›</div>
+                  </div>
+                  <div class="profile-item">
+                    <div class="profile-item-left"><div class="pitem-icon red"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div><div class="pitem-title">Privacy & data</div><div class="pitem-sub">Consent, data deletion</div></div></div><div class="chevron">›</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="spec-box">
+        <h4>Specs</h4>
+        <ul>
+          <li>Dependents: add up to 5 linked profiles (name, DOB, insurance, relationship)</li>
+          <li>Health records: symptom checker sessions + visit summaries, QR share to doctor</li>
+          <li>Privacy: view consent log, download my data (JSON), request full deletion</li>
+          <li>Insurance: editable, shows expiry date with renewal reminder 30 days before</li>
+          <li>Language selector in settings (EN / FR / RW) — applies globally to all screens</li>
+        </ul>
+      </div>
+    </div>
+
+  </div><!-- end screen-grid -->
+
+  <!-- SPEC SUMMARY TABLE -->
+  <div class="tokens-section">
+    <h2>Complete Screen Inventory</h2>
+    <table class="spec-table">
+      <thead><tr><th>Code</th><th>Screen</th><th>Actor</th><th>Key Interactions</th><th>Data Connected</th></tr></thead>
+      <tbody>
+        <tr><td>S-01</td><td>Splash</td><td>All users</td><td>Get started, Sign in, USSD hint</td><td>—</td></tr>
+        <tr><td>S-02</td><td>Onboarding (×3)</td><td>New user</td><td>Next / Skip slides</td><td>—</td></tr>
+        <tr><td>S-03</td><td>Registration / Sign in</td><td>Patient</td><td>OTP verify, insurance select, WhatsApp</td><td>RSSB / SMS OTP</td></tr>
+        <tr><td>S-04</td><td>Home dashboard</td><td>Patient</td><td>Search, Quick actions, Facility cards</td><td>Facility DB, Queue API, Insurance API</td></tr>
+        <tr><td>S-05</td><td>Symptom checker</td><td>Patient</td><td>Chip select, severity, AI result, Find doctor</td><td>ML inference API, Facility DB</td></tr>
+        <tr><td>S-06</td><td>Queue tracker</td><td>Patient</td><td>Position, ETA, Cancel, Notify me</td><td>Live Queue API (30s refresh)</td></tr>
+        <tr><td>S-07</td><td>Booking (4-step wizard)</td><td>Patient</td><td>Date, Time, Doctor, Confirm</td><td>Appointment API, Doctor API</td></tr>
+        <tr><td>S-08</td><td>Profile</td><td>Patient</td><td>Dependents, Insurance, Health records, Privacy</td><td>Patient API, PDPL consent log</td></tr>
+        <tr><td>S-09</td><td>Facility detail</td><td>Patient</td><td>Map, Directions, All departments, Reviews</td><td>Facility API, Maps API</td></tr>
+        <tr><td>S-10</td><td>Doctor profile</td><td>Patient</td><td>Bio, Availability, Insurance, Book</td><td>Doctor API</td></tr>
+        <tr><td>S-11</td><td>Notifications</td><td>Patient</td><td>Queue alerts, Reminders, Confirmations</td><td>Push / SMS / WhatsApp</td></tr>
+        <tr><td>S-12</td><td>Booking confirmation</td><td>Patient</td><td>Ticket QR, Add to calendar, Share</td><td>Booking API</td></tr>
+        <tr><td>S-13</td><td>Emergency alert</td><td>Patient</td><td>Call 912, Nearest A&E map</td><td>Maps API</td></tr>
+        <tr><td>S-14</td><td>USSD flow (text)</td><td>Low-tech patient</td><td>Menu navigation (3 levels max)</td><td>USSD Gateway → Booking API</td></tr>
+        <tr><td>S-15</td><td>WhatsApp chatbot</td><td>Patient</td><td>Natural language + button menus</td><td>WhatsApp Cloud API → Core API</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+</body>
+</html>

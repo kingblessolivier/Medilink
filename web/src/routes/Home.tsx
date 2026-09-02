@@ -17,7 +17,7 @@ import { FacilityCard } from "../components/FacilityCard"
 import { NoLiveWaitNote } from "../components/NoLiveWaitNote"
 import { DoctorCard } from "../components/DoctorCard"
 import { GlobalSearch } from "../components/GlobalSearch"
-import { InsurerChip } from "../components/InsurerChip"
+import { HomeHeader } from "../components/HomeHeader"
 import { DistrictPicker } from "../components/DistrictPicker"
 import { CachedNotice } from "../components/CachedNotice"
 import { QueueCard } from "../components/QueueCard"
@@ -25,25 +25,16 @@ import { AppointmentCard } from "../components/AppointmentCard"
 import { Button, EmptyState, ErrorState, ListSkeleton, Notice } from "../ui"
 import {
   IconChevronRight,
-  IconClock,
-  IconHeart,
-  IconPin,
-  IconSearch,
   IconShieldCheck,
+  IconHeart,
   IconStethoscope,
 } from "../ui/icons"
 
-/**
- * What MediLink is, in three lines.
- *
- * No numbers. We have no honest adoption figures to quote yet, and inventing
- * them on a health service is exactly what docs/11 rule 1 forbids.
- */
-const VALUE_POINTS = [
-  { Glyph: IconPin, title: "value_nearby", body: "value_nearby_body" },
-  { Glyph: IconClock, title: "value_wait", body: "value_wait_body" },
-  { Glyph: IconShieldCheck, title: "value_insurance", body: "value_insurance_body" },
-] as const
+/* The three value points that used to sit in the hero are gone with it: the
+   S-04 design puts quick actions there instead. The promise they carried -
+   that a wait time is never guessed - is still made on /about, /help and by
+   NoLiveWaitNote wherever a wait is actually missing, which is the place it
+   lands hardest. */
 
 /**
  * Home - healthcare discovery, and the state ordering IS the product.
@@ -59,7 +50,7 @@ export function Home() {
   const { t, lang } = useI18n()
   const navigate = useNavigate()
   const { state: geo, locate } = useGeolocation()
-  const { insurer, setInsurer } = useInsurerPreference()
+  const { insurer } = useInsurerPreference()
   const patient = usePatient()
 
   const signedIn = patient !== null
@@ -79,6 +70,19 @@ export function Home() {
   const triage = useTriageStatus()
 
   const insurerName = insurerData?.results.find((i) => i.code === insurer)?.name
+
+  /* The header chip names the insurer the PATIENT has saved on their record,
+     falling back to the local browser preference for somebody signed out.
+     Those are two different things and the header wants the first: a signed-in
+     patient who set their insurer on another device should still see it here,
+     and `useInsurerPreference` only ever knows about this browser.
+
+     It names the insurer and stops. Not "active", not "covered" - MediLink
+     knows which insurer was chosen, never whether the membership is paid up. */
+  const headerInsurerName =
+    insurerData?.results.find(
+      (i) => i.code === (patient?.insurer ?? insurer),
+    )?.name ?? null
   // Three on a phone, six once the grid has columns to fill. Home is a
   // summary; the full list is one tap away and always was.
   const wide = useMediaQuery("(min-width: 768px)")
@@ -114,102 +118,23 @@ export function Home() {
       {/* ---- Hero. Demoted to a strip when something is active, never
              removed: discovery is still the product. ---- */}
       {!queue.data && (
-        <section
-          className={
-            "relative overflow-hidden border-b border-n200 bg-hero-wash text-n900 " +
-            (nextAppointment ? "mt-4" : "")
-          }
+        <HomeHeader
+          name={patient?.full_name ?? null}
+          insurerName={headerInsurerName}
+          hasActiveAppointment={Boolean(nextAppointment)}
         >
-          {/* A faint grid rather than a photograph. Stock imagery of smiling
-              clinicians is the visual language of marketing, and this is a
-              tool people open when they are unwell. */}
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-hero-grid bg-grid opacity-60"
-          />
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-primary/[0.06]"
-          />
-
-          <div className="ml-shell relative grid gap-10 py-10 sm:py-12 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-center lg:gap-14 lg:py-16">
-            {/* 42rem ran the subhead to 82 characters a line on a 1920
-                monitor - past the 45-75 that stays comfortable to read. The
-                headline is short enough not to care; the sentence under it
-                is not. */}
-            <div className="max-w-xl">
-              <p className="text-body font-medium uppercase tracking-wide text-primary">
-                {patient?.full_name
-                  ? t("greeting_named", { name: patient.full_name })
-                  : t("greeting")}
-              </p>
-              <h1 className="mt-2 text-h1 sm:text-h1">{t("hero_title")}</h1>
-              <p className="mt-3 max-w-prose text-body-lg text-n700">
-                {t("hero_body")}
-              </p>
-
-              <div className="mt-6">
-                <GlobalSearch coords={coords} />
-              </div>
-
-              {/* One primary affordance, not two.
-                  The search field above and this button did the same job with
-                  the same weight, stacked, so neither read as the thing to
-                  use. Typing is the better path - it reaches doctors and
-                  services, not just facilities - so the field keeps the
-                  emphasis and this is demoted to the outline treatment the
-                  Care Guide already uses. Kept rather than removed: somebody
-                  who does not know what to type still needs a way in. */}
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Link
-                  to="/search"
-                  className="ml-btn-secondary inline-flex"
-                >
-                  <IconSearch size={17} />
-                  {t("find_care")}
-                </Link>
-                {/* Hidden entirely when no clinician has signed off a
-                    protocol. A button that errors is worse than no button. */}
-                {triage.available && (
-                  <Link
-                    to="/care-guide"
-                    className="ml-btn-secondary inline-flex"
-                  >
-                    <IconHeart size={17} />
-                    {t("start_care_guide")}
-                  </Link>
-                )}
-              </div>
-            </div>
-
-            {/* Three plain facts about what this is. They sit in the hero's
-                right-hand column on a wide screen - which is what stops a
-                1440px viewport being half empty green - and fall back to a
-                strip underneath the copy on anything narrower. */}
-            <ul className="grid gap-5 border-t border-n200 pt-6 sm:grid-cols-3 lg:grid-cols-1 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
-              {VALUE_POINTS.map(({ Glyph, title, body }) => (
-                <li key={title} className="flex gap-3">
-                  <span className="ml-icon-plate bg-primary-light text-primary">
-                    <Glyph size={18} />
-                  </span>
-                  <span>
-                    <span className="block text-body-lg font-medium">{t(title)}</span>
-                    <span className="mt-0.5 block text-body text-n700">
-                      {t(body)}
-                    </span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
+          <GlobalSearch coords={coords} />
+        </HomeHeader>
       )}
 
       <div className="ml-shell pt-8">
-        <div className="mb-6">
-          <InsurerChip insurer={insurer} onChange={setInsurer} />
-        </div>
-
+        {/* The insurer card that used to sit here is gone. S-04 puts the
+            insurer in the header chip instead, and keeping both meant two
+            controls disagreeing on screen: the chip reads the patient record,
+            the card read this browser localStorage, so a patient whose
+            insurer was saved server-side saw "Mutuelle de Sante" above "no
+            insurance set". Changing it still lives on /insurance, which is a
+            primary tab, and on the profile. */}
         {geoFailed && (
           <div className="mb-6 max-w-2xl">
             {/* Home is a summary. Picking a district hands off to /search,
