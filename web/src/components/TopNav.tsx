@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import { Link, NavLink } from "react-router-dom"
+import { Link, NavLink, useLocation } from "react-router-dom"
 import { useI18n } from "../i18n"
 import { LanguageToggle } from "./LanguageToggle"
 import {
@@ -29,23 +29,52 @@ import type { Session } from "../api/types"
 type Glyph = typeof IconHospital
 type NavItem = { to: string; label: string; icon: Glyph; end?: boolean }
 
-function itemsFor(session: Session | null, t: (k: string) => string): NavItem[] {
+/** Surfaces that carry their own sidebar navigation. */
+const DASHBOARD_PREFIXES = ["/workspace", "/platform"]
+
+function onDashboard(pathname: string): boolean {
+  return DASHBOARD_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(prefix + "/"),
+  )
+}
+
+/**
+ * Which links the bar carries, decided by WHERE you are - not by who you are.
+ *
+ * It used to switch on `session.kind` alone: staff and admin got an empty
+ * array, because their sections live in the DashboardShell sidebar and
+ * repeating them here was duplication. That is right on `/workspace` and
+ * `/platform`, and wrong everywhere else - the sidebar only renders on those
+ * two surfaces. A signed-in admin who opened the patient home got the patient
+ * page with no sidebar AND no top-bar links: no navigation at all, on a route
+ * their role is allowed to visit, with only the wordmark to escape by.
+ *
+ * Staff and admin genuinely need the patient app - checking what a patient
+ * sees is part of running this - so the fix is to keep the links and drop them
+ * only on the surfaces that already have a sidebar.
+ */
+function itemsFor(
+  session: Session | null,
+  pathname: string,
+  t: (k: string) => string,
+): NavItem[] {
   switch (session?.kind) {
-    // Staff and admin sections live in the DashboardShell sidebar, which is
-    // where they can grow. Repeating them here was duplication, and it is
-    // what forced a hamburger menu onto the dashboards.
     case "staff":
     case "admin":
-      return []
+      return onDashboard(pathname) ? [] : patientItems(t)
     default:
-      return [
-        { to: "/", label: t("nav_home"), icon: IconHospital, end: true },
-        { to: "/search", label: t("nav_facilities"), icon: IconSearch },
-        { to: "/doctors", label: t("nav_doctors"), icon: IconStethoscope },
-        { to: "/insurance", label: t("nav_insurance"), icon: IconShield },
-        { to: "/visits", label: t("nav_visits"), icon: IconCalendar },
-      ]
+      return patientItems(t)
   }
+}
+
+function patientItems(t: (k: string) => string): NavItem[] {
+  return [
+    { to: "/", label: t("nav_home"), icon: IconHospital, end: true },
+    { to: "/search", label: t("nav_facilities"), icon: IconSearch },
+    { to: "/doctors", label: t("nav_doctors"), icon: IconStethoscope },
+    { to: "/insurance", label: t("nav_insurance"), icon: IconShield },
+    { to: "/visits", label: t("nav_visits"), icon: IconCalendar },
+  ]
 }
 
 export function TopNav({
@@ -79,7 +108,8 @@ export function TopNav({
     observer.observe(bar)
     return () => observer.disconnect()
   }, [])
-  const items = itemsFor(session, t)
+  const { pathname } = useLocation()
+  const items = itemsFor(session, pathname, t)
 
   return (
     <header ref={barRef} className="sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80">
