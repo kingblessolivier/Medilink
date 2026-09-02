@@ -176,6 +176,7 @@
   "error_screen_home": "Subira ku ntangiriro",
   "error_screen_retry": "Ongera ugerageze iyi paji",
   "error_screen_title": "Hari ikitagenze neza kuri iyi paji",
+  "est_wait": "Igihe giteganyijwe",
   "eta_about": "Hasigaye nka iminota {minutes}",
   "eta_range": "Hasigaye iminota {low} kugeza {high}",
   "facility_information": "Amakuru y'ivuriro",
@@ -333,6 +334,7 @@
   "profile_saved": "Byabitswe",
   "profile_title": "Umwirondoro",
   "progress": "Aho ugeze",
+  "queue_active": "Uri ku murongo",
   "queue_called_now": "Barahamagara {ticket}. Injira.",
   "queue_eta_about": "Nka iminota {minutes} kugira ngo bakwakire",
   "queue_eta_range": "Hafi iminota {from} kugeza {to}",
@@ -391,6 +393,7 @@
   "tab_services": "Serivisi",
   "tab_visits": "Ingendo",
   "tagline": "Menya mbere yo kugenda",
+  "ticket": "Itike yawe",
   "track_queue": "Kurikirana umurongo",
   "try_any_available": "Gerageza uwo ari we wese",
   "updated_ago": "byavuguruwe hashize {ago}",
@@ -430,5 +433,6 @@
   "you_are_next": "Uri uwa mbere",
   "you_are_number": "Uri nomero",
   "your_cover": "Ubwishingizi bwawe",
+  "your_position": "Umwanya wawe",
   "your_queue": "Umurongo wawe"
 }

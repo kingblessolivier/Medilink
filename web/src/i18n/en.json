@@ -176,6 +176,7 @@
   "error_screen_home": "Back to the start",
   "error_screen_retry": "Try this screen again",
   "error_screen_title": "Something went wrong on this screen",
+  "est_wait": "Est. wait time",
   "eta_about": "About {minutes} min to your turn",
   "eta_range": "Roughly {low}-{high} min to your turn",
   "facility_information": "Facility information",
@@ -333,6 +334,7 @@
   "profile_saved": "Saved",
   "profile_title": "Profile",
   "progress": "Progress",
+  "queue_active": "Active",
   "queue_called_now": "You are being called - {ticket}. Go in.",
   "queue_eta_about": "About {minutes} min to your turn",
   "queue_eta_range": "Roughly {from}-{to} min to your turn",
@@ -391,6 +393,7 @@
   "tab_services": "Services",
   "tab_visits": "Visits",
   "tagline": "Know before you go",
+  "ticket": "Your ticket",
   "track_queue": "Track queue",
   "try_any_available": "Try any available",
   "updated_ago": "updated {ago}",
@@ -430,5 +433,6 @@
   "you_are_next": "You are next",
   "you_are_number": "You are number",
   "your_cover": "Your cover",
+  "your_position": "Your position",
   "your_queue": "Your queue"
 }
