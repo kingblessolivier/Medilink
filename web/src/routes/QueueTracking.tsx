@@ -2,8 +2,9 @@ import { Link } from "react-router-dom"
 import { IconClock } from "../ui/icons"
 import { useI18n } from "../i18n"
 import { useCurrentQueueEntry } from "../hooks/useQueue"
+import { useServiceTypes } from "../hooks/useNearbyFacilities"
 import { usePatient } from "../hooks/useAuth"
-import { Card, Chip, EmptyState, ErrorState, ListSkeleton, Notice } from "../ui"
+import { Chip, EmptyState, ErrorState, ListSkeleton, Notice } from "../ui"
 import { timeAgo } from "../lib/format"
 import type { QueueEntryPublic } from "../api/types"
 
@@ -25,6 +26,7 @@ export function QueueTracking() {
   const { t, lang } = useI18n()
   const patient = usePatient()
   const query = useCurrentQueueEntry(patient !== null)
+  const serviceTypes = useServiceTypes()
 
   if (!patient) {
     return (
@@ -96,23 +98,77 @@ export function QueueTracking() {
 
   const called = entry.status === "called"
 
+  /* `entry.service` is a code - it was rendering as "general_consultation"
+     on the panel, under a facility name, in a Kinyarwanda interface. Resolve
+     it to the translated name, and show nothing rather than the code if the
+     lookup has not landed yet. */
+  const serviceLabel =
+    serviceTypes.data?.results.find((s) => s.code === entry.service)?.[
+      `name_${lang}` as "name_rw" | "name_en" | "name_fr"
+    ] ?? null
+
   return (
     <div className="mx-auto w-full max-w-xl px-4 py-6 pb-24 md:pb-10">
       {/* Visually the facility name leads, but the page still has to SAY what
           it is - the position and the departure time below carry the weight,
           so the heading stays small rather than competing with them. */}
       <h1 className="sr-only">{t("queue_title")}</h1>
-      <p className="text-center text-body-lg text-n700">
-        {entry.facility.name}
-      </p>
 
-      <Card className="mt-3 px-6 py-8 text-center">
+      {/* S-06, per docs/01_patient_app.html: a green panel carrying the
+          position and the ticket, with the two facts a patient checks next
+          - the wait and the place - as cards beneath it.
+
+          Three things the spec draws that are NOT here, because the API
+          cannot answer them and this screen does not invent: the "of 47"
+          total, the assigned doctor, and the three-lane progress bar, which
+          needs a seen/remaining split the queue entry does not carry. The
+          dots below show people ahead instead, which is the same question a
+          patient is actually asking and is countable at a glance. */}
+      <section className="overflow-hidden rounded-lg bg-primary px-6 py-8 text-center text-white">
+        <p className="text-body-lg text-white/80">
+          {entry.facility.name}
+          {serviceLabel ? ` · ${serviceLabel}` : ""}
+        </p>
+
         {called ? <Called entry={entry} /> : <Waiting entry={entry} />}
 
-        <p className="mt-6 text-label text-n600">
-          {t("updated_ago", { ago: timeAgo(entry.as_of, lang) })}
-        </p>
-      </Card>
+        {entry.ticket_code && (
+          <p className="mt-5 inline-flex items-center gap-2 rounded-pill bg-white/15 px-3 py-1.5 text-label">
+            <span
+              aria-hidden="true"
+              className="h-2 w-2 rounded-full bg-success"
+            />
+            {t("queue_active")} · {t("ticket")}: {entry.ticket_code}
+          </p>
+        )}
+      </section>
+
+      {/* The two numbers a patient checks after the position itself. */}
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="rounded-lg border border-n200 bg-white p-4">
+          <p className="ml-label">{t("est_wait")}</p>
+          {/* The honesty branch, again. Amber when we have a figure from the
+              facility; muted and explicit when we do not. Never a guess. */}
+          {entry.eta_minutes === null ? (
+            <p className="mt-1 text-body text-n600">{t("queue_eta_unknown")}</p>
+          ) : (
+            <p className="mt-1 text-h2 tabular-nums text-n900">
+              ~{entry.eta_minutes} min
+            </p>
+          )}
+        </div>
+
+        <div className="rounded-lg border border-n200 bg-white p-4">
+          <p className="ml-label">{t("your_position")}</p>
+          <p className="mt-1 text-h2 tabular-nums text-n900">
+            {entry.position}
+          </p>
+        </div>
+      </div>
+
+      <p className="mt-3 text-center text-label text-n600">
+        {t("updated_ago", { ago: timeAgo(entry.as_of, lang) })}
+      </p>
 
       <div className="mt-4 flex gap-2">
         <a
@@ -151,7 +207,7 @@ function Waiting({ entry }: { entry: QueueEntryPublic }) {
 
   return (
     <>
-      <p className="text-body-lg text-n700">{t("you_are_number")}</p>
+      <p className="text-body-lg text-white/80">{t("you_are_number")}</p>
       <p className="mt-1 text-display tabular-nums">
         {entry.position}
       </p>
@@ -174,12 +230,12 @@ function Waiting({ entry }: { entry: QueueEntryPublic }) {
               <span
                 key={i}
                 aria-hidden="true"
-                className="h-2 w-2 rounded-full bg-primary/25"
+                className="h-2 w-2 rounded-full bg-white/30"
               />
             ))}
-            <span aria-hidden="true" className="h-2 w-2 rounded-full bg-primary" />
+            <span aria-hidden="true" className="h-2 w-2 rounded-full bg-white" />
           </div>
-          <p className="mt-2.5 text-body text-n700">
+          <p className="mt-2.5 text-body text-white/80">
             {t("people_ahead", { n: ahead })}
           </p>
         </div>
@@ -192,9 +248,13 @@ function Waiting({ entry }: { entry: QueueEntryPublic }) {
         </p>
       )}
 
-      <p className="mt-4 text-body-lg text-n700">
+      {/* The card below carries the estimate now, so the panel only speaks
+          when there IS one - a range or an approximation is context for the
+          number above it, whereas repeating "not available" twice on one
+          screen reads as a fault rather than as honesty. */}
+      <p className="mt-4 text-body-lg text-white/90">
         {entry.eta_minutes === null
-          ? t("wait_unavailable")
+          ? ""
           : entry.eta_confidence === "low"
             ? t("eta_range", {
                 low: Math.max(5, Math.round((entry.eta_minutes * 0.85) / 5) * 5),

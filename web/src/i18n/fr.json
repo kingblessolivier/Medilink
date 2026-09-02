@@ -176,6 +176,7 @@
   "error_screen_home": "Revenir au debut",
   "error_screen_retry": "Reessayer cet ecran",
   "error_screen_title": "Un probleme est survenu sur cet ecran",
+  "est_wait": "Attente estimee",
   "eta_about": "Environ {minutes} min",
   "eta_range": "Environ {low}-{high} min",
   "facility_information": "Informations",
@@ -333,6 +334,7 @@
   "profile_saved": "Enregistre",
   "profile_title": "Profil",
   "progress": "Progression",
+  "queue_active": "Dans la file",
   "queue_called_now": "On vous appelle - {ticket}. Entrez.",
   "queue_eta_about": "Environ {minutes} min avant votre tour",
   "queue_eta_range": "Environ {from}-{to} min avant votre tour",
@@ -391,6 +393,7 @@
   "tab_services": "Services",
   "tab_visits": "Visites",
   "tagline": "Sachez avant de partir",
+  "ticket": "Votre ticket",
   "track_queue": "Suivre la file",
   "try_any_available": "Essayer tout medecin",
   "updated_ago": "mis a jour {ago}",
@@ -430,5 +433,6 @@
   "you_are_next": "Vous etes le prochain",
   "you_are_number": "Vous etes numero",
   "your_cover": "Votre assurance",
+  "your_position": "Votre position",
   "your_queue": "Votre file"
 }
