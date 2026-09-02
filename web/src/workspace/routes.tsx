@@ -14,6 +14,7 @@ import {
 } from "../ui/icons"
 import { useQueueActions } from "./useQueueActions"
 import { Reception } from "./Reception"
+import { WorkspaceDashboard } from "./Dashboard"
 import { WorkspaceAppointments } from "./Appointments"
 import { WorkspaceDoctors } from "./Doctors"
 import { WorkspaceServices } from "./Services"
@@ -43,6 +44,7 @@ const SECTIONS: NavSection[] = [
     label: "Today",
     items: [
       { to: "/workspace", label: "Reception", icon: <IconUsers size={17} />, end: true },
+      { to: "/workspace/dashboard", label: "Dashboard", icon: <IconChart size={17} /> },
       { to: "/workspace/appointments", label: "Appointments", icon: <IconCalendar size={17} /> },
       { to: "/workspace/patients", label: "Find a patient", icon: <IconSearch size={17} /> },
     ],
@@ -74,6 +76,10 @@ export function WorkspaceRoutes() {
     >
       <Routes>
         <Route path="/" element={<Reception actions={actions} />} />
+        {/* FA-01. Not the workspace landing: a receptionist opening this app
+            needs the queue in front of them, and the desk is what most people
+            signing in are here to work. The overview is one click away. */}
+        <Route path="/dashboard" element={<WorkspaceDashboard />} />
         <Route
           path="/appointments"
           element={
