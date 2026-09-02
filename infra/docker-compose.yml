@@ -29,18 +29,27 @@ services:
   redis:
     image: redis:7-alpine
     container_name: medilink-redis
-    # 56379 on the HOST, 6379 inside. The API does not use this - it reaches
-    # Redis over the compose network on 6379 - but anything running natively
-    # against this stack does, and without a published port every cached or
-    # throttled endpoint fails.
+    # Published on the HOST, 6379 inside. The API does not use this - it
+    # reaches Redis over the compose network on 6379 - but anything running
+    # natively against this stack does, and without a published port every
+    # cached or throttled endpoint fails.
     #
     # This used to publish nothing, on the reasoning that nothing on the host
     # needed Redis. That stopped being true the moment the backend could be
-    # run natively. The original conflict was real, though, and the lesson
-    # from it holds: 6379 and 6380 are both already taken on a machine with
-    # other projects on it, so this claims a port high enough that nothing
-    # else is likely to want it, rather than competing for the obvious one.
-    ports: ["56379:6379"]
+    # run natively. The original conflict was real, and 6379 and 6380 are
+    # both commonly taken on a machine with other projects on it.
+    #
+    # It was 56379, and that broke: on Windows, Hyper-V reserves blocks of
+    # high ports dynamically, and after a reboot 56364-56463 was one of them.
+    # Docker then fails with "An attempt was made to access a socket in a way
+    # forbidden by its access permissions", which sounds like a permissions
+    # problem and is not - the port is simply spoken for. Check with
+    # `netsh interface ipv4 show excludedportrange protocol=tcp`.
+    #
+    # 6381 is below the dynamic range entirely, so it cannot be reserved out
+    # from under us. Override REDIS_HOST_PORT if it clashes on your machine,
+    # and change REDIS_URL in backend/.env to match.
+    ports: ["${REDIS_HOST_PORT:-6381}:6379"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
