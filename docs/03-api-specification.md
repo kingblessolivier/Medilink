@@ -349,9 +349,23 @@ does not fail the whole batch.
 |---|---|
 | `GET /me` | Profile: name, language, insurer, home location |
 | `PATCH /me` | Update any of the above |
-| `GET /me/visits` | Past appointments and queue entries, cursor-paginated |
-| `POST /me/push-subscription` | Register a Web Push subscription |
+| `GET /appointments` | Past and upcoming appointments. (Documented here as `/me/visits` until 2026-09-02; the implemented route is `/appointments`, and the Visits screen uses it.) |
+| `GET /me/notifications` | Notification history |
+| `GET /me/notification-preferences` | Channel preferences |
+| `GET /me/export` | Data export - see doc 08 |
 | `DELETE /me` | Account deletion request - see doc 08 |
+
+### Specified but NOT implemented
+
+Audited 2026-09-02 against the registered URLconf. These two appear in earlier
+drafts of this document and have no route:
+
+| Endpoint | Status |
+|---|---|
+| `POST /me/push-subscription` | Web Push is modelled - `NotificationChannel.PUSH` exists - but there is no subscription endpoint, no VAPID keypair and no service-worker push handler. Notifications reach patients by the channels in doc 06. |
+| `POST /gateway/sms-status` | No SMS delivery-receipt webhook. Delivery is not currently confirmed back from the gateway. |
+
+Do not build against either without checking this table again.
 
 ## 7. Triage (Phase 4)
 
@@ -386,7 +400,6 @@ suggestion.
 | `POST /gateway/ussd` | USSD aggregator | Shared secret + IP allowlist |
 | `POST /gateway/whatsapp` | Meta Cloud API | `X-Hub-Signature-256` HMAC |
 | `GET /gateway/whatsapp` | Meta verification handshake | `hub.verify_token` |
-| `POST /gateway/sms-status` | SMS gateway delivery receipts | Shared secret |
 
 These return plain text (USSD) or `200 OK` fast. Never do slow work inline -
 queue it to Celery and return immediately, or the aggregator times out and the

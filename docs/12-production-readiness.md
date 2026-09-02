@@ -15,19 +15,35 @@ a database in the wrong country.
 
 | | |
 |---|---|
-| Backend tests | 669 passing, 94% coverage |
-| Frontend tests | 37 passing |
+| Backend tests | 706 passing. Coverage not measured - see below |
+| Frontend tests | 80 passing |
 | API operations | 68 across 64 paths, schema generated with zero warnings, no drift from the committed file |
-| Routes | 48 `<Route>` declarations across three surfaces |
-| Translations | 401 keys × 3 languages, parity enforced by test |
-| Patient bundle | 112.64 KB gzipped (budget 150 KB, enforced in CI) |
+| Routes | 40 `<Route>` declarations across three surfaces |
+| Translations | 472 keys × 3 languages, parity enforced by test |
+| Patient bundle | 117.33 KB gzipped (budget 150 KB, enforced in CI) |
 | `ruff check apps/` | clean |
 | `npm audit` | 0 in production dependencies; 6 in the dev toolchain (see below) |
 | `pip-audit` | clean, excluding `pip` itself (the installer, not shipped) |
 | Django | 5.2 LTS |
 
-Every figure above was observed on 2026-08-27, in the compose stack, not
-carried over from a previous edit.
+Every figure above was re-measured on 2026-09-02, on a Windows host, not
+carried over from a previous edit. The 2026-08-27 row read 669 backend tests
+at 94% coverage, 37 frontend tests, 48 routes, 401 translation keys and a
+112.64 KB bundle; each of those had drifted.
+
+**The coverage percentage is gone on purpose.** `pytest --cov` cannot run on a
+Windows host - a GDAL/coverage load-order conflict, diagnosed in full in
+[10-testing-strategy.md](10-testing-strategy.md#measuring-coverage-not-on-windows) -
+so 94% could not be reproduced and is not restated here. Measure it in the
+container:
+
+```bash
+docker compose -f infra/docker-compose.yml run --rm api pytest --cov=apps
+```
+
+CI has never run on this repository (the GitHub Actions account is billing
+locked), so every number above comes from a developer machine. Treat "enforced
+in CI" throughout this document as "enforced once CI runs".
 
 **This is the third time these numbers have drifted, and the second time the
 same correction has been written here.** The previous note recorded that the

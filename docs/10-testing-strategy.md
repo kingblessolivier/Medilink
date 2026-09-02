@@ -368,3 +368,43 @@ is regenerated and committed.
 
 Coverage is a floor, not a goal. A 95%-covered geo module with no
 coordinate-order test is worse than a 70%-covered one that has it.
+
+### Measuring coverage: not on Windows
+
+Audited 2026-09-02. **`pytest --cov` cannot run on a Windows host**, so measure
+coverage in the container:
+
+```bash
+docker compose -f infra/docker-compose.yml run --rm api pytest --cov=apps
+```
+
+On Windows it dies during import with
+
+```
+OSError: [WinError 127] The specified procedure could not be found
+```
+
+from `django.contrib.gis.gdal.libgdal`, while the identical suite passes
+without `--cov` and the dev server runs GeoDjango queries perfectly well. That
+combination looks like a broken OSGeo4W install and is not one.
+
+WinError 127 is "the specified PROCEDURE could not be found" - not 126, "the
+specified MODULE". The DLL is found; an entry point in one of its dependencies
+is missing. Starting coverage first changes which dependency wins, and GDAL
+then binds against a library that does not export what it needs. It is an
+ordering problem, proved by ordering alone: import GDAL and then start
+coverage, and the postgis backend imports fine; start coverage and then import
+GDAL, and it fails.
+
+Getting GDAL in first from inside the test process does not work. A root
+`conftest.py` is too late - pytest-cov starts the tracer in
+`pytest_load_initial_conftests`, before any conftest is imported - and
+`sitecustomize.py` is too early, since `site` imports it before this directory
+is on `sys.path`. Both were tried and neither is in the tree.
+
+The container sidesteps it entirely: the image installs libgdal through apt,
+where the versioned soname is exactly what Django probes for, and there is no
+second copy of any dependency to bind against.
+
+**Without a container, the suite still runs - just without a coverage number.**
+`pytest -q` from `backend/` passes 706 tests.

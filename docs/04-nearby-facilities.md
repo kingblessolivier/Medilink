@@ -268,7 +268,7 @@ class NearbyQuerySerializer(serializers.Serializer):
 ### 7.1 Getting location
 
 ```ts
-// web-patient/src/hooks/useGeolocation.ts
+// web/src/hooks/useGeolocation.ts
 type GeoState =
   | { status: "idle" }
   | { status: "locating" }
@@ -316,7 +316,7 @@ for no benefit - the patient has not moved far.
 ### 7.2 Fetching
 
 ```ts
-// web-patient/src/hooks/useNearbyFacilities.ts
+// web/src/hooks/useNearbyFacilities.ts
 export function useNearbyFacilities(
   coords: { lat: number; lng: number } | null,
   filters: { insurer?: string; service?: string; openNow?: boolean },
@@ -335,7 +335,7 @@ export function useNearbyFacilities(
 ### 7.3 The facility card
 
 ```tsx
-// web-patient/src/components/FacilityCard.tsx
+// web/src/components/FacilityCard.tsx
 export function FacilityCard({ facility }: { facility: Facility }) {
   const { t } = useTranslation()
   return (

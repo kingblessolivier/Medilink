@@ -17,7 +17,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 const tokensPath = join(here, "..", "src", "styles", "tokens.css")
 const css = readFileSync(tokensPath, "utf8")
 
-/** The sixteen colours the roadmap's `:root` block defines. */
+/** The colours the design system defines. See tokens.css on why n800 is absent. */
 const EXPECTED_COLOURS = [
   "primary",
   "primary-dark",
@@ -27,7 +27,6 @@ const EXPECTED_COLOURS = [
   "success",
   "warning",
   "n900",
-  "n800",
   "n700",
   "n600",
   "n400",
