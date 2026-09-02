@@ -43,14 +43,14 @@ export function Verification() {
   return (
     <div className="mx-auto w-full max-w-5xl">
       <h1 className="text-h2">Verification</h1>
-      <p className="mt-1 text-small text-ink-muted">
+      <p className="mt-1 text-body text-n700">
         Until a facility is verified, patients cannot find it. Oldest first.
       </p>
 
       {query.isLoading && (
         <div className="mt-6 space-y-3">
           {Array.from({ length: 3 }, (_, i) => (
-            <div key={i} className="rounded-lg border border-line bg-surface p-4">
+            <div key={i} className="rounded-md border border-n200 bg-white p-4">
               <Skeleton className="h-4 w-1/3" />
               <Skeleton className="mt-2 h-3 w-1/4" />
             </div>
@@ -219,15 +219,15 @@ function Row({
   return (
     <li className="ml-card overflow-hidden">
       <div className="flex items-start gap-3 p-4">
-        <span className="ml-icon-plate shrink-0 bg-surface-sunken text-ink-muted">
+        <span className="ml-icon-plate shrink-0 bg-n100 text-n700">
           {icon}
         </span>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-body font-medium">{title}</p>
-          <p className="mt-0.5 truncate text-small text-ink-muted">{subtitle}</p>
+          <p className="truncate text-body-lg font-medium">{title}</p>
+          <p className="mt-0.5 truncate text-body text-n700">{subtitle}</p>
           {detail && (
-            <p className="mt-0.5 truncate text-small tabular-nums text-ink-muted">
+            <p className="mt-0.5 truncate text-body tabular-nums text-n700">
               {detail}
             </p>
           )}
@@ -246,7 +246,7 @@ function Row({
       </div>
 
       {open && (
-        <div className="border-t border-line bg-surface-sunken/40 p-4">
+        <div className="border-t border-n200 bg-n100/40 p-4">
           <label className="block">
             <span className="ml-label block">Verification note</span>
             <textarea
@@ -259,7 +259,7 @@ function Row({
           </label>
 
           {error && (
-            <p className="mt-2 text-small text-danger" role="alert">
+            <p className="mt-2 text-body text-danger" role="alert">
               {error}
             </p>
           )}
@@ -275,7 +275,7 @@ function Row({
               {pending ? "Verifying..." : "Verify"}
             </button>
             {!ready && (
-              <span className="text-caption text-ink-subtle">
+              <span className="text-label text-n600">
                 Write what you checked to enable this.
               </span>
             )}

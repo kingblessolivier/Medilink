@@ -3,175 +3,179 @@
  *
  * The single source of truth for the one web app, which serves all three
  * surfaces - patient, facility workspace, platform admin.
- * Both import it in their tailwind.config.js via `presets: [medilink]`.
  *
- * Three rules this preset deliberately encodes, because they are the ones a
- * healthcare UI gets wrong most often:
+ * NOTHING IN THIS FILE IS A VALUE. Every entry points at a custom property
+ * declared in web/src/styles/tokens.css, which is the only place a colour, a
+ * size or a duration is actually written down. Changing the product's palette
+ * is one edit to that file; this preset only decides what the utilities are
+ * called. If you find yourself typing a hex here, it belongs in tokens.css.
  *
- * 1. GREEN IS NOT THE INTERFACE. It carries availability, verification,
- *    success and the primary action - nothing else. Everything structural is
- *    neutral. A wholly green product reads as marketing, not as a tool
- *    somebody uses while worried.
+ * Colours are emitted as `rgb(var(--x-rgb) / <alpha-value>)` rather than
+ * `var(--x)`. That is what keeps opacity modifiers alive: with a plain hex
+ * custom property, `bg-primary/25` compiles to a colour the browser cannot
+ * parse and the element renders transparent, silently. `npm run verify:tokens`
+ * guards the hex/channel pairs those two forms depend on.
  *
- * 2. RADIUS IS MODERATE. Containers stop at 12px. `2xl` (16px) exists only
- *    for full-width surfaces - a hero or a page panel - where 12px on a
- *    600px-tall block reads as an accident rather than a decision. Pill
- *    shapes stay reserved for status chips, where the shape carries meaning.
+ * Three rules the system encodes, because they are the ones a healthcare UI
+ * gets wrong most often:
  *
- * 3. ELEVATION IS RESTRAINED, NOT ABSENT. It used to be one shadow, which
- *    left every card looking equally inert and gave hover nothing to say.
- *    There is now a three-step scale, and the steps are small on purpose:
- *    `raised` for something you can click, `floating` for something the
- *    page is briefly about, `overlay` for something on top of the page.
- *    Borders still do the separating; shadows only ever say "this is
- *    interactive" or "this is above".
+ * 1. GREEN IS NOT THE INTERFACE. It carries the primary action, availability
+ *    and verification - nothing else. Everything structural is neutral. A
+ *    wholly green product reads as marketing, not as a tool somebody opens
+ *    while worried.
+ *
+ * 2. SHAPE CARRIES MEANING. A pill is an action or a status; a 16px corner is
+ *    a card; a 10px corner is an input. Rounding a card to a pill removes the
+ *    only cue that says which is which.
+ *
+ * 3. AMBER IS A FILL, NEVER A LABEL. `accent` and `warning` measure 2.0:1 and
+ *    2.85:1 on white - below the 3:1 a non-text control needs, let alone the
+ *    4.5:1 for text. They colour a badge's background, carrying `n900` on top.
+ *    The ETA is the one number a patient has to read.
  */
+
+/** A colour that still answers to `/50`. */
+const token = (name) => `rgb(var(--${name}-rgb) / <alpha-value>)`
+
+/** Size, line height and weight, all three read from tokens.css. */
+const type = (name) => [
+  `var(--text-${name})`,
+  {
+    lineHeight: `var(--text-${name}-lh)`,
+    fontWeight: `var(--text-${name}-weight)`,
+  },
+]
 
 /** @type {import('tailwindcss').Config} */
 export default {
   theme: {
+    /* Replaced wholesale rather than extended. Tailwind's default palette is
+       247 colours the design system has no opinion about, and leaving them
+       reachable is how `bg-slate-100` ends up next to `bg-n100` in the same
+       card. If a colour is not below, it is not in the product. */
+    colors: {
+      transparent: "transparent",
+      current: "currentColor",
+      inherit: "inherit",
+
+      /* Not a palette colour - an absolute, and the only thing a modal
+         scrim should ever be. Always used with an opacity modifier. */
+      black: "rgb(0 0 0 / <alpha-value>)",
+      white: token("white"),
+
+      primary: {
+        DEFAULT: token("primary"), // actions, links, active states, identity
+        dark: token("primary-dark"), // hover, pressed, header backgrounds
+        light: token("primary-light"), // selected rows, chips, tinted surfaces
+      },
+
+      accent: token("accent"), // queue badges, ETA, urgency - a fill only
+      danger: token("danger"), // emergency, errors, destructive actions
+      success: token("success"), // confirmed, attended, insurance active
+      warning: token("warning"), // no-show, expiring, pending - a fill only
+
+      n900: token("n900"), // primary text, headings
+      n800: token("n800"), // dark surfaces: inverted panels, footers
+      n700: token("n700"), // body copy
+      n600: token("n600"), // secondary text, labels, captions
+      n400: token("n400"), // placeholders, disabled text, decorative icons
+      n300: token("n300"), // borders that must read: inputs, dividers
+      n200: token("n200"), // default border, hairline separators
+      n100: token("n100"), // page background, wells, inactive surfaces
+    },
+
+    fontFamily: {
+      sans: ["var(--font-sans)"],
+      /* Ticket codes and reference codes: read aloud across a reception desk,
+         or typed off a paper slip. */
+      mono: ["var(--font-mono)"],
+    },
+
+    /* Replaced, not extended: the default scale runs text-xs to text-9xl with
+       no opinion about which is a heading. These eight are the whole product,
+       and each carries its own weight and line height so `text-h1` is one
+       decision rather than three classes that can disagree. */
+    fontSize: {
+      micro: type("micro"), // 11px - status pills, timestamps, legal
+      label: type("label"), // 12px - input labels, badge text, table headers
+      body: type("body"), // 14px - secondary body, table cells, hints
+      "body-lg": type("body-lg"), // 16px - primary body text, descriptions
+      h3: type("h3"), // 18px - card sub-sections, form group labels
+      h2: type("h2"), // 24px - section headers, card titles
+      h1: type("h1"), // 32px - page titles, screen headers
+      /* The queue position, and nothing else in the product. */
+      display: type("display"), // 72px
+    },
+
+    borderRadius: {
+      none: "0",
+      sm: "var(--radius-sm)", // 6px - badges, pills, tags
+      DEFAULT: "var(--radius-sm)",
+      md: "var(--radius-md)", // 10px - input fields, buttons
+      lg: "var(--radius-lg)", // 16px - cards, panels
+      pill: "var(--radius-pill)", // CTA buttons and status chips
+      full: "9999px", // circles: avatars, map markers, dots
+    },
+
+    boxShadow: {
+      none: "none",
+      sm: "var(--shadow-sm)", // subtle card lift
+      md: "var(--shadow-md)", // floating elements, modals
+      lg: "var(--shadow-lg)", // phone shell, hero cards
+      /* Applied as a shadow so it survives `overflow: hidden` on a scrolling
+         table or a clipped card. Reception staff work the workspace entirely
+         from the keyboard - this is how they know where they are. */
+      focus: "var(--shadow-focus)",
+      "input-focus": "var(--shadow-input-focus)",
+    },
+
     extend: {
-      colors: {
-        // Structure. Most of the product is built from these.
-        canvas: "#F7F9F8", // page background
-        surface: "#FFFFFF", // cards, sheets, tables
-        "surface-sunken": "#F2F5F3", // wells, inactive tabs, table headers
-        line: "#E3E8E5", // default border
-        "line-strong": "#CDD6D1", // input borders, dividers that must read
-
-        ink: "#17201C", // primary text
-        // Darkened from #66716C, which measured 4.44 against danger-subtle
-        // under ErrorState - just under AA, and it had to move anyway to
-        // leave a visible gap above ink-subtle once that was fixed.
-        "ink-muted": "#4F5A55", // secondary text - 7.18 on surface
-        // Was #8B948F, which measured 3.12 on surface - well under AA on
-        // text a patient has to read. 4.77 on surface, 4.52 on sunken.
-        // NOT for use on a tinted status background: nothing clears 4.5
-        // there without collapsing into ink-muted. Those surfaces carry
-        // their own text colour (text-danger, text-info) instead.
-        "ink-subtle": "#69726D", // captions, placeholders, stale data
-
-        primary: {
-          DEFAULT: "#0B6B55",
-          hover: "#095A47",
-          active: "#07513F",
-          subtle: "#E7F1EE", // tinted background for selected rows
-          border: "#B7D5CB",
-        },
-
-        // Status. Each has a subtle background so a chip needs no shadow.
-        success: { DEFAULT: "#0B6B55", subtle: "#E7F1EE", border: "#B7D5CB" },
-        warning: { DEFAULT: "#94620A", subtle: "#FBF2DE", border: "#E8D3A0" },
-        danger: { DEFAULT: "#A3342B", subtle: "#FBEDEB", border: "#EFC7C2" },
-        info: { DEFAULT: "#1F5F80", subtle: "#E8F1F6", border: "#BBD5E3" },
-
-        // Unknown data. Deliberately the quietest thing on the screen: a
-        // patient must be able to tell "we do not know" from "we know" at a
-        // glance, without reading. See the wait-status rule in docs/04.
-        // "Not confirmed" is the honesty label - the quietest thing on the
-        // screen, but a patient still has to be able to READ it. #8B948F
-        // measured 2.84 on its own subtle background.
-        unknown: { DEFAULT: "#69726D", subtle: "#F2F5F3", border: "#E3E8E5" },
-      },
-
-      fontFamily: {
-        sans: [
-          "Inter",
-          "system-ui",
-          "-apple-system",
-          "Segoe UI",
-          "Roboto",
-          "sans-serif",
-        ],
-        // Ticket codes, queue numbers, reference codes - anything read aloud
-        // across a reception desk or typed from a paper slip.
-        mono: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
-      },
-
-      fontSize: {
-        // A restrained scale. Healthcare screens carry a lot of information;
-        // oversized type pushes it below the fold rather than clarifying it.
-        caption: ["0.75rem", { lineHeight: "1rem", letterSpacing: "0.01em" }],
-        small: ["0.8125rem", { lineHeight: "1.25rem" }],
-        body: ["0.9375rem", { lineHeight: "1.5rem" }],
-        "body-lg": ["1rem", { lineHeight: "1.625rem" }],
-        h3: ["1.0625rem", { lineHeight: "1.5rem", letterSpacing: "-0.006em" }],
-        h2: ["1.3125rem", { lineHeight: "1.75rem", letterSpacing: "-0.012em" }],
-        h1: ["1.75rem", { lineHeight: "2.125rem", letterSpacing: "-0.018em" }],
-        display: ["2.5rem", { lineHeight: "2.875rem", letterSpacing: "-0.024em" }],
-        // The one intentionally enormous thing in the product: a queue
-        // position, which must be readable at arm's length in a waiting room.
-        queue: ["4.5rem", { lineHeight: "1", letterSpacing: "-0.03em" }],
-      },
-
-      borderRadius: {
-        sm: "4px",
-        DEFAULT: "6px",
-        md: "8px",
-        lg: "10px",
-        xl: "12px", // containers stop here
-        // Large surfaces only: hero, page panels, the map frame. Never a card.
-        "2xl": "16px",
-      },
-
-      boxShadow: {
-        // Hairline. Reads as a border, not a float.
-        hairline: "0 0 0 1px rgba(23, 32, 28, 0.06)",
-        // Something you can click. Barely there at rest - it exists so that
-        // `raised-hover` has somewhere to move FROM.
-        raised:
-          "0 1px 2px rgba(23, 32, 28, 0.05), 0 1px 3px -1px rgba(23, 32, 28, 0.05)",
-        "raised-hover":
-          "0 2px 4px rgba(23, 32, 28, 0.06), 0 6px 14px -4px rgba(23, 32, 28, 0.10)",
-        // Something the page is briefly about: a hero panel, a summary block.
-        floating:
-          "0 1px 2px rgba(23, 32, 28, 0.04), 0 12px 32px -8px rgba(23, 32, 28, 0.12)",
-        // Things that genuinely sit on top of the page.
-        overlay:
-          "0 1px 2px rgba(23, 32, 28, 0.04), 0 8px 24px -4px rgba(23, 32, 28, 0.10)",
-        // Focus ring, applied as a shadow so it survives overflow clipping.
-        //
-        // 0.22 opacity measured about 1.3:1 against the page - a hint of a
-        // halo rather than an indicator, and WCAG 2.2 asks for 3:1 against
-        // what is next to it. At 0.9 the same ring reads as a ring. This
-        // matters more here than on most products: reception staff work the
-        // workspace entirely from the keyboard, so this is how they know
-        // where they are.
-        focus: "0 0 0 3px rgba(11, 107, 85, 0.9)",
-      },
-
       spacing: {
-        // 44px: the minimum comfortable touch target, and the height every
-        // interactive control snaps to.
-        touch: "2.75rem",
+        /* The numeric scale is deliberately absent: 4/8/12/16/24/32/40/48/80
+           is already exactly Tailwind's 1/2/3/4/6/8/10/12/20, so overriding
+           it would rename every `p-4` in the app to say the same thing.
+           These are the two additions that carry meaning of their own. */
+
+        /* The minimum comfortable touch target, and the height every
+           interactive control snaps to. WCAG 2.5.8 asks for 24px; 44px is
+           what a thumb on a phone held in one hand actually needs. */
+        touch: "var(--touch-target)",
+
+        /* Control heights, so a button's size is a token rather than an
+           arbitrary value someone measured off a mock. */
+        "control-sm": "var(--control-sm)",
+        "control-md": "var(--control-md)",
+        "control-lg": "var(--control-lg)",
+
+        /* The named scale, for the places the roadmap speaks in names. Same
+           values as the numeric steps, by construction. */
+        xs: "var(--space-xs)",
+        sm: "var(--space-sm)",
+        md: "var(--space-md)",
+        lg: "var(--space-lg)",
+        xl: "var(--space-xl)",
+        "2xl": "var(--space-2xl)",
       },
 
       maxWidth: {
         prose: "68ch",
-        // The reading column - a single stream of text or one list.
+        /* The reading column - a single stream of text, or one list. */
         content: "76rem",
-        // The full working width. Wider than `content` because the discovery
-        // and workspace screens lay out in columns rather than one stream,
-        // and a 76rem cap on a 1440px monitor left 350px dead on each side.
+        /* The full working width. Wider than `content` because discovery and
+           workspace screens lay out in columns rather than one stream, and a
+           76rem cap on a 1440px monitor left 350px dead on each side. */
         shell: "88rem",
       },
 
       backgroundImage: {
-        // The hero. A single soft wash rather than a photograph: stock
-        // imagery of smiling clinicians is the visual language of marketing,
-        // and this is a tool people open when they are unwell.
-        //
-        // It used to be a saturated green block with white text, which made
-        // the first screen of the product a solid slab of brand colour and
-        // put green - the colour that means "open", "verified", "available"
-        // everywhere else - on 400px of decoration. Rule 1 of the design
-        // system is that green is not the interface. The hero is now a light
-        // surface with green used only as an accent, so the eye still lands
-        // on the search field rather than on the background.
+        /* The hero. A single soft wash rather than a photograph: stock imagery
+           of smiling clinicians is the visual language of marketing, and this
+           is a tool people open when they are unwell. Green appears only as an
+           accent, so the eye lands on the search field. */
         "hero-wash":
-          "radial-gradient(120% 120% at 85% -10%, #EEF5F2 0%, #F7F9F8 45%, #FFFFFF 100%)",
+          "radial-gradient(120% 120% at 85% -10%, var(--primary-light) 0%, var(--n100) 45%, var(--white) 100%)",
         "hero-grid":
-          "linear-gradient(rgba(11,107,85,0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(11,107,85,0.055) 1px, transparent 1px)",
+          "linear-gradient(rgb(var(--primary-rgb) / 0.055) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--primary-rgb) / 0.055) 1px, transparent 1px)",
       },
 
       backgroundSize: {
@@ -179,8 +183,39 @@ export default {
       },
 
       transitionDuration: {
-        // Fast enough to feel instant, slow enough to be seen.
-        DEFAULT: "140ms",
+        DEFAULT: "var(--duration-fast)",
+        fast: "var(--duration-fast)", // hover, colour transitions
+        base: "var(--duration-base)", // most interactive transitions
+        slow: "var(--duration-slow)", // panels, modals, drawers
+      },
+
+      transitionTimingFunction: {
+        standard: "var(--curve-standard)",
+      },
+
+      keyframes: {
+        /* The queue position ticking down. The number is the product; when it
+           changes, the change itself has to be visible from across a room. */
+        "queue-tick": {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.08)" },
+        },
+        /* Toasts and modals arrive from below, never fade in place - motion
+           from an edge tells you where a thing came from. */
+        "slide-up": {
+          from: { transform: "translateY(12px)", opacity: "0" },
+          to: { transform: "translateY(0)", opacity: "1" },
+        },
+        "fade-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+      },
+
+      animation: {
+        "queue-tick": "queue-tick 300ms var(--curve-standard)",
+        "slide-up": "slide-up var(--duration-slow) var(--curve-standard)",
+        "fade-in": "fade-in var(--duration-base) ease",
       },
     },
   },

@@ -48,7 +48,7 @@ export function WorkspacePatients() {
       <div className="ml-section-head">
         <div>
           <h1 className="text-h2">Find a patient</h1>
-          <p className="mt-1 text-small text-ink-muted">
+          <p className="mt-1 text-body text-n700">
             Patients this facility has seen before. Searching is recorded.
           </p>
         </div>
@@ -125,17 +125,17 @@ export function WorkspacePatients() {
             <tbody>
               {results.map((person) => (
                 <tr key={person.id}>
-                  <td>{person.display_name || <span className="text-ink-subtle">No name on file</span>}</td>
+                  <td>{person.display_name || <span className="text-n600">No name on file</span>}</td>
                   <td className="tabular-nums">{person.phone}</td>
                   <td className="tabular-nums">{person.visits_here}</td>
                   <td className="tabular-nums">
-                    {person.last_seen ?? <span className="text-ink-subtle">—</span>}
+                    {person.last_seen ?? <span className="text-n600">—</span>}
                   </td>
                   <td>
                     {person.in_queue_now ? (
                       <Chip tone="success">In the queue · {person.ticket_code}</Chip>
                     ) : (
-                      <span className="text-small text-ink-muted">Not checked in</span>
+                      <span className="text-body text-n700">Not checked in</span>
                     )}
                   </td>
                 </tr>

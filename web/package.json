@@ -11,7 +11,8 @@
     "lint": "eslint src --ext ts,tsx",
     "gen:api": "openapi-typescript ../backend/schema.yaml -o src/api/schema.d.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "verify:tokens": "node scripts/verify-tokens.mjs",
+    "test": "node scripts/verify-tokens.mjs && vitest run"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.51.1",

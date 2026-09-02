@@ -125,14 +125,14 @@ export function WorkspaceSchedule({ canManage }: { canManage: boolean }) {
       <div className="ml-section-head">
         <div>
           <h1 className="text-h2">Schedule</h1>
-          <p className="mt-1 text-small text-ink-muted">
+          <p className="mt-1 text-body text-n700">
             When {session?.facility?.name ?? "this facility"} accepts bookings.
             {open.length > 0 && (
               <>
                 {" "}
                 {open.length} open{" "}
                 {open.length === 1 ? "session" : "sessions"}, about{" "}
-                <strong className="text-ink">{weeklyCapacity}</strong>{" "}
+                <strong className="text-n900">{weeklyCapacity}</strong>{" "}
                 appointments a week.
               </>
             )}
@@ -253,7 +253,7 @@ function Row({
       <td>{row.service_name_en}</td>
       {/* Not blank: "General clinic" is a real answer and an empty cell reads
           as missing data. */}
-      <td className="text-ink-muted">{row.provider_name ?? "General clinic"}</td>
+      <td className="text-n700">{row.provider_name ?? "General clinic"}</td>
       <td className="tabular-nums">
         {row.start_time}–{row.end_time}
       </td>
@@ -266,9 +266,9 @@ function Row({
           bookings and does NOT cancel these. */}
       <td className="tabular-nums">
         {row.upcoming > 0 ? (
-          <strong className="text-ink">{row.upcoming}</strong>
+          <strong className="text-n900">{row.upcoming}</strong>
         ) : (
-          <span className="text-ink-subtle">0</span>
+          <span className="text-n600">0</span>
         )}
       </td>
       <td>
@@ -287,7 +287,7 @@ function Row({
             {row.active ? "Close" : "Reopen"}
           </Button>
           {row.active && row.upcoming > 0 && (
-            <p className="mt-1 text-caption text-ink-muted">
+            <p className="mt-1 text-label text-n700">
               {row.upcoming} still booked
             </p>
           )}
@@ -329,7 +329,7 @@ function SessionForm({
 
   return (
     <form
-      className="mb-6 rounded-lg border border-line bg-surface p-4"
+      className="mb-6 rounded-md border border-n200 bg-white p-4"
       onSubmit={(e) => {
         e.preventDefault()
         onSave()
@@ -437,12 +437,12 @@ function SessionForm({
         </Field>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
-        <p className="text-small text-ink-muted">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-n200 pt-4">
+        <p className="text-body text-n700">
           {perWeek > 0 ? (
             <>
               This opens{" "}
-              <strong className="text-ink tabular-nums">{perWeek}</strong>{" "}
+              <strong className="text-n900 tabular-nums">{perWeek}</strong>{" "}
               appointments every {WEEKDAYS[draft.weekday]}.
             </>
           ) : (
@@ -450,7 +450,7 @@ function SessionForm({
           )}
         </p>
         <div className="flex gap-2">
-          <Button type="button" variant="tertiary" size="sm" onClick={onCancel}>
+          <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
             Cancel
           </Button>
           <Button

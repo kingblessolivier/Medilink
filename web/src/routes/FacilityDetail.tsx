@@ -101,7 +101,7 @@ export function FacilityDetail() {
                 <h2 className="text-h3">{t("availability_title")}</h2>
                 {/* Per-service status is the answer to "how busy is the thing
                     I need", which is what a patient actually asks. */}
-                <ul className="mt-3 divide-y divide-line rounded-xl border border-line bg-surface">
+                <ul className="mt-3 divide-y divide-n200 rounded-lg border border-n200 bg-white">
                   {data.services.slice(0, 6).map((service) => (
                     // Stacks on a narrow screen. Side by side, the service
                     // name was the half that gave way - and it is the half
@@ -113,7 +113,7 @@ export function FacilityDetail() {
                       key={service.code}
                       className="flex flex-col gap-1.5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
                     >
-                      <span className="min-w-0 text-body sm:truncate">
+                      <span className="min-w-0 text-body-lg sm:truncate">
                         {label(service)}
                       </span>
                       {/* The unknown state is suppressed per row and stated
@@ -126,7 +126,7 @@ export function FacilityDetail() {
                   ))}
                 </ul>
                 {!data.services.slice(0, 6).some((s) => s.wait.status === "available") && (
-                  <p className="mt-2 text-small text-ink-muted">
+                  <p className="mt-2 text-body text-n700">
                     {t("wait_unavailable_explained")}
                   </p>
                 )}
@@ -138,8 +138,8 @@ export function FacilityDetail() {
                   the map are one block, with directions as its action. */}
               <section>
                 <h2 className="text-h3">{t("location_title")}</h2>
-                <div className="mt-3 overflow-hidden rounded-xl border border-line bg-surface">
-                  <div className="h-52 border-b border-line">
+                <div className="mt-3 overflow-hidden rounded-lg border border-n200 bg-white">
+                  <div className="h-52 border-b border-n200">
                     <Suspense
                       fallback={<Skeleton className="h-full w-full rounded-none" />}
                     >
@@ -152,20 +152,20 @@ export function FacilityDetail() {
                     </Suspense>
                   </div>
                   <div className="space-y-1 p-4">
-                    <p className="text-body">
+                    <p className="text-body-lg">
                       {placeLabel(data.sector, data.district)}
                     </p>
                     {data.address && (
-                      <p className="text-small text-ink-muted">{data.address}</p>
+                      <p className="text-body text-n700">{data.address}</p>
                     )}
                     {data.phone && (
-                      <p className="text-small">
+                      <p className="text-body">
                         <a href={`tel:${data.phone}`} className="text-primary underline">
                           {data.phone}
                         </a>
                       </p>
                     )}
-                    <p className="pt-1 text-caption text-ink-subtle">
+                    <p className="pt-1 text-label text-n600">
                       {data.verified_at
                         ? t("verified_on", {
                             date: new Date(data.verified_at).toLocaleDateString(),
@@ -183,11 +183,11 @@ export function FacilityDetail() {
             {data.services.length === 0 ? (
               <EmptyState icon={<IconHospital size={20} />} title={t("no_services_listed")} />
             ) : (
-              <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+              <ul className="divide-y divide-n200 rounded-lg border border-n200 bg-white">
                 {data.services.map((service) => (
                   <li key={service.code} className="px-4 py-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-body font-medium">{label(service)}</span>
+                      <span className="text-body-lg font-medium">{label(service)}</span>
                       <WaitLine wait={service.wait} />
                     </div>
                     {insurer && (
@@ -241,11 +241,11 @@ export function FacilityDetail() {
                     {data.insurers.map((option) => (
                       <tr key={option.code}>
                         <th scope="row" className="text-left align-top">
-                          <span className="text-body font-medium text-ink">
+                          <span className="text-body-lg font-medium text-n900">
                             {option.name}
                           </span>
                           {option.note && (
-                            <span className="mt-0.5 block text-small text-ink-muted">
+                            <span className="mt-0.5 block text-body text-n700">
                               {option.note}
                             </span>
                           )}
@@ -286,7 +286,7 @@ export function FacilityDetail() {
           </TabPanel>
 
           <TabPanel value="hours">
-            <dl className="divide-y divide-line rounded-xl border border-line bg-surface">
+            <dl className="divide-y divide-n200 rounded-lg border border-n200 bg-white">
               {WEEKDAYS.map((weekday) => {
                 const periods = data.opening_hours
                   .filter((h) => h.weekday === weekday)
@@ -310,14 +310,14 @@ function Header({ facility }: { facility: Detail }) {
 
   return (
     <header>
-      <Link to="/search" className="text-small font-medium text-primary">
+      <Link to="/search" className="text-body font-medium text-primary">
         {t("back")}
       </Link>
 
       <div className="mt-2 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <h1 className="text-h1">{facility.name}</h1>
-          <p className="mt-1 text-body text-ink-muted">
+          <p className="mt-1 text-body-lg text-n700">
             {placeLabel(facility.sector, facility.district)}
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -360,7 +360,7 @@ function Row({
   return (
     <div className="flex items-baseline justify-between gap-4 px-4 py-3">
       <dt className="ml-label shrink-0">{label}</dt>
-      <dd className="min-w-0 text-right text-body">{children}</dd>
+      <dd className="min-w-0 text-right text-body-lg">{children}</dd>
     </div>
   )
 }
@@ -470,7 +470,7 @@ function AppointmentsPanel({
   })
 
   return (
-    <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+    <ul className="divide-y divide-n200 rounded-lg border border-n200 bg-white">
       {services.map((service, index) => {
         const query = queries[index]
         const firstDay = query.data?.days?.find((day) =>
@@ -483,17 +483,17 @@ function AppointmentsPanel({
             key={service.code}
             className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
           >
-            <span className="min-w-0 text-body">{label(service)}</span>
+            <span className="min-w-0 text-body-lg">{label(service)}</span>
             <span className="flex items-center gap-3">
               {query.isLoading && <Skeleton className="h-4 w-32" />}
               {!query.isLoading && !firstSlot && (
-                <span className="text-small text-ink-muted">
+                <span className="text-body text-n700">
                   {t("appointments_no_slots")}
                 </span>
               )}
               {firstSlot && (
                 <>
-                  <span className="text-small tabular-nums text-ink">
+                  <span className="text-body tabular-nums text-n900">
                     {new Date(firstSlot.start).toLocaleString(undefined, {
                       weekday: "short",
                       day: "numeric",
@@ -545,20 +545,20 @@ function QueuePanel({
         </div>
       )}
 
-      <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+      <ul className="divide-y divide-n200 rounded-lg border border-n200 bg-white">
         {services.map((service) => (
           <li
             key={service.code}
             className="flex flex-col gap-1.5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
           >
-            <span className="min-w-0 text-body">{label(service)}</span>
+            <span className="min-w-0 text-body-lg">{label(service)}</span>
             <span className="flex items-center gap-3">
               {/* People waiting is a plain count and always honest, even
                   where the minutes are not - so it is shown whenever we have
                   it, including under `insufficient_data`. */}
               {service.wait.people_waiting !== null &&
                 service.wait.people_waiting !== undefined && (
-                  <span className="text-small tabular-nums text-ink-muted">
+                  <span className="text-body tabular-nums text-n700">
                     {service.wait.people_waiting > 0
                       ? t("queue_people_waiting", {
                           n: service.wait.people_waiting,
@@ -572,7 +572,7 @@ function QueuePanel({
         ))}
       </ul>
 
-      <p className="mt-3 max-w-prose text-small text-ink-muted">
+      <p className="mt-3 max-w-prose text-body text-n700">
         {t("queue_explainer")}
       </p>
     </div>

@@ -27,7 +27,7 @@ export function QueueCard({
 
   return (
     <section className="ml-card mb-4 p-4 text-center">
-      <p className="text-small text-ink-muted">{entry.facility.name}</p>
+      <p className="text-body text-n700">{entry.facility.name}</p>
 
       {called ? (
         <p className="my-6 text-2xl font-semibold text-success">
@@ -35,12 +35,12 @@ export function QueueCard({
         </p>
       ) : (
         <>
-          <p className="mt-4 text-small text-ink-muted">{t("queue_you_are")}</p>
+          <p className="mt-4 text-body text-n700">{t("queue_you_are")}</p>
           {/* Readable at arm's length, across a room, by an elderly patient. */}
           <p className="text-[4rem] font-bold leading-none">{entry.position}</p>
 
           <div
-            className="mx-auto mt-4 h-2 w-full max-w-xs overflow-hidden rounded-full bg-surface-sunken"
+            className="mx-auto mt-4 h-2 w-full max-w-xs overflow-hidden rounded-full bg-n100"
             role="progressbar"
             aria-valuenow={Math.round(progress * 100)}
             aria-valuemin={0}
@@ -57,7 +57,7 @@ export function QueueCard({
         </>
       )}
 
-      <p className="mt-4 text-caption text-ink-subtle">
+      <p className="mt-4 text-label text-n600">
         {t("updated_ago", { ago: timeAgo(entry.as_of, lang) })}
       </p>
 
@@ -89,7 +89,7 @@ function EtaLine({ entry }: { entry: QueueEntryPublic }) {
 
   if (entry.eta_minutes === null || entry.eta_minutes === undefined) {
     return (
-      <p className="mt-4 text-small text-ink-muted">{t("queue_eta_unknown")}</p>
+      <p className="mt-4 text-body text-n700">{t("queue_eta_unknown")}</p>
     )
   }
 
@@ -118,7 +118,7 @@ function LeaveByLine({ entry }: { entry: QueueEntryPublic }) {
 
   if (!entry.leave_by) {
     return (
-      <p className="mt-2 text-caption text-ink-subtle">{t("queue_set_home")}</p>
+      <p className="mt-2 text-label text-n600">{t("queue_set_home")}</p>
     )
   }
 
@@ -127,7 +127,7 @@ function LeaveByLine({ entry }: { entry: QueueEntryPublic }) {
 
   if (leaveNow) {
     return (
-      <p className="mt-3 rounded-lg bg-amber-50 py-2 text-base font-semibold text-warning">
+      <p className="mt-3 rounded-md bg-accent/10 py-2 text-base font-semibold text-warning">
         {t("queue_leave_now")}
       </p>
     )

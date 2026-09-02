@@ -63,7 +63,7 @@ export function WorkspaceServices() {
   return (
     <div className="mx-auto w-full max-w-4xl">
       <h1 className="text-h2">Services</h1>
-      <p className="mt-1 text-small text-ink-muted">
+      <p className="mt-1 text-body text-n700">
         What patients find when they search for care near you.
       </p>
 
@@ -112,7 +112,7 @@ export function WorkspaceServices() {
           <section className="mt-8">
             <h2 className="text-h3 mb-3">Insurers listed</h2>
             {facility.insurers.length === 0 ? (
-              <p className="text-body text-ink-muted">
+              <p className="text-body-lg text-n700">
                 No insurers recorded. Patients filtering by insurance will not
                 find you.
               </p>
@@ -160,13 +160,13 @@ export function WorkspaceServices() {
 
 function ServiceRow({ service }: { service: ServiceBrief }) {
   return (
-    <li className="rounded-lg border border-line bg-surface p-4">
+    <li className="rounded-md border border-n200 bg-white p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <span className="text-body font-medium">{service.name_en}</span>
+        <span className="text-body-lg font-medium">{service.name_en}</span>
         <WaitLabel wait={service.wait} />
       </div>
 
-      <p className="mt-0.5 text-small text-ink-muted">{service.name_rw}</p>
+      <p className="mt-0.5 text-body text-n700">{service.name_rw}</p>
 
       {service.coverage.length > 0 && (
         <ul className="mt-3 flex flex-wrap gap-2">
@@ -192,13 +192,13 @@ function WaitLabel({ wait }: { wait: ServiceBrief["wait"] }) {
   // time - which is the useful thing to show them.
   if (wait.status === "available" && wait.minutes !== null) {
     return (
-      <span className="tabular-nums text-small text-ink-muted">
+      <span className="tabular-nums text-body text-n700">
         About {wait.minutes} min wait
       </span>
     )
   }
   return (
-    <span className="text-small text-ink-subtle">
+    <span className="text-body text-n600">
       {wait.status === "closed"
         ? "Closed"
         : wait.status === "insufficient_data"

@@ -66,7 +66,7 @@ export function PlatformSettings() {
       <div className="ml-section-head">
         <div>
           <h1 className="text-h2">Platform settings</h1>
-          <p className="mt-1 text-small text-ink-muted">
+          <p className="mt-1 text-body text-n700">
             Configuration that applies across every facility.
           </p>
         </div>
@@ -132,22 +132,22 @@ export function PlatformSettings() {
           {/* The half that matters. */}
           <section>
             <h2 className="text-h3">Fixed at deploy</h2>
-            <p className="mt-1 max-w-prose text-small text-ink-muted">
+            <p className="mt-1 max-w-prose text-body text-n700">
               These are shown so you can answer questions about them. They are
               deliberately not editable here — each is a decision that should
               take a release and a review, not a form.
             </p>
 
-            <dl className="mt-3 divide-y divide-line rounded-xl border border-line bg-surface">
+            <dl className="mt-3 divide-y divide-n200 rounded-lg border border-n200 bg-white">
               {data.fixed.map((item) => (
                 <div key={item.key} className="px-4 py-3">
                   <dt className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-small text-ink">
+                    <span className="font-mono text-body text-n900">
                       {item.key}
                     </span>
                     <Chip tone="neutral">{item.value}</Chip>
                   </dt>
-                  <dd className="mt-1 max-w-prose text-small text-ink-muted">
+                  <dd className="mt-1 max-w-prose text-body text-n700">
                     {item.why}
                   </dd>
                 </div>

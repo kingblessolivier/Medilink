@@ -29,7 +29,7 @@ export function LanguageToggle() {
         // The accessible name has to say what pressing it DOES - "RW" alone
         // tells a screen-reader user nothing about the outcome.
         aria-label={t("switch_language_to", { language: next.toUpperCase() })}
-        className="inline-flex h-touch items-center gap-1.5 rounded-lg border border-line bg-surface px-2.5 text-caption font-semibold uppercase text-ink-muted sm:hidden"
+        className="inline-flex h-touch items-center gap-1.5 rounded-md border border-n200 bg-white px-2.5 text-label uppercase text-n700 sm:hidden"
       >
         <IconGlobe size={16} />
         {lang}
@@ -37,7 +37,7 @@ export function LanguageToggle() {
 
       {/* Wide: all three, so the choice is visible rather than discovered. */}
       <div
-        className="hidden rounded-lg border border-line bg-surface-sunken p-0.5 sm:flex"
+        className="hidden rounded-md border border-n200 bg-n100 p-0.5 sm:flex"
         role="group"
         aria-label={t("language")}
       >
@@ -55,10 +55,10 @@ export function LanguageToggle() {
             // setting, and the selected segment only needs a surface lift.
             className={
               "inline-flex min-h-touch min-w-touch items-center justify-center " +
-              "rounded-md px-2.5 text-caption font-semibold uppercase transition-colors " +
+              "rounded-md px-2.5 text-label uppercase transition-colors " +
               (lang === code
-                ? "bg-surface text-ink shadow-sm"
-                : "text-ink-subtle hover:text-ink")
+                ? "bg-white text-n900 shadow-sm"
+                : "text-n600 hover:text-n900")
             }
           >
             {code}

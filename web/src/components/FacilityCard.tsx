@@ -53,13 +53,13 @@ export function FacilityCard({
       // heights across a row - which reads as misalignment, not as content.
       className={
         "flex h-full min-w-0 flex-col p-4 " +
-        (selected ? "border-primary-border bg-primary-subtle/40" : "")
+        (selected ? "border-primary/30 bg-primary-light/40" : "")
       }
     >
       <div className="flex items-start gap-3">
         {/* A fixed anchor at the top-left of every card. It is what makes a
             grid of these scan as a grid rather than as paragraphs. */}
-        <span className="ml-icon-plate bg-primary-subtle text-primary">
+        <span className="ml-icon-plate bg-primary-light text-primary">
           <IconHospital size={18} />
         </span>
 
@@ -78,7 +78,7 @@ export function FacilityCard({
               {facility.name}
             </Link>
           </h3>
-          <p className="mt-0.5 truncate text-small text-ink-muted">
+          <p className="mt-0.5 truncate text-body text-n700">
             {LEVEL_LABEL[facility.level] ?? facility.level}
             {facility.sector ? ` · ${facility.sector}` : ""}
           </p>
@@ -88,12 +88,12 @@ export function FacilityCard({
             and an empty slot reads as a value that failed to load. */}
         {distance && (
           // Distance is the single fact that orders these results and the
-          // one a patient scans down the column for. At text-small in muted
+          // one a patient scans down the column for. At text-body in muted
           // grey it sat below the facility type in visual weight and read as
           // metadata. Same position, full ink, tabular so the column does not
           // jitter between "800 m" and "2.8 km".
-          <span className="flex shrink-0 items-center gap-1 text-body font-semibold tabular-nums text-ink">
-            <IconPin size={14} className="text-ink-subtle" />
+          <span className="flex shrink-0 items-center gap-1 text-body-lg font-semibold tabular-nums text-n900">
+            <IconPin size={14} className="text-n600" />
             {distance}
           </span>
         )}

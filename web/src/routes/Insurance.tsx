@@ -75,7 +75,7 @@ export function Insurance() {
     <div className="ml-shell py-6 pb-24 md:pb-10">
       <header className="max-w-prose">
         <h1 className="text-h1">{t("insurance_title")}</h1>
-        <p className="mt-2 text-body text-ink-muted">
+        <p className="mt-2 text-body-lg text-n700">
           {t("insurance_intro")}
         </p>
       </header>
@@ -98,8 +98,8 @@ export function Insurance() {
               className={
                 "ml-btn ml-btn-sm " +
                 (active
-                  ? "bg-primary text-white hover:bg-primary-hover"
-                  : "border border-line-strong bg-surface text-ink hover:bg-surface-sunken")
+                  ? "bg-primary text-white hover:bg-primary-dark"
+                  : "border border-n300 bg-white text-n900 hover:bg-n100")
               }
             >
               {option.name}
@@ -124,7 +124,7 @@ export function Insurance() {
           </h2>
           {/* Says what the facility accepts. Never that this patient is
               covered - docs/11 section 7 rule 6. */}
-          <p className="mt-1 max-w-prose text-small text-ink-muted">
+          <p className="mt-1 max-w-prose text-body text-n700">
             {t("insurance_disclaimer")}
           </p>
 

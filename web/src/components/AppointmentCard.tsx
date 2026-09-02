@@ -19,7 +19,7 @@ export function AppointmentCard({
 
   return (
     <section className="ml-card mb-4 p-4">
-      <p className="text-small text-ink-muted">
+      <p className="text-body text-n700">
         {isToday
           ? t("appt_today_at", {
               time: start.toLocaleTimeString([], {
@@ -38,9 +38,9 @@ export function AppointmentCard({
 
       <h3 className="mt-1 text-h2">{appointment.facility.name}</h3>
 
-      <p className="mt-1 text-small text-ink-muted">
+      <p className="mt-1 text-body text-n700">
         {t("appt_reference")}:{" "}
-        <span className="font-mono font-medium text-ink">
+        <span className="font-mono font-medium text-n900">
           {appointment.reference}
         </span>
       </p>

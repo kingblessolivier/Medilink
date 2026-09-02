@@ -65,7 +65,7 @@ export function PlatformAccess() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-h2">Access</h1>
-          <p className="mt-1 text-small text-ink-muted">
+          <p className="mt-1 text-body text-n700">
             Who can read patient records, and who has been.
           </p>
         </div>
@@ -120,7 +120,7 @@ export function PlatformAccess() {
       {/* --------------------------------------------------- who can read */}
       <section className="ml-section">
         <h2 className="text-h3 mb-1">Who can read patient records</h2>
-        <p className="mb-4 max-w-prose text-small text-ink-muted">
+        <p className="mb-4 max-w-prose text-body text-n700">
           Each account below opens exactly one facility's patient data. A
           dormant account left active is a standing door.
         </p>
@@ -141,7 +141,7 @@ export function PlatformAccess() {
         )}
 
         {rows.length > 0 && (
-          <div className="ml-scroll-x rounded-xl border border-line bg-surface">
+          <div className="ml-scroll-x rounded-lg border border-n200 bg-white">
             <table className="ml-table">
               <thead>
                 <tr>
@@ -157,18 +157,18 @@ export function PlatformAccess() {
                 {rows.map((s) => (
                   <tr key={s.id}>
                     <td className="font-medium">{s.username}</td>
-                    <td className="text-ink-muted">{s.facility}</td>
-                    <td className="text-ink-muted">{ROLE[s.role] ?? s.role}</td>
+                    <td className="text-n700">{s.facility}</td>
+                    <td className="text-n700">{ROLE[s.role] ?? s.role}</td>
                     <td>
                       {s.can_manage_queue ? (
                         <Chip tone="neutral">Yes</Chip>
                       ) : (
-                        <span className="text-small text-ink-subtle">
+                        <span className="text-body text-n600">
                           Read only
                         </span>
                       )}
                     </td>
-                    <td className="tabular-nums text-ink-muted">
+                    <td className="tabular-nums text-n700">
                       {s.last_login
                         ? new Date(s.last_login).toLocaleDateString(undefined, {
                             day: "numeric",
@@ -195,7 +195,7 @@ export function PlatformAccess() {
       {/* --------------------------------------------------- who has read */}
       <section className="ml-section">
         <h2 className="text-h3 mb-1">Who has been reading them</h2>
-        <p className="mb-4 max-w-prose text-small text-ink-muted">
+        <p className="mb-4 max-w-prose text-body text-n700">
           Grouped by account. One &ldquo;viewed 20 records&rdquo; event is a
           queue board; forty of them from one account is something to ask
           about.
@@ -229,12 +229,12 @@ export function PlatformAccess() {
       {(log.data?.recent.length ?? 0) > 0 && (
         <section className="ml-section">
           <h2 className="text-h3 mb-1">Most recent</h2>
-          <p className="mb-4 text-small text-ink-muted">
+          <p className="mb-4 text-body text-n700">
             The latest {log.data!.recent.length} of {log.data!.total_events}{" "}
             events in this period. The grouped totals above are where a spike
             shows up; this is for checking what one was made of.
           </p>
-          <div className="ml-scroll-x rounded-xl border border-line bg-surface">
+          <div className="ml-scroll-x rounded-lg border border-n200 bg-white">
             <table className="ml-table">
               <thead>
                 <tr>
@@ -249,7 +249,7 @@ export function PlatformAccess() {
               <tbody>
                 {log.data!.recent.map((e) => (
                   <tr key={e.id}>
-                    <td className="whitespace-nowrap tabular-nums text-ink-muted">
+                    <td className="whitespace-nowrap tabular-nums text-n700">
                       {new Date(e.occurred_at).toLocaleString(undefined, {
                         day: "numeric",
                         month: "short",
@@ -258,10 +258,10 @@ export function PlatformAccess() {
                       })}
                     </td>
                     <td className="font-medium">{e.actor}</td>
-                    <td className="text-ink-muted">{e.action_label}</td>
-                    <td className="text-ink-muted">{e.facility}</td>
+                    <td className="text-n700">{e.action_label}</td>
+                    <td className="text-n700">{e.facility}</td>
                     <td className="tabular-nums">{e.record_count}</td>
-                    <td className="tabular-nums text-ink-subtle">
+                    <td className="tabular-nums text-n600">
                       {e.ip_address ?? "—"}
                     </td>
                   </tr>

@@ -28,14 +28,14 @@ export function DistrictPicker({
 
   return (
     <div className="ml-card p-4">
-      <p className="text-small text-ink">{message}</p>
+      <p className="text-body text-n900">{message}</p>
 
-      <p className="mt-3 text-small font-medium">{t("choose_district")}</p>
+      <p className="mt-3 text-body font-medium">{t("choose_district")}</p>
 
       {districts.length === 0 ? (
         // The list itself failed to load. Retrying the location is still a
         // way forward, so the button below is not the only thing on screen.
-        <p className="mt-2 text-small text-ink-muted">
+        <p className="mt-2 text-body text-n700">
           {t("districts_unavailable")}
         </p>
       ) : (

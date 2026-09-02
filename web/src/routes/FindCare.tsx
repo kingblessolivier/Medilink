@@ -152,7 +152,7 @@ export function FindCare() {
                 checked={openNow}
                 onChange={(e) => setParam("open", e.target.checked ? "1" : undefined)}
               />
-              <span className="text-body">{t("filter_open_now")}</span>
+              <span className="text-body-lg">{t("filter_open_now")}</span>
             </label>
           </div>
 
@@ -186,7 +186,7 @@ export function FindCare() {
             {/* Mobile only: the map is opt-in, never the default. */}
             <Button
               size="sm"
-              variant="tertiary"
+              variant="ghost"
               className="lg:hidden"
               onClick={() => setShowMap((v) => !v)}
             >
@@ -263,7 +263,7 @@ export function FindCare() {
         >
           <div className="h-[60vh] lg:h-full">
             {results.length > 0 ? (
-              <Suspense fallback={<Skeleton className="h-full w-full rounded-xl" />}>
+              <Suspense fallback={<Skeleton className="h-full w-full rounded-lg" />}>
                 <FacilityMap
                   facilities={results}
                   center={coords}
@@ -273,7 +273,7 @@ export function FindCare() {
               </Suspense>
             ) : (
               <div className="ml-card grid h-full place-items-center p-6 text-center">
-                <p className="text-body text-ink-muted">{t("map_needs_results")}</p>
+                <p className="text-body-lg text-n700">{t("map_needs_results")}</p>
               </div>
             )}
           </div>
@@ -283,7 +283,7 @@ export function FindCare() {
               {results
                 .filter((f) => f.slug === selected)
                 .map((facility) => (
-                  <div key={facility.id} className="shadow-overlay rounded-xl">
+                  <div key={facility.id} className="shadow-md rounded-lg">
                     <FacilityCard facility={facility} insurerName={insurerName} selected />
                   </div>
                 ))}
@@ -293,7 +293,7 @@ export function FindCare() {
       </div>
 
       {specialty && results.length > 0 && (
-        <p className="mt-4 text-small text-ink-muted">
+        <p className="mt-4 text-body text-n700">
           <Chip tone="info">{t("from_care_guide")}</Chip>
         </p>
       )}

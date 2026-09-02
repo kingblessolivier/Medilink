@@ -111,7 +111,7 @@ export function WorkspaceSettings({ canManage }: { canManage: boolean }) {
       <div className="ml-section-head">
         <div>
           <h1 className="text-h2">Facility settings</h1>
-          <p className="mt-1 text-small text-ink-muted">
+          <p className="mt-1 text-body text-n700">
             How patients reach this facility, and when it is open.
           </p>
         </div>
@@ -143,9 +143,9 @@ export function WorkspaceSettings({ canManage }: { canManage: boolean }) {
       {facility && (
         <div className="space-y-6">
           {/* What verification attests to. Read-only, and it says why. */}
-          <section className="rounded-lg border border-line bg-surface-sunken p-4">
+          <section className="rounded-md border border-n200 bg-n100 p-4">
             <h2 className="text-h3">{facility.name}</h2>
-            <p className="mt-1 text-small text-ink-muted">
+            <p className="mt-1 text-body text-n700">
               {facility.level} · {facility.ownership} · {facility.district}
               {facility.verified && (
                 <>
@@ -154,7 +154,7 @@ export function WorkspaceSettings({ canManage }: { canManage: boolean }) {
                 </>
               )}
             </p>
-            <p className="mt-3 text-small text-ink-muted">
+            <p className="mt-3 text-body text-n700">
               The name, type and location are part of what MediLink verified,
               so they are not editable here. Contact MediLink to change them.
             </p>
@@ -236,7 +236,7 @@ export function WorkspaceSettings({ canManage }: { canManage: boolean }) {
 
           <section>
             <h2 className="text-h3 mb-1">Opening hours</h2>
-            <p className="mb-3 text-small text-ink-muted">
+            <p className="mb-3 text-body text-n700">
               These decide whether patients see this facility as open, and
               whether it appears under &ldquo;open now&rdquo;. Add a second
               period on a day to show a lunch break.
@@ -259,13 +259,13 @@ export function WorkspaceSettings({ canManage }: { canManage: boolean }) {
                 return (
                   <div
                     key={label}
-                    className="flex flex-wrap items-center gap-3 border-b border-line py-2"
+                    className="flex flex-wrap items-center gap-3 border-b border-n200 py-2"
                   >
-                    <span className="w-24 shrink-0 text-body font-medium">
+                    <span className="w-24 shrink-0 text-body-lg font-medium">
                       {label}
                     </span>
                     {periods.length === 0 && (
-                      <span className="text-small text-ink-muted">Closed</span>
+                      <span className="text-body text-n700">Closed</span>
                     )}
                     {periods.map(({ row, index }) => (
                       <span key={index} className="flex items-center gap-1.5">
@@ -279,7 +279,7 @@ export function WorkspaceSettings({ canManage }: { canManage: boolean }) {
                             editPeriod(index, { opens_at: e.target.value })
                           }
                         />
-                        <span className="text-ink-muted">–</span>
+                        <span className="text-n700">–</span>
                         <TextInput
                           type="time"
                           aria-label={`${label} closes`}
@@ -294,7 +294,7 @@ export function WorkspaceSettings({ canManage }: { canManage: boolean }) {
                           <Button
                             type="button"
                             size="sm"
-                            variant="tertiary"
+                            variant="ghost"
                             onClick={() => removePeriod(index)}
                           >
                             Remove
@@ -306,7 +306,7 @@ export function WorkspaceSettings({ canManage }: { canManage: boolean }) {
                       <Button
                         type="button"
                         size="sm"
-                        variant="tertiary"
+                        variant="ghost"
                         onClick={() => addPeriod(weekday)}
                       >
                         {periods.length === 0 ? "Open this day" : "Add a period"}

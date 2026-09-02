@@ -170,7 +170,7 @@ export default function FacilityMap({
       ref={container}
       role="application"
       aria-label={t("map_label")}
-      className="h-full w-full rounded-xl border border-line bg-surface-sunken"
+      className="h-full w-full rounded-lg border border-n200 bg-n100"
     />
   )
 }

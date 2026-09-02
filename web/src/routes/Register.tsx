@@ -103,7 +103,7 @@ export function Register() {
   return (
     <div className="mx-auto w-full max-w-sm px-4 py-10">
       <h1 className="text-h1">{t("auth_create_account")}</h1>
-      <p className="mt-1 text-small text-ink-muted">{t("auth_register_subtitle")}</p>
+      <p className="mt-1 text-body text-n700">{t("auth_register_subtitle")}</p>
 
       <Card className="mt-6 p-4">
         {step === "details" ? (
@@ -161,14 +161,14 @@ export function Register() {
             )}
           </Field>
 
-          <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-line bg-surface-sunken/50 p-3">
+          <label className="flex cursor-pointer items-start gap-3 rounded-md border border-n200 bg-n100/50 p-3">
             <input
               type="checkbox"
               className="ml-checkbox mt-0.5"
               checked={consent}
               onChange={(e) => setConsent(e.target.checked)}
             />
-            <span className="text-small text-ink">
+            <span className="text-body text-n900">
               {t("auth_consent")}{" "}
               <Link to="/privacy" className="font-medium text-primary underline">
                 {t("auth_privacy_notice")}
@@ -177,7 +177,7 @@ export function Register() {
           </label>
 
           {error && (
-            <p role="alert" className="text-small text-danger">
+            <p role="alert" className="text-body text-danger">
               {error}
             </p>
           )}
@@ -190,9 +190,9 @@ export function Register() {
         <form onSubmit={submit} className="space-y-3">
           {/* The number is repeated back, because a typo here is why the code
               never arrives - and the fix is to go back, not to wait. */}
-          <p className="text-small text-ink-muted">
+          <p className="text-body text-n700">
             {t("auth_code_sent_to")}{" "}
-            <span className="font-medium text-ink">{form.phone.trim()}</span>
+            <span className="font-medium text-n900">{form.phone.trim()}</span>
           </p>
 
           <Field label={t("auth_code")} hint={t("auth_code_hint")}>
@@ -213,7 +213,7 @@ export function Register() {
           </Field>
 
           {error && (
-            <p role="alert" className="text-small text-danger">
+            <p role="alert" className="text-body text-danger">
               {error}
             </p>
           )}
@@ -228,7 +228,7 @@ export function Register() {
           <div className="flex justify-between gap-3">
             <button
               type="button"
-              className="text-small font-medium text-primary underline"
+              className="text-body font-medium text-primary underline"
               onClick={() => {
                 setStep("details")
                 setError(null)
@@ -238,7 +238,7 @@ export function Register() {
             </button>
             <button
               type="button"
-              className="text-small font-medium text-primary underline disabled:opacity-50"
+              className="text-body font-medium text-primary underline disabled:opacity-50"
               disabled={busy}
               onClick={() => sendCode()}
             >
@@ -249,7 +249,7 @@ export function Register() {
         )}
       </Card>
 
-      <p className="mt-4 text-center text-body">
+      <p className="mt-4 text-center text-body-lg">
         {t("auth_have_account")}{" "}
         <Link to="/sign-in" className="font-medium text-primary underline">
           {t("auth_sign_in")}

@@ -1,5 +1,16 @@
-/* Imports must precede all other rules. postcss-import inlines them. */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+/* Imports must precede all other rules. postcss-import inlines them.
+ *
+ * Order is load-bearing:
+ *   1. the font, so Inter is requested before anything paints
+ *   2. tokens.css, so every custom property exists before a utility reads one
+ *   3. base.css, whose @layer blocks Tailwind hoists into place
+ *
+ * Weights 800 and 900 are not optional extras: the type scale puts headings at
+ * 800 and the queue position at 900, and a missing weight is silently faked by
+ * the browser into a blurrier, wider approximation of the real face.
+ */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
+@import "./styles/tokens.css";
 @import "../../design/base.css";
 
 @tailwind base;

@@ -64,21 +64,21 @@ export function Notifications() {
 
         {preferences.isLoading && <ListSkeleton rows={1} />}
 
-        <Card className="divide-y divide-line">
+        <Card className="divide-y divide-n200">
           {preferences.data?.results.map((preference) => (
             <div
               key={preference.kind}
               className="flex items-center justify-between gap-4 px-4 py-3"
             >
               <span className="min-w-0">
-                <span className="block text-body">{preference.label}</span>
+                <span className="block text-body-lg">{preference.label}</span>
                 {!preference.can_disable && (
-                  <span className="block text-small text-ink-muted">
+                  <span className="block text-body text-n700">
                     {t("always_sent")}
                   </span>
                 )}
                 {preference.kind === "called" && preference.enabled && (
-                  <span className="block text-small text-warning">
+                  <span className="block text-body text-warning">
                     {t("called_off_warning")}
                   </span>
                 )}
@@ -114,7 +114,7 @@ export function Notifications() {
           </div>
         )}
 
-        <p className="mt-3 text-caption text-ink-subtle">
+        <p className="mt-3 text-label text-n600">
           {t("preferences_note")}
         </p>
       </section>
@@ -136,7 +136,7 @@ export function Notifications() {
                 <div className="flex items-baseline justify-between gap-3">
                   <Chip tone="neutral">{message.kind_label}</Chip>
                   <time
-                    className="shrink-0 text-caption text-ink-subtle"
+                    className="shrink-0 text-label text-n600"
                     dateTime={message.sent_at ?? undefined}
                   >
                     {message.sent_at
@@ -149,7 +149,7 @@ export function Notifications() {
                       : ""}
                   </time>
                 </div>
-                <p className="mt-2 text-body">{message.body}</p>
+                <p className="mt-2 text-body-lg">{message.body}</p>
               </Card>
             </li>
           ))}

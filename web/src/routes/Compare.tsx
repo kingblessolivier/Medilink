@@ -78,7 +78,7 @@ export function Compare() {
     <div className="ml-page py-6">
       <h1 className="mb-4 text-h1">{t("compare")}</h1>
 
-      {loading && <Skeleton className="h-64 w-full rounded-xl" />}
+      {loading && <Skeleton className="h-64 w-full rounded-lg" />}
 
       {!loading && failed > 0 && (
         <div className="mb-4">
@@ -106,12 +106,12 @@ export function Compare() {
                 </th>
                 {facilities.map((facility) => (
                   <th key={facility.slug} scope="col">
-                    <span className="block text-body font-semibold normal-case tracking-normal text-ink">
+                    <span className="block text-body-lg font-semibold normal-case tracking-normal text-n900">
                       {facility.name}
                     </span>
                     <button
                       onClick={() => remove(facility.slug)}
-                      className="mt-1 text-caption font-medium normal-case text-primary underline"
+                      className="mt-1 text-label normal-case text-primary underline"
                     >
                       {t("remove")}
                     </button>
@@ -153,7 +153,7 @@ export function Compare() {
                               })}
                         </Chip>
                       ) : (
-                        <span className="text-small text-ink-muted">
+                        <span className="text-body text-n700">
                           {f.insurers.map((i) => i.name).join(", ") || "-"}
                         </span>
                       )}
@@ -164,7 +164,7 @@ export function Compare() {
 
               <Row label={t("services_offered")}>
                 {facilities.map((f) => (
-                  <td key={f.slug} className="text-small text-ink-muted">
+                  <td key={f.slug} className="text-body text-n700">
                     {f.services.slice(0, 4).map(label).join(", ")}
                     {f.services.length > 4 &&
                       ` +${f.services.length - 4}`}
@@ -174,7 +174,7 @@ export function Compare() {
 
               <Row label={t("compare_district")}>
                 {facilities.map((f) => (
-                  <td key={f.slug} className="text-small text-ink-muted">
+                  <td key={f.slug} className="text-body text-n700">
                     {f.sector ? `${f.sector}, ` : ""}
                     {f.district}
                   </td>
@@ -195,7 +195,7 @@ export function Compare() {
                         href={f.directions_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="ml-btn-tertiary ml-btn-sm"
+                        className="ml-btn-ghost ml-btn-sm"
                       >
                         {t("directions")}
                       </a>
@@ -209,7 +209,7 @@ export function Compare() {
       )}
 
       {slugs.length < MAX && (
-        <p className="mt-4 text-small text-ink-muted">
+        <p className="mt-4 text-body text-n700">
           {t("compare_add_more", { n: MAX - slugs.length })}{" "}
           <Link to="/search" className="font-medium text-primary underline">
             {t("find_care")}
@@ -219,7 +219,7 @@ export function Compare() {
 
       <div className="mt-4">
         <Button
-          variant="tertiary"
+          variant="ghost"
           size="sm"
           onClick={() => setParams(new URLSearchParams(), { replace: true })}
         >

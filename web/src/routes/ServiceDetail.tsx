@@ -60,14 +60,14 @@ export function ServiceDetail() {
 
   return (
     <div className="ml-page py-6 pb-24 md:pb-10">
-      <Link to="/search" className="text-small font-medium text-primary">
+      <Link to="/search" className="text-body font-medium text-primary">
         {t("back")}
       </Link>
 
       <h1 className="mt-2 text-h1">{name}</h1>
 
       {specialties.length > 0 && (
-        <p className="mt-1.5 max-w-prose text-body text-ink-muted">
+        <p className="mt-1.5 max-w-prose text-body-lg text-n700">
           {t("service_delivered_by", {
             specialties: specialties
               .map((s) =>
@@ -95,7 +95,7 @@ export function ServiceDetail() {
           {results.length > 3 && (
             <Link
               to={`/search?service=${code}`}
-              className="text-small font-medium text-primary"
+              className="text-body font-medium text-primary"
             >
               {t("see_all")}
             </Link>

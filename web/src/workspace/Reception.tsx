@@ -54,11 +54,11 @@ export function Reception({
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-h2">Reception</h1>
-          <p className="mt-1 text-small text-ink-muted">
+          <p className="mt-1 text-body text-n700">
             {me?.facility?.name ?? ""}
           </p>
         </div>
-        <p className="text-small tabular-nums text-ink-muted">
+        <p className="text-body tabular-nums text-n700">
           {new Date().toLocaleDateString(undefined, {
             weekday: "long",
             day: "numeric",
@@ -73,7 +73,7 @@ export function Reception({
           the queue - a definite claim about someone's permissions, made
           before we knew any of them. Say nothing until we do. */}
       {meQuery.isLoading ? (
-        <div className="ml-card h-[7.5rem] animate-pulse bg-surface-sunken" />
+        <div className="ml-card h-[7.5rem] animate-pulse bg-n100" />
       ) : me?.can_manage_queue ? (
         <CheckInForm services={me.services ?? []} onCheckIn={actions.checkIn} />
       ) : (
@@ -96,7 +96,7 @@ export function Reception({
       {actions.pendingCount > 0 && (
         <div
           role="status"
-          className="mt-3 flex items-center gap-2.5 rounded-lg border border-warning-border bg-warning-subtle p-3 text-small text-warning"
+          className="mt-3 flex items-center gap-2.5 rounded-md border border-warning/30 bg-warning/10 p-3 text-body text-warning"
         >
           <IconClock size={16} className="shrink-0" />
           <span>
@@ -117,7 +117,7 @@ export function Reception({
       {actions.lastError && (
         <div
           role="alert"
-          className="mt-3 flex items-start justify-between gap-3 rounded-lg border border-danger-border bg-danger-subtle p-3 text-small text-danger"
+          className="mt-3 flex items-start justify-between gap-3 rounded-md border border-danger/30 bg-danger/10 p-3 text-body text-danger"
         >
           <span>{actions.lastError}</span>
           <button className="shrink-0 underline" onClick={actions.clearError}>
@@ -129,12 +129,12 @@ export function Reception({
       <div className="mb-3 mt-8 flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-h3">
           Queue
-          <span className="ml-2 font-normal text-ink-muted">
+          <span className="ml-2 font-normal text-n700">
             <span className="tabular-nums">{totalWaiting}</span> waiting
           </span>
         </h2>
         {board.data && (
-          <span className="text-caption tabular-nums text-ink-subtle">
+          <span className="text-label tabular-nums text-n600">
             updated{" "}
             {new Date(board.data.as_of).toLocaleTimeString([], {
               hour: "2-digit",
@@ -145,7 +145,7 @@ export function Reception({
       </div>
 
       {board.isLoading && (
-        <p className="text-small text-ink-muted">Loading...</p>
+        <p className="text-body text-n700">Loading...</p>
       )}
 
       {!actions.online && (

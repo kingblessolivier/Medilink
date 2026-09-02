@@ -58,7 +58,7 @@ export function DoctorProfile() {
 
   return (
     <div className="ml-page py-6 pb-24 md:pb-10">
-      <Link to="/doctors" className="text-small font-medium text-primary">
+      <Link to="/doctors" className="text-body font-medium text-primary">
         {t("back")}
       </Link>
 
@@ -67,7 +67,7 @@ export function DoctorProfile() {
         <div className="min-w-0 flex-1">
           <h1 className="text-h1">{data.display_name}</h1>
           {data.specialties.length > 0 && (
-            <p className="mt-1 text-body-lg text-ink-muted">
+            <p className="mt-1 text-body-lg text-n700">
               {specialtyNames(data.specialties, lang)}
             </p>
           )}
@@ -95,7 +95,7 @@ export function DoctorProfile() {
       {data.bio_en && (
         <section className="ml-section">
           <h2 className="text-h3 mb-2">{t("about")}</h2>
-          <p className="max-w-prose text-body text-ink-muted">{data.bio_en}</p>
+          <p className="max-w-prose text-body-lg text-n700">{data.bio_en}</p>
         </section>
       )}
 
@@ -103,7 +103,7 @@ export function DoctorProfile() {
         <h2 className="text-h3 mb-3">{t("practises_at")}</h2>
 
         {data.placements.length === 0 ? (
-          <p className="text-body text-ink-muted">{t("no_placements")}</p>
+          <p className="text-body-lg text-n700">{t("no_placements")}</p>
         ) : (
           <div className="space-y-3">
             {data.placements.map((placement) => (
@@ -118,7 +118,7 @@ export function DoctorProfile() {
                         {placement.facility_name}
                       </Link>
                     </h3>
-                    <p className="mt-0.5 text-small text-ink-muted">
+                    <p className="mt-0.5 text-body text-n700">
                       {placement.district}
                       {placement.role_title ? ` · ${placement.role_title}` : ""}
                     </p>
@@ -137,7 +137,7 @@ export function DoctorProfile() {
                       <Link
                         key={service}
                         to={`/service/${service}`}
-                        className="ml-chip-neutral hover:border-line-strong"
+                        className="ml-chip-neutral hover:border-n300"
                       >
                         {service.replace(/_/g, " ")}
                       </Link>
@@ -159,14 +159,14 @@ function Avatar({ doctor }: { doctor: Provider }) {
       <img
         src={doctor.photo_url}
         alt=""
-        className="h-20 w-20 shrink-0 rounded-full border border-line object-cover"
+        className="h-20 w-20 shrink-0 rounded-full border border-n200 object-cover"
       />
     )
   }
   return (
     <span
       aria-hidden="true"
-      className="grid h-20 w-20 shrink-0 place-items-center rounded-full border border-primary-border bg-primary-subtle text-h1 font-semibold text-primary"
+      className="grid h-20 w-20 shrink-0 place-items-center rounded-full border border-primary/30 bg-primary-light text-h1 text-primary"
     >
       {doctor.initials}
     </span>

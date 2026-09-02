@@ -70,7 +70,7 @@ export function WorkspaceInsurance({ canManage }: { canManage: boolean }) {
       <div className="ml-section-head">
         <div>
           <h1 className="text-h2">Insurance</h1>
-          <p className="mt-1 text-small text-ink-muted">
+          <p className="mt-1 text-body text-n700">
             What this facility accepts at its counter. Patients see this as
             &ldquo;Accepts Mutuelle&rdquo; &mdash; never as confirmation that
             they personally are covered.
@@ -146,11 +146,11 @@ function InsurerBlock({
   onCoverage: (service: string, coverage: CoverageLevel) => void
 }) {
   return (
-    <section className="rounded-lg border border-line bg-surface">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
+    <section className="rounded-md border border-n200 bg-white">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-n200 px-4 py-3">
         <div className="min-w-0">
           <h2 className="text-h3">{insurer.name}</h2>
-          <p className="mt-0.5 text-small text-ink-muted">
+          <p className="mt-0.5 text-body text-n700">
             {insurer.accepted
               ? "Accepted at this facility"
               : "Not accepted here"}
@@ -226,7 +226,7 @@ function InsurerBlock({
       )}
 
       {insurer.accepted && insurer.services.length === 0 && (
-        <p className="px-4 py-3 text-small text-ink-muted">
+        <p className="px-4 py-3 text-body text-n700">
           Add services to this facility before setting what this insurer
           covers.
         </p>

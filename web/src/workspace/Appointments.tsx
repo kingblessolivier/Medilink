@@ -78,7 +78,7 @@ export function WorkspaceAppointments({ canManage }: { canManage: boolean }) {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-h2">Appointments</h1>
-          <p className="mt-1 text-small text-ink-muted">
+          <p className="mt-1 text-body text-n700">
             {query.isLoading
               ? " "
               : `${rows.length} booked · ${expected} still expected`}
@@ -104,7 +104,7 @@ export function WorkspaceAppointments({ canManage }: { canManage: boolean }) {
         </div>
       </div>
 
-      <label className="mt-3 flex items-center gap-2 text-small text-ink-muted">
+      <label className="mt-3 flex items-center gap-2 text-body text-n700">
         <input
           type="checkbox"
           className="ml-checkbox"
@@ -149,7 +149,7 @@ export function WorkspaceAppointments({ canManage }: { canManage: boolean }) {
         )}
 
         {rows.length > 0 && (
-          <div className="ml-scroll-x rounded-lg border border-line bg-surface">
+          <div className="ml-scroll-x rounded-md border border-n200 bg-white">
             <table className="ml-table">
               <thead>
                 <tr>
@@ -215,21 +215,21 @@ function Row({
         {row.patient_phone ? (
           // A link, not text: on a desk phone or a tablet this is one tap.
           <a
-            className="text-small tabular-nums text-ink-muted underline"
+            className="text-body tabular-nums text-n700 underline"
             href={`tel:${row.patient_phone}`}
           >
             {row.patient_phone}
           </a>
         ) : (
-          <span className="text-small text-ink-subtle">
+          <span className="text-body text-n600">
             Record removed at the patient's request
           </span>
         )}
       </td>
 
       <td>{row.service}</td>
-      <td className="text-ink-muted">{row.provider ?? "—"}</td>
-      <td className="text-ink-muted">
+      <td className="text-n700">{row.provider ?? "—"}</td>
+      <td className="text-n700">
         {VIA_LABEL[row.booked_via] ?? row.booked_via}
       </td>
 
@@ -264,7 +264,7 @@ function Row({
               )}
               {row.status === "no_show" ? (
                 <button
-                  className="ml-btn-tertiary ml-btn-sm"
+                  className="ml-btn-ghost ml-btn-sm"
                   disabled={busy}
                   onClick={() => onSet("arrived")}
                 >
@@ -272,7 +272,7 @@ function Row({
                 </button>
               ) : (
                 <button
-                  className="ml-btn-tertiary ml-btn-sm"
+                  className="ml-btn-ghost ml-btn-sm"
                   disabled={busy}
                   onClick={() => onSet("no_show")}
                 >

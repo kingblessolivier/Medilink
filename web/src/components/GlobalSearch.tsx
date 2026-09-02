@@ -142,7 +142,7 @@ export function GlobalSearch({
           className="ml-field h-12 pl-4 pr-10 text-body-lg"
         />
         {query.isFetching && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-subtle">
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-n600">
             <Spinner />
           </span>
         )}
@@ -158,14 +158,14 @@ export function GlobalSearch({
           id={listId}
           role="listbox"
           aria-label={t("search_placeholder")}
-          className="absolute inset-x-0 top-full z-30 mt-1 max-h-96 overflow-auto rounded-xl border border-line bg-surface py-1 shadow-overlay"
+          className="absolute inset-x-0 top-full z-30 mt-1 max-h-96 overflow-auto rounded-lg border border-n200 bg-white py-1 shadow-md"
         >
           {query.isLoading && (
-            <p className="px-4 py-3 text-small text-ink-muted">{t("loading")}</p>
+            <p className="px-4 py-3 text-body text-n700">{t("loading")}</p>
           )}
 
           {query.data && flat.length === 0 && (
-            <p className="px-4 py-3 text-small text-ink-muted">
+            <p className="px-4 py-3 text-body text-n700">
               {t("search_no_matches", { term: debounced })}
             </p>
           )}
@@ -192,22 +192,22 @@ export function GlobalSearch({
                     onClick={() => go(result)}
                     className={
                       "flex w-full items-baseline justify-between gap-3 px-4 py-2 text-left transition-colors " +
-                      (position === active ? "bg-primary-subtle" : "") +
+                      (position === active ? "bg-primary-light" : "") +
                       (result.routable ? "" : " opacity-50")
                     }
                   >
                     <span className="min-w-0">
-                      <span className="block truncate text-body text-ink">
+                      <span className="block truncate text-body-lg text-n900">
                         {label(result)}
                       </span>
                       {result.sublabel && (
-                        <span className="block truncate text-small text-ink-muted">
+                        <span className="block truncate text-body text-n700">
                           {result.sublabel}
                         </span>
                       )}
                     </span>
                     {typeof result.distance_m === "number" && (
-                      <span className="shrink-0 text-small text-ink-muted">
+                      <span className="shrink-0 text-body text-n700">
                         {formatDistance(result.distance_m, t("distance_nearby"))}
                       </span>
                     )}

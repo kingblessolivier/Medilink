@@ -35,7 +35,7 @@ export function Profile() {
         {/* Every page states where it is. Without an h1 a screen-reader user
             has nothing to jump to and no idea which screen they landed on. */}
         <h1 className="mb-2 text-h1">{t("profile_title")}</h1>
-        <p className="mb-4 text-small text-ink-muted">{t("auth_prompt")}</p>
+        <p className="mb-4 text-body text-n700">{t("auth_prompt")}</p>
         <Link to={`/sign-in?next=${encodeURIComponent("/profile")}`} className="ml-btn-primary w-full">
           {t("auth_sign_in")}
         </Link>
@@ -53,14 +53,14 @@ export function Profile() {
           in this product - it is what USSD, WhatsApp and every SMS key on -
           so it gets stated rather than tucked into a line of body text. */}
       <div className="ml-card mb-4 flex items-center gap-3 p-4">
-        <span className="ml-icon-plate h-11 w-11 bg-primary-subtle text-primary">
+        <span className="ml-icon-plate h-11 w-11 bg-primary-light text-primary">
           <IconUser size={20} />
         </span>
         <div className="min-w-0">
-          <p className="truncate text-body font-medium">
+          <p className="truncate text-body-lg font-medium">
             {patient.full_name || t("profile_no_name")}
           </p>
-          <p className="truncate text-small tabular-nums text-ink-muted">
+          <p className="truncate text-body tabular-nums text-n700">
             {patient.phone}
           </p>
         </div>
@@ -70,7 +70,7 @@ export function Profile() {
       <div className="ml-card space-y-4 p-4">
 
         <label className="block">
-          <span className="mb-1 block text-small text-ink-muted">
+          <span className="mb-1 block text-body text-n700">
             {t("profile_name")}
           </span>
           <input
@@ -81,7 +81,7 @@ export function Profile() {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-small text-ink-muted">
+          <span className="mb-1 block text-body text-n700">
             {t("your_cover")}
           </span>
           <select
@@ -99,7 +99,7 @@ export function Profile() {
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-small text-ink-muted">
+          <span className="mb-1 block text-body text-n700">
             {t("profile_language")}
           </span>
           <select
@@ -123,9 +123,9 @@ export function Profile() {
       {/* Opt-in, and the only thing that makes "leave home by" possible. */}
       <h2 className="text-h3 mb-2 mt-6">{t("profile_home_title")}</h2>
       <div className="ml-card p-4">
-        <p className="text-small font-medium">{t("profile_home_title")}</p>
-        <p className="mt-1 text-small text-ink-muted">{t("profile_home_why")}</p>
-        <p className="mt-2 text-small">
+        <p className="text-body font-medium">{t("profile_home_title")}</p>
+        <p className="mt-1 text-body text-n700">{t("profile_home_why")}</p>
+        <p className="mt-2 text-body">
           {patient.home_location ? t("profile_home_set") : t("profile_home_unset")}
         </p>
         <button
@@ -143,7 +143,7 @@ export function Profile() {
         </button>
         {patient.home_location && (
           <button
-            className="mt-2 w-full py-2 text-small text-ink-muted"
+            className="mt-2 w-full py-2 text-body text-n700"
             onClick={() => save.mutate({ home_location: null })}
           >
             {t("profile_home_clear")}
@@ -152,7 +152,7 @@ export function Profile() {
       </div>
 
       {saved && (
-        <p role="status" className="mt-3 text-center text-small text-success">
+        <p role="status" className="mt-3 text-center text-body text-success">
           {t("profile_saved")}
         </p>
       )}
@@ -180,7 +180,7 @@ export function Profile() {
           location" directly above it, and leaving is not a neighbouring
           choice to setting a preference. */}
       <button
-        className="ml-btn-tertiary mt-8 text-ink-muted hover:text-danger"
+        className="ml-btn-ghost mt-8 text-n700 hover:text-danger"
         onClick={signOut}
       >
         {t("auth_sign_out")}

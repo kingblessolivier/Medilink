@@ -38,7 +38,7 @@ export function WorkspaceReports() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-h2">Reports</h1>
-          <p className="mt-1 text-small text-ink-muted">
+          <p className="mt-1 text-body text-n700">
             Measured from your own check-ins. Nothing here is estimated.
           </p>
         </div>
@@ -149,7 +149,7 @@ function Body({ report }: { report: FacilityReport }) {
       <section className="mt-8">
         <h2 className="text-h3 mb-3">Busiest services</h2>
         {report.demand.length === 0 ? (
-          <p className="text-body text-ink-muted">
+          <p className="text-body-lg text-n700">
             No check-ins recorded in this period.
           </p>
         ) : (
@@ -157,7 +157,7 @@ function Body({ report }: { report: FacilityReport }) {
         )}
       </section>
 
-      <p className="mt-8 text-caption text-ink-subtle">
+      <p className="mt-8 text-label text-n600">
         As of{" "}
         {new Date(report.as_of).toLocaleString([], {
           day: "numeric",

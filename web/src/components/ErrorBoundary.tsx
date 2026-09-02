@@ -82,8 +82,8 @@ function ErrorScreen({
       role="alert"
       className="mx-auto w-full max-w-sm px-4 py-16 text-center"
     >
-      <h1 className="text-h2 text-ink">{t("error_screen_title")}</h1>
-      <p className="mt-2 text-body text-ink-muted">{t("error_screen_body")}</p>
+      <h1 className="text-h2 text-n900">{t("error_screen_title")}</h1>
+      <p className="mt-2 text-body-lg text-n700">{t("error_screen_body")}</p>
 
       <div className="mt-6 flex flex-col gap-3">
         {/* Re-mounts the subtree rather than reloading the page: a reload

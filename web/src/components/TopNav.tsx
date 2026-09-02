@@ -112,25 +112,25 @@ export function TopNav({
   const items = itemsFor(session, pathname, t)
 
   return (
-    <header ref={barRef} className="sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80">
+    <header ref={barRef} className="sticky top-0 z-30 border-b border-n200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
       <div className="ml-shell flex items-center gap-4 py-3">
         {/* The home link was 68x16 - the wordmark's own text box. It is on
             every screen and it is how you get back, so it gets a real target
             rather than the height of a caption. */}
         <Link
           to={homeFor(session)}
-          className="flex min-h-touch shrink-0 flex-col justify-center rounded-md px-1 -mx-1 hover:bg-surface-sunken"
+          className="flex min-h-touch shrink-0 flex-col justify-center rounded-md px-1 -mx-1 hover:bg-n100"
         >
-          <span className="block text-caption font-semibold uppercase tracking-widest text-primary">
+          <span className="block text-label uppercase tracking-widest text-primary">
             MediLink
           </span>
           {session?.facility && (
-            <span className="block max-w-[14rem] truncate text-small text-ink-muted">
+            <span className="block max-w-[14rem] truncate text-body text-n700">
               {session.facility.name}
             </span>
           )}
           {session?.kind === "admin" && (
-            <span className="block text-small text-ink-muted">
+            <span className="block text-body text-n700">
               {t("nav_platform")}
             </span>
           )}
@@ -161,11 +161,11 @@ export function TopNav({
                   // in button it sat beside. The underline is the quieter
                   // convention and leaves the bar visually light.
                   className={({ isActive }) =>
-                    "relative flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-body transition-colors " +
+                    "relative flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-body-lg transition-colors " +
                     "after:absolute after:inset-x-3 after:-bottom-px after:h-0.5 after:rounded-full after:transition-colors " +
                     (isActive
-                      ? "font-medium text-ink after:bg-primary"
-                      : "text-ink-muted after:bg-transparent hover:text-ink")
+                      ? "font-medium text-n900 after:bg-primary"
+                      : "text-n700 after:bg-transparent hover:text-n900")
                   }
                 >
                   {/* Same glyphs as the bottom tab bar, so moving between a
@@ -184,8 +184,8 @@ export function TopNav({
 
           {session ? (
             <>
-              <span className="hidden max-w-[10rem] items-center gap-1.5 truncate text-small text-ink-muted sm:flex">
-                <IconUser size={15} className="shrink-0 text-ink-subtle" />
+              <span className="hidden max-w-[10rem] items-center gap-1.5 truncate text-body text-n700 sm:flex">
+                <IconUser size={15} className="shrink-0 text-n600" />
                 <span className="truncate">{session.display_name}</span>
               </span>
               <button
