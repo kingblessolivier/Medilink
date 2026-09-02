@@ -257,6 +257,20 @@
 </style>
 </head>
 <body>
+<div style="background:#FBEDEB;border:2px solid #D93025;border-radius:12px;padding:20px 24px;margin:24px auto;max-width:1100px;font-family:Inter,system-ui,sans-serif">
+<p style="margin:0 0 10px;font-weight:800;font-size:16px;color:#D93025">STATUS CORRECTION - audited 2026-09-02</p>
+<p style="margin:0 0 10px;font-size:14px;line-height:1.6;color:#2D3748">This document's assessment of the <strong>current state</strong> is out of date, and reading it as a description of the repository will send you looking for problems that were solved weeks ago. The plan, the token tables and the component specifications are still good; the "what exists today" parts are not.</p>
+<p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#2D3748">Specifically, all of the following are wrong:</p>
+<ul style="margin:0 0 10px;padding-left:20px;font-size:14px;line-height:1.7;color:#2D3748">
+<li><code>web-patient</code> and <code>web-provider</code> do not exist. There is <strong>one</strong> app at <code>web/</code> serving three surfaces - <code>/</code>, <code>/workspace</code>, <code>/platform</code> - consolidated on 2026-08-21.</li>
+<li><code>web-provider</code> is not an empty folder. The facility workspace is built: reception, queue management, appointments, schedule, doctors, services, insurance, reports, settings.</li>
+<li>Authentication exists - JWT via <code>simplejwt</code>, phone OTP, registration, sessions.</li>
+<li>The queue and booking APIs exist and are wired to the UI.</li>
+<li>Design tokens are not hardcoded. <code>web/src/styles/tokens.css</code> is the single source, and the Tailwind preset contains no literal values.</li>
+</ul>
+<p style="margin:0;font-size:14px;line-height:1.6;color:#2D3748">Two figures in the token table were also taken from this file's own <code>:root</code> block, which styles <em>this document</em> rather than describing the product. The specification is the token <strong>table</strong>: <code>--n900</code> is <code>#1A1A2E</code>, and there is no <code>--n800</code>.<br>For what is actually built, see <a href="12-production-readiness.md">12-production-readiness.md</a> and the changelog in <a href="11-redesign-roadmap.md">11-redesign-roadmap.md</a>.</p>
+</div>
+
 
 <!-- ══════════════════════════════════════════════
      COVER
