@@ -1,9 +1,11 @@
 import { useEffect, useRef } from "react"
 import { Link, NavLink, useLocation } from "react-router-dom"
 import { useI18n } from "../i18n"
+import { useTriageStatus } from "../hooks/useTriageStatus"
 import { LanguageToggle } from "./LanguageToggle"
 import {
   IconCalendar,
+  IconHeart,
   IconHospital,
   IconSearch,
   IconShield,
@@ -57,21 +59,33 @@ function itemsFor(
   session: Session | null,
   pathname: string,
   t: (k: string) => string,
+  careGuideAvailable: boolean,
 ): NavItem[] {
   switch (session?.kind) {
     case "staff":
     case "admin":
-      return onDashboard(pathname) ? [] : patientItems(t)
+      return onDashboard(pathname) ? [] : patientItems(t, careGuideAvailable)
     default:
-      return patientItems(t)
+      return patientItems(t, careGuideAvailable)
   }
 }
 
-function patientItems(t: (k: string) => string): NavItem[] {
+/**
+ * The third link mirrors the bottom bar: the Care Guide takes it when the
+ * clinician gate is open, Doctors holds it when it is shut. See BottomNav for
+ * why, and note that the two lists have to agree - a link that exists on a
+ * phone and not on a desktop is how a feature quietly becomes unreachable.
+ */
+function patientItems(
+  t: (k: string) => string,
+  careGuideAvailable: boolean,
+): NavItem[] {
   return [
     { to: "/", label: t("nav_home"), icon: IconHospital, end: true },
     { to: "/search", label: t("nav_facilities"), icon: IconSearch },
-    { to: "/doctors", label: t("nav_doctors"), icon: IconStethoscope },
+    careGuideAvailable
+      ? { to: "/care-guide", label: t("care_guide"), icon: IconHeart }
+      : { to: "/doctors", label: t("nav_doctors"), icon: IconStethoscope },
     { to: "/insurance", label: t("nav_insurance"), icon: IconShield },
     { to: "/visits", label: t("nav_visits"), icon: IconCalendar },
   ]
@@ -109,7 +123,8 @@ export function TopNav({
     return () => observer.disconnect()
   }, [])
   const { pathname } = useLocation()
-  const items = itemsFor(session, pathname, t)
+  const { available: careGuideAvailable } = useTriageStatus()
+  const items = itemsFor(session, pathname, t, careGuideAvailable)
 
   return (
     <header ref={barRef} className="sticky top-0 z-30 border-b border-n200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
