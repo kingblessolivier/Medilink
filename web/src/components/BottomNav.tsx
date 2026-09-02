@@ -1,12 +1,10 @@
 import { NavLink } from "react-router-dom"
 import { useI18n } from "../i18n"
-import { useTriageStatus } from "../hooks/useTriageStatus"
 import {
   IconCalendar,
   IconHeart,
   IconHospital,
   IconSearch,
-  IconStethoscope,
   IconUser,
 } from "../ui/icons"
 
@@ -36,40 +34,38 @@ import {
  * menu somebody has to read.
  */
 /**
- * The third tab is the one that changes.
+ * The third tab is the Care Guide, unconditionally.
  *
  * Browsing every doctor in Kigali is a weak thing for a patient to do: a
  * doctor is only reachable through the facility they practise at, and someone
  * who feels unwell does not know which doctor they need. Symptom-first
- * routing answers the question they actually have, so the Care Guide takes
- * this slot whenever it is available.
+ * routing answers the question they actually have, so it gets the tab.
  *
- * It is NOT simply swapped in. `/triage/status` is the authority, and it
- * reports unavailable until a named clinician has signed off a protocol -
- * offering a tab that leads to "not available yet" would be worse than the
- * doctor list it replaced. So the list falls back to Doctors while the gate
- * is shut, and the swap happens on its own the moment it opens, with no
- * deploy.
+ * This deliberately does NOT consult `/triage/status`. While the clinician
+ * gate is shut the tab lands on the Care Guide's unavailable screen, which
+ * says plainly that it is awaiting sign-off and offers facility search and
+ * the doctor list as the ways on. That was a product decision taken with the
+ * trade-off understood: the tab reflects where the product is going, and the
+ * landing screen is honest about where it is today.
  *
- * Doctors do not disappear either way: each facility page carries its own
- * doctors tab, which is where that relationship actually lives.
+ * The gate itself is untouched and still absolute - `/triage/status` governs
+ * whether the flow can START, and no question is ever asked without a
+ * clinician's sign-off. This changes navigation, not safety.
+ *
+ * Doctors remain reachable from the site footer on every page, from the Home
+ * doctors section, and from each facility page - which is where that
+ * relationship actually lives.
  */
-function tabsFor(careGuideAvailable: boolean) {
-  return [
-    { to: "/", key: "tab_home", Glyph: IconHospital, end: true },
-    { to: "/search", key: "tab_facilities", Glyph: IconSearch },
-    careGuideAvailable
-      ? { to: "/care-guide", key: "tab_care_guide", Glyph: IconHeart }
-      : { to: "/doctors", key: "tab_doctors", Glyph: IconStethoscope },
-    { to: "/visits", key: "tab_visits", Glyph: IconCalendar },
-    { to: "/profile", key: "tab_profile", Glyph: IconUser },
-  ] as const
-}
+const TABS = [
+  { to: "/", key: "tab_home", Glyph: IconHospital, end: true },
+  { to: "/search", key: "tab_facilities", Glyph: IconSearch },
+  { to: "/care-guide", key: "tab_care_guide", Glyph: IconHeart },
+  { to: "/visits", key: "tab_visits", Glyph: IconCalendar },
+  { to: "/profile", key: "tab_profile", Glyph: IconUser },
+] as const
 
 export function BottomNav() {
   const { t } = useI18n()
-  const { available } = useTriageStatus()
-  const TABS = tabsFor(available)
 
   return (
     /* Hidden from `md` up. A thumb reaches the bottom of a phone; on a

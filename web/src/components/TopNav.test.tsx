@@ -43,7 +43,7 @@ function renderNav(current: Session | null, path: string) {
   )
 }
 
-const PATIENT_LINKS = ["Home", "Facilities", "Doctors", "Insurance", "Visits"]
+const PATIENT_LINKS = ["Home", "Facilities", "Care Guide", "Insurance", "Visits"]
 
 describe("patient routes always carry navigation", () => {
   it.each([
@@ -65,7 +65,7 @@ describe("patient routes always carry navigation", () => {
     "shows them to an admin on %s too",
     (path) => {
       renderNav(session("admin"), path)
-      expect(screen.getByRole("link", { name: /^Doctors$/ })).toBeInTheDocument()
+      expect(screen.getByRole("link", { name: /^Care Guide$/ })).toBeInTheDocument()
     },
   )
 })
@@ -77,7 +77,7 @@ describe("dashboard surfaces defer to their own sidebar", () => {
       renderNav(session("admin"), path)
       // Duplicating the sidebar here is what previously forced an empty
       // hamburger menu onto the dashboards.
-      expect(screen.queryByRole("link", { name: /^Doctors$/ })).toBeNull()
+      expect(screen.queryByRole("link", { name: /^Care Guide$/ })).toBeNull()
     },
   )
 
@@ -85,27 +85,27 @@ describe("dashboard surfaces defer to their own sidebar", () => {
     // `/platform-guide` is not `/platform`. Prefix matching without the
     // boundary check would strip the nav from it.
     renderNav(session("admin"), "/platformx")
-    expect(screen.getByRole("link", { name: /^Doctors$/ })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /^Care Guide$/ })).toBeInTheDocument()
   })
 })
 
 /**
- * The third link is the Care Guide when the clinician gate is open and the
- * doctor list when it is shut.
+ * The Care Guide holds the third link whatever `/triage/status` says.
  *
- * Worth a test rather than a glance: the default is "shut", and a bug that
- * flipped it would put a symptom checker in front of patients that no
- * clinician has signed off - which is the exact outcome the gate exists to
- * prevent.
+ * That is a deliberate product decision, not an oversight: the tab reflects
+ * where the product is going, and the Care Guide screen itself is honest
+ * about the gate being shut. These pin it so a later "helpful" change does
+ * not quietly reintroduce the doctor list and move the tab under people.
+ *
+ * The gate is untouched and still absolute - it governs whether the triage
+ * FLOW may start, which is the safety property. This is navigation.
  */
-describe("the Care Guide tab is gated on a clinician sign-off", () => {
+describe("the Care Guide holds the third link regardless of the gate", () => {
   const renderWithGate = (available: boolean) => {
     window.localStorage.setItem("medilink.language", "en")
     const client = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     })
-    // Seed the cache directly rather than mocking fetch: it is the same key
-    // `useTriageStatus` reads, and it keeps the test off the network.
     client.setQueryData(["triage", "status"], {
       available,
       protocol_version: "",
@@ -124,24 +124,18 @@ describe("the Care Guide tab is gated on a clinician sign-off", () => {
     )
   }
 
-  it("shows Doctors while the gate is shut", () => {
-    renderWithGate(false)
-
-    expect(screen.getByRole("link", { name: /doctors/i })).toBeInTheDocument()
-    expect(
-      screen.queryByRole("link", { name: /care guide/i }),
-    ).not.toBeInTheDocument()
-  })
-
-  it("shows the Care Guide once a clinician has signed off", () => {
-    renderWithGate(true)
+  it.each([
+    ["shut", false],
+    ["open", true],
+  ])("shows the Care Guide with the gate %s", (_state, available) => {
+    renderWithGate(available)
 
     expect(
       screen.getByRole("link", { name: /care guide/i }),
     ).toBeInTheDocument()
-    // The tab is replaced, not added: five items is the maximum the bar holds.
+    // Replaced, not added: five items is the maximum the bar holds.
     expect(
-      screen.queryByRole("link", { name: /doctors/i }),
+      screen.queryByRole("link", { name: /^doctors$/i }),
     ).not.toBeInTheDocument()
   })
 })
