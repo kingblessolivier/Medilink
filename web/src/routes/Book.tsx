@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { IconCalendar } from "../ui/icons"
+import { IconCalendar, IconCheck } from "../ui/icons"
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { api, ApiRequestError } from "../api/client"
@@ -47,6 +47,8 @@ export function Book() {
   )
   const [provider, setProvider] = useState<string | undefined>(undefined)
   const [slot, setSlot] = useState<string | undefined>(undefined)
+  /** Which day the time grid is showing. Defaults to the first open one. */
+  const [selectedDay, setSelectedDay] = useState<string | undefined>(undefined)
   const [step, setStep] = useState<Step>(service ? "provider" : "service")
 
   const facility = useQuery({
@@ -91,6 +93,13 @@ export function Book() {
     () => days.filter((d) => d.slots.some((s) => s.remaining > 0)),
     [days],
   )
+
+  /* The day the grid is showing. `selectedDay` is undefined until a pill is
+     tapped, and the grid already fell back to the first open day - but the
+     pills compared against the raw state, so on arrival the times below were
+     Thursday's while no pill looked selected. Resolve the fallback once and
+     let both read the same value. */
+  const activeDay = selectedDay ?? openDays[0]?.date
 
   // Signing in is required to book, but discovery is not - so the prompt
   // arrives here rather than at the front door.
@@ -249,8 +258,49 @@ export function Book() {
             />
           )}
 
+          {/* S-07 picks a DAY first, then shows that day's times.
+              Every open day's slots were previously stacked on one screen,
+              which on a facility running six services is a page a patient
+              scrolls rather than reads. The row scrolls sideways; the times
+              below belong to whichever day is selected. */}
+          {openDays.length > 0 && (
+            <div className="ml-scroll-x -mx-4 mb-5 px-4">
+              <div className="flex gap-2">
+                {openDays.map((day) => {
+                  const date = new Date(day.date)
+                  const active = day.date === activeDay
+                  return (
+                    <button
+                      key={day.date}
+                      aria-pressed={active}
+                      onClick={() => {
+                        setSelectedDay(day.date)
+                        setSlot(undefined)
+                      }}
+                      className={
+                        "min-h-touch shrink-0 rounded-md border px-4 py-2 text-center transition-colors " +
+                        (active
+                          ? "border-primary bg-primary text-white"
+                          : "border-n300 bg-white hover:bg-n100")
+                      }
+                    >
+                      <span className="block text-label uppercase">
+                        {date.toLocaleDateString(undefined, { weekday: "short" })}
+                      </span>
+                      <span className="block text-h3 tabular-nums">
+                        {date.getDate()}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="space-y-4">
-            {openDays.map((day) => (
+            {openDays
+              .filter((day) => day.date === activeDay)
+              .map((day) => (
               <div key={day.date}>
                 <p className="ml-label mb-2">
                   {new Date(day.date).toLocaleDateString(undefined, {
@@ -259,7 +309,7 @@ export function Book() {
                     month: "short",
                   })}
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {day.slots.map((option) => {
                     const full = option.remaining === 0
                     const time = new Date(option.start).toLocaleTimeString([], {
@@ -382,22 +432,57 @@ export function Book() {
 
 const ORDER: Step[] = ["service", "provider", "time", "review"]
 
+/**
+ * Numbered circles joined by a rule, per S-07: a completed step shows a tick,
+ * the current one shows its number, the rest sit grey.
+ *
+ * It was a four-segment bar, which said how far along you were but not how
+ * many steps there are or which one you are on. On a booking flow those are
+ * the two questions somebody actually has.
+ */
 function Steps({ step }: { step: Step }) {
   const { t } = useI18n()
   const index = ORDER.indexOf(step)
 
   return (
-    <ol className="mt-4 flex gap-1.5" aria-label={t("progress")}>
-      {ORDER.map((name, position) => (
-        <li
-          key={name}
-          aria-current={position === index ? "step" : undefined}
-          className={
-            "h-1.5 flex-1 rounded-full " +
-            (position <= index ? "bg-primary" : "bg-n100")
-          }
-        />
-      ))}
+    <ol className="mt-5 flex items-center" aria-label={t("progress")}>
+      {ORDER.map((name, position) => {
+        const done = position < index
+        const current = position === index
+        return (
+          <li
+            key={name}
+            aria-current={current ? "step" : undefined}
+            className={
+              position === 0 ? "flex items-center" : "flex flex-1 items-center"
+            }
+          >
+            {/* The connector belongs to the step it leads INTO, so the first
+                circle has none and the row starts flush left. */}
+            {position > 0 && (
+              <span
+                aria-hidden="true"
+                className={
+                  "h-px flex-1 " +
+                  (done || current ? "bg-primary" : "bg-n200")
+                }
+              />
+            )}
+            <span
+              className={
+                "grid h-7 w-7 shrink-0 place-items-center rounded-full border text-label tabular-nums " +
+                (done
+                  ? "border-primary bg-primary text-white"
+                  : current
+                    ? "border-primary bg-white text-primary"
+                    : "border-n300 bg-white text-n600")
+              }
+            >
+              {done ? <IconCheck size={14} /> : position + 1}
+            </span>
+          </li>
+        )
+      })}
     </ol>
   )
 }
