@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediLink Rwanda — Dashboard Specifications</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --primary:#0A6E5E; --primary-dark:#074F44; --primary-light:#E6F4F1;
+  --accent:#F4A832; --danger:#D93025; --success:#1E8A4C; --warning:#E67E22;
+  --n900:#1A1A2E; --n700:#2D3748; --n600:#4A5568; --n400:#718096; --n300:#CBD5E0; --n200:#E2E8F0; --n100:#F7FAFC;
+  --white:#FFFFFF; --shadow:0 2px 12px rgba(0,0,0,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',system-ui,sans-serif;background:#E8EDF2;color:var(--n900);}
+
+/* ── PAGE HEADER ── */
+.page-header{background:var(--primary);color:#fff;padding:24px 32px;display:flex;align-items:center;gap:16px;}
+.page-header h1{font-size:22px;font-weight:700;}
+.page-header p{font-size:13px;opacity:.8;margin-top:2px;}
+.badge{background:rgba(255,255,255,.2);padding:4px 12px;border-radius:20px;font-size:12px;}
+
+/* ── SECTION WRAPPER ── */
+.section{max-width:1400px;margin:0 auto;padding:40px 24px;}
+.section-title{font-size:20px;font-weight:700;color:var(--n900);margin-bottom:6px;}
+.section-sub{font-size:13px;color:var(--n600);margin-bottom:28px;}
+
+/* ── DASHBOARD SHELL ── */
+.dash-shell{background:var(--n100);border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.14);border:1px solid var(--n200);}
+
+/* Sidebar */
+.dash-layout{display:flex;min-height:720px;}
+.sidebar{width:220px;background:#fff;border-right:1px solid var(--n200);display:flex;flex-direction:column;flex-shrink:0;}
+.sidebar-logo{padding:20px 16px;border-bottom:1px solid var(--n100);display:flex;align-items:center;gap:10px;}
+.sidebar-logo-icon{width:32px;height:32px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.sidebar-logo-text{font-size:14px;font-weight:700;color:var(--n900);}
+.sidebar-logo-sub{font-size:10px;color:var(--n600);}
+.sidebar-nav{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:2px;}
+.nav-group-label{font-size:10px;font-weight:700;color:var(--n400);letter-spacing:.8px;text-transform:uppercase;padding:8px 8px 4px;}
+.nav-link{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--n600);transition:all 150ms;}
+.nav-link:hover{background:var(--n100);color:var(--n900);}
+.nav-link.active{background:var(--primary-light);color:var(--primary);font-weight:700;}
+.nav-link .badge-count{margin-left:auto;background:var(--danger);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;}
+.nav-link svg{width:16px;height:16px;flex-shrink:0;}
+.sidebar-user{padding:14px 12px;border-top:1px solid var(--n100);display:flex;align-items:center;gap:10px;}
+.sidebar-avatar{width:32px;height:32px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0;}
+.sidebar-user-info .name{font-size:12px;font-weight:700;}
+.sidebar-user-info .role{font-size:10px;color:var(--n600);}
+
+/* Main content */
+.dash-main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.dash-topbar{background:#fff;border-bottom:1px solid var(--n200);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
+.dash-topbar-title{font-size:16px;font-weight:700;}
+.topbar-actions{display:flex;align-items:center;gap:10px;}
+.topbar-btn{border:1px solid var(--n300);background:#fff;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;color:var(--n700);}
+.topbar-btn.primary{background:var(--primary);border-color:var(--primary);color:#fff;}
+.dash-content{flex:1;padding:20px;background:var(--n100);overflow:auto;}
+
+/* KPI cards */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.kpi-card{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);}
+.kpi-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.kpi-label{font-size:11px;font-weight:700;color:var(--n600);letter-spacing:.3px;text-transform:uppercase;}
+.kpi-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.kpi-icon.green{background:var(--primary-light);color:var(--primary);}
+.kpi-icon.amber{background:#FEF3DC;color:var(--accent);}
+.kpi-icon.red{background:#FFF0EF;color:var(--danger);}
+.kpi-icon.blue{background:#EBF4FF;color:#2B6CB0;}
+.kpi-value{font-size:28px;font-weight:800;color:var(--n900);line-height:1;}
+.kpi-change{font-size:12px;font-weight:600;margin-top:4px;}
+.kpi-change.up{color:var(--success);}
+.kpi-change.down{color:var(--danger);}
+.kpi-change.neutral{color:var(--n600);}
+
+/* Charts row */
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:20px;}
+.chart-card{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);}
+.chart-card h3{font-size:13px;font-weight:700;color:var(--n900);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+.chart-card h3 span{font-size:11px;font-weight:500;color:var(--n600);}
+.chart-wrap{height:200px;position:relative;}
+
+/* Queue live panel */
+.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.table-card{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);}
+.table-card h3{font-size:13px;font-weight:700;margin-bottom:14px;}
+.data-table{width:100%;border-collapse:collapse;font-size:12px;}
+.data-table th{text-align:left;padding:8px 10px;border-bottom:2px solid var(--n100);color:var(--n600);font-size:11px;text-transform:uppercase;font-weight:700;}
+.data-table td{padding:8px 10px;border-bottom:1px solid var(--n100);color:var(--n900);}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:var(--n100);}
+.status-pill{padding:3px 9px;border-radius:10px;font-size:10px;font-weight:700;}
+.pill-seen{background:#E6F6ED;color:var(--success);}
+.pill-waiting{background:#FEF3DC;color:#92590A;}
+.pill-urgent{background:#FFF0EF;color:var(--danger);}
+.pill-noshow{background:var(--n100);color:var(--n600);}
+
+/* Queue live view */
+.queue-live{display:flex;flex-direction:column;gap:8px;}
+.queue-item{background:var(--n100);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;}
+.queue-item.current{background:var(--primary-light);border:1.5px solid var(--primary);}
+.queue-item.urgent{background:#FFF0EF;border:1.5px solid var(--danger);}
+.q-pos{width:28px;height:28px;border-radius:50%;background:var(--n300);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--n900);flex-shrink:0;}
+.q-pos.active{background:var(--primary);color:#fff;}
+.q-pos.urg{background:var(--danger);color:#fff;}
+.q-info{flex:1;}
+.q-info .qname{font-size:13px;font-weight:700;}
+.q-info .qsub{font-size:10px;color:var(--n600);}
+.q-time{font-size:11px;font-weight:600;color:var(--n600);}
+
+/* Spec annotation boxes */
+.spec-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;}
+.spec-box{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);border-left:3px solid var(--primary);}
+.spec-box h4{font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px;}
+.spec-box ul{list-style:none;display:flex;flex-direction:column;gap:5px;}
+.spec-box li{font-size:12px;color:var(--n600);padding-left:14px;position:relative;}
+.spec-box li::before{content:'→';position:absolute;left:0;color:var(--primary);font-size:10px;top:1px;}
+
+/* Section separator */
+.section-sep{border:none;border-top:3px solid var(--n200);margin:40px 0;}
+
+/* Clinical screen */
+.clinical-topbar{background:var(--primary);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
+.clinical-topbar h2{color:#fff;font-size:15px;font-weight:700;}
+.clinical-body{display:grid;grid-template-columns:300px 1fr;height:600px;}
+.patient-list{background:#fff;border-right:1px solid var(--n200);overflow-y:auto;}
+.pl-header{padding:12px 14px;border-bottom:1px solid var(--n100);font-size:12px;font-weight:700;color:var(--n600);display:flex;justify-content:space-between;align-items:center;}
+.pl-search{padding:10px 14px;border-bottom:1px solid var(--n100);}
+.pl-search input{width:100%;border:1.5px solid var(--n300);border-radius:8px;padding:8px 12px;font-size:12px;outline:none;}
+.patient-item{display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--n100);cursor:pointer;}
+.patient-item:hover{background:var(--n100);}
+.patient-item.active{background:var(--primary-light);border-left:3px solid var(--primary);}
+.pat-num{width:28px;height:28px;border-radius:50%;background:var(--n200);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;color:var(--n700);}
+.pat-num.curr{background:var(--primary);color:#fff;}
+.pat-num.urg{background:var(--danger);color:#fff;}
+.pat-info .pname{font-size:13px;font-weight:700;}
+.pat-info .psub{font-size:10px;color:var(--n600);}
+.pat-tags{display:flex;gap:4px;margin-top:3px;}
+.pat-tag{font-size:9px;padding:2px 6px;border-radius:6px;font-weight:700;}
+
+/* Patient detail panel */
+.patient-detail{flex:1;background:var(--n100);overflow-y:auto;padding:16px;}
+.pd-header{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px;display:flex;gap:14px;box-shadow:var(--shadow);}
+.pd-avatar{width:56px;height:56px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;flex-shrink:0;}
+.pd-info h4{font-size:16px;font-weight:700;}
+.pd-info p{font-size:12px;color:var(--n600);margin-top:2px;}
+.pd-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.pd-chip{font-size:11px;padding:4px 10px;border-radius:8px;font-weight:600;}
+.pd-chip.ins{background:var(--primary-light);color:var(--primary);}
+.pd-chip.sym{background:#FEF3DC;color:#92590A;}
+.pd-chip.wait{background:var(--n100);border:1px solid var(--n300);color:var(--n600);}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.detail-card{background:#fff;border-radius:12px;padding:14px;box-shadow:var(--shadow);}
+.detail-card h5{font-size:11px;font-weight:700;color:var(--n600);text-transform:uppercase;letter-spacing:.3px;margin-bottom:10px;}
+.detail-card p{font-size:13px;color:var(--n900);line-height:1.6;}
+.action-bar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;}
+.action-btn{border:none;border-radius:10px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+.ab-seen{background:var(--primary);color:#fff;}
+.ab-refer{background:#FEF3DC;color:#92590A;}
+.ab-noshow{background:var(--n100);color:var(--n600);border:1.5px solid var(--n300);}
+
+/* Admin portal */
+.admin-dash{background:#1A1A2E;min-height:720px;border-radius:20px;overflow:hidden;display:flex;}
+.admin-sidebar{width:220px;background:#0F0F1E;border-right:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;}
+.admin-logo{padding:20px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px;}
+.admin-logo-icon{width:32px;height:32px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.admin-logo-text{font-size:14px;font-weight:700;color:#fff;}
+.admin-logo-badge{font-size:9px;background:var(--danger);color:#fff;border-radius:4px;padding:1px 5px;font-weight:700;}
+.admin-nav{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:2px;}
+.admin-nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:500;color:rgba(255,255,255,.55);transition:all 150ms;}
+.admin-nav-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.85);}
+.admin-nav-item.active{background:rgba(10,110,94,.3);color:#4AE89A;font-weight:700;}
+.admin-nav-item .bc{margin-left:auto;background:var(--danger);color:#fff;border-radius:8px;padding:1px 6px;font-size:9px;font-weight:700;}
+.admin-main{flex:1;display:flex;flex-direction:column;}
+.admin-topbar{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;}
+.admin-topbar h2{color:#fff;font-size:15px;font-weight:700;}
+.admin-search{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:7px 12px;font-size:12px;color:#fff;outline:none;width:240px;}
+.admin-search::placeholder{color:rgba(255,255,255,.3);}
+.admin-content{flex:1;padding:20px;background:#1A1A2E;display:flex;flex-direction:column;gap:14px;overflow:auto;}
+.admin-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.admin-kpi{background:#242438;border-radius:12px;padding:14px 16px;border:1px solid rgba(255,255,255,.06);}
+.admin-kpi-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;}
+.admin-kpi-val{font-size:24px;font-weight:800;color:#fff;}
+.admin-kpi-sub{font-size:11px;color:rgba(255,255,255,.35);margin-top:4px;}
+.admin-kpi-up{font-size:11px;font-weight:700;color:#4AE89A;margin-top:4px;}
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.admin-card{background:#242438;border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,.06);}
+.admin-card h4{font-size:12px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px;}
+.facility-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.facility-row:last-child{border-bottom:none;}
+.fac-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.fac-dot.active{background:#4AE89A;}
+.fac-dot.pending{background:var(--accent);}
+.fac-dot.suspended{background:var(--danger);}
+.fac-row-name{font-size:13px;color:#fff;flex:1;}
+.fac-row-status{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;}
+.frs-active{background:rgba(74,232,154,.15);color:#4AE89A;}
+.frs-pending{background:rgba(244,168,50,.15);color:var(--accent);}
+.frs-sus{background:rgba(217,48,37,.15);color:#FF6B6B;}
+.approval-item{background:rgba(255,255,255,.04);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;}
+.appr-icon{width:36px;height:36px;background:rgba(255,255,255,.07);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.appr-info .aname{font-size:13px;font-weight:700;color:#fff;}
+.appr-info .asub{font-size:11px;color:rgba(255,255,255,.4);}
+.appr-actions{margin-left:auto;display:flex;gap:6px;}
+.appr-approve{background:rgba(74,232,154,.2);border:1px solid rgba(74,232,154,.4);color:#4AE89A;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;}
+.appr-reject{background:rgba(217,48,37,.15);border:1px solid rgba(217,48,37,.3);color:#FF6B6B;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;}
+
+/* MoH dashboard */
+.moh-dash{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.12);}
+.moh-header{background:linear-gradient(135deg,#074F44 0%,#0A6E5E 100%);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;}
+.moh-header-left h2{color:#fff;font-size:18px;font-weight:700;}
+.moh-header-left p{color:rgba(255,255,255,.7);font-size:12px;margin-top:2px;}
+.moh-filters{display:flex;gap:10px;align-items:center;}
+.moh-filter-select{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:7px 12px;font-size:12px;color:#fff;outline:none;}
+.moh-body{padding:20px;background:var(--n100);}
+.moh-kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px;}
+.moh-kpi{background:#fff;border-radius:12px;padding:14px;box-shadow:var(--shadow);text-align:center;}
+.moh-kpi-val{font-size:22px;font-weight:800;color:var(--n900);}
+.moh-kpi-label{font-size:11px;color:var(--n600);margin-top:2px;}
+.moh-kpi-trend{font-size:11px;font-weight:700;margin-top:4px;}
+.moh-map-row{display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-bottom:16px;}
+.moh-map-card{background:#fff;border-radius:12px;padding:16px;box-shadow:var(--shadow);}
+.moh-map-card h4{font-size:13px;font-weight:700;margin-bottom:12px;}
+.map-placeholder{background:var(--primary-light);border-radius:10px;height:220px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--primary);}
+.district-list{display:flex;flex-direction:column;gap:6px;}
+.district-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--n100);}
+.district-item:last-child{border-bottom:none;}
+.dist-name{font-size:13px;font-weight:600;flex:1;}
+.dist-bar-wrap{width:120px;background:var(--n100);border-radius:3px;height:6px;overflow:hidden;}
+.dist-bar-fill{height:100%;background:var(--primary);border-radius:3px;}
+.dist-val{font-size:12px;font-weight:700;color:var(--n600);min-width:36px;text-align:right;}
+.moh-table-card{background:#fff;border-radius:12px;padding:16px;box-shadow:var(--shadow);}
+.moh-table-card h4{font-size:13px;font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;}
+.moh-table-card h4 span{font-size:11px;font-weight:500;color:var(--n600);}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div><h1>MediLink Rwanda — Dashboard Specifications</h1><p>Facility Admin · Clinical Interface · MediLink Super Admin · MoH Portal</p></div>
+  <div class="badge">Web Dashboards</div>
+  <div class="badge">4 Portals</div>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!-- DASHBOARD 1: FACILITY ADMIN -->
+<!-- ════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">Dashboard 1 — Facility Administrator Portal</div>
+  <div class="section-sub">Used by: Facility Administrator, Department Head, Receptionist (limited view). Web browser only.</div>
+
+  <div class="dash-shell">
+    <div class="dash-layout">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-logo">
+          <div class="sidebar-logo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+          <div><div class="sidebar-logo-text">MediLink</div><div class="sidebar-logo-sub">CHUK · Admin</div></div>
+        </div>
+        <div class="sidebar-nav">
+          <div class="nav-group-label">Overview</div>
+          <div class="nav-link active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</div>
+          <div class="nav-group-label">Operations</div>
+          <div class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Appointments <span class="badge-count">8</span></div>
+          <div class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>Live queue</div>
+          <div class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Patients</div>
+          <div class="nav-group-label">Facility</div>
+          <div class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Doctors</div>
+          <div class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Insurance</div>
+          <div class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports</div>
+          <div class="nav-group-label">Settings</div>
+          <div class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>Settings</div>
+          <div class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Subscription</div>
+        </div>
+        <div class="sidebar-user">
+          <div class="sidebar-avatar">NK</div>
+          <div class="sidebar-user-info"><div class="name">Nshuti Karen</div><div class="role">Facility Admin</div></div>
+        </div>
+      </div>
+
+      <!-- Main -->
+      <div class="dash-main">
+        <div class="dash-topbar">
+          <div class="dash-topbar-title">Today's overview · Wed 4 Sep 2026</div>
+          <div class="topbar-actions">
+            <button class="topbar-btn">📊 Export report</button>
+            <button class="topbar-btn primary">+ Add walk-in</button>
+          </div>
+        </div>
+        <div class="dash-content">
+          <!-- KPIs -->
+          <div class="kpi-row">
+            <div class="kpi-card">
+              <div class="kpi-card-top"><div class="kpi-label">Today's appointments</div><div class="kpi-icon green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div></div>
+              <div class="kpi-value">127</div>
+              <div class="kpi-change up">↑ 12 vs yesterday</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-card-top"><div class="kpi-label">Attended</div><div class="kpi-icon blue"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg></div></div>
+              <div class="kpi-value">84</div>
+              <div class="kpi-change up">↑ 66% attendance rate</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-card-top"><div class="kpi-label">No-shows</div><div class="kpi-icon red"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div></div>
+              <div class="kpi-value">18</div>
+              <div class="kpi-change down">↑ 14% (high — investigate)</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-card-top"><div class="kpi-label">Avg wait time</div><div class="kpi-icon amber"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div></div>
+              <div class="kpi-value">34<span style="font-size:16px;font-weight:500"> min</span></div>
+              <div class="kpi-change up">↓ 8 min vs last week</div>
+            </div>
+          </div>
+
+          <!-- Charts -->
+          <div class="charts-row">
+            <div class="chart-card">
+              <h3>Hourly patient flow <span>today vs yesterday</span></h3>
+              <div class="chart-wrap"><canvas id="flowChart"></canvas></div>
+            </div>
+            <div class="chart-card">
+              <h3>By department <span>today</span></h3>
+              <div class="chart-wrap"><canvas id="deptChart"></canvas></div>
+            </div>
+          </div>
+
+          <!-- Bottom row -->
+          <div class="bottom-row">
+            <!-- Appointments table -->
+            <div class="table-card">
+              <h3>Upcoming appointments — OPD General</h3>
+              <table class="data-table">
+                <thead><tr><th>#</th><th>Patient</th><th>Time</th><th>Doctor</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr><td style="font-weight:700">A-044</td><td>Uwera Marie</td><td>10:00</td><td>Dr. Mutesi</td><td><span class="status-pill pill-seen">Seen</span></td><td style="color:var(--n400);font-size:11px">—</td></tr>
+                  <tr><td style="font-weight:700">A-045</td><td>Mugisha Jean</td><td>10:15</td><td>Dr. Mutesi</td><td><span class="status-pill pill-waiting">Waiting</span></td><td><button style="border:none;background:var(--primary-light);color:var(--primary);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;cursor:pointer">Check in</button></td></tr>
+                  <tr><td style="font-weight:700">A-046</td><td>Hakizimana Rose</td><td>10:30</td><td>Dr. Mutesi</td><td><span class="status-pill pill-waiting">Waiting</span></td><td><button style="border:none;background:var(--primary-light);color:var(--primary);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;cursor:pointer">Check in</button></td></tr>
+                  <tr><td style="font-weight:700;color:var(--primary)">A-047</td><td style="font-weight:700">Uwimana Amahoro</td><td>10:45</td><td>Dr. Mutesi</td><td><span class="status-pill" style="background:var(--primary-light);color:var(--primary);font-weight:800">Current</span></td><td><button style="border:none;background:var(--primary);color:#fff;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;cursor:pointer">Mark seen</button></td></tr>
+                  <tr><td style="font-weight:700">A-048</td><td>Niyonsaba Eric</td><td>11:00</td><td>Dr. Mutesi</td><td><span class="status-pill pill-urgent">Urgent</span></td><td><button style="border:none;background:#FFF0EF;color:var(--danger);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;cursor:pointer">Promote</button></td></tr>
+                  <tr><td style="font-weight:700">A-049</td><td>Mukamana Diane</td><td>11:15</td><td>Dr. Karenzi</td><td><span class="status-pill pill-noshow">No-show</span></td><td style="color:var(--n400);font-size:11px">Slot freed</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Live queue -->
+            <div class="table-card">
+              <h3 style="display:flex;justify-content:space-between;align-items:center">Live queue — OPD General <span style="background:#E6F6ED;color:var(--success);border-radius:8px;padding:3px 10px;font-size:11px;font-weight:700">🟢 Active</span></h3>
+              <div class="queue-live">
+                <div class="queue-item"><div class="q-pos">1</div><div class="q-info"><div class="qname">Uwera Marie</div><div class="qsub">A-044 · Seen at 10:12</div></div><div class="q-time" style="color:var(--success)">✓ Done</div></div>
+                <div class="queue-item current"><div class="q-pos active">2</div><div class="q-info"><div class="qname">Mugisha Jean</div><div class="qsub">A-045 · 10:15 · Checked in</div></div><div class="q-time" style="color:var(--primary)">With Dr.</div></div>
+                <div class="queue-item"><div class="q-pos">3</div><div class="q-info"><div class="qname">Hakizimana Rose</div><div class="qsub">A-046 · 10:30 · Waiting</div></div><div class="q-time">~15 min</div></div>
+                <div class="queue-item urgent"><div class="q-pos urg">!</div><div class="q-info"><div class="qname">Niyonsaba Eric</div><div class="qsub">A-048 · Nurse-flagged urgent</div></div><div class="q-time" style="color:var(--danger)">Promote?</div></div>
+                <div class="queue-item"><div class="q-pos">5</div><div class="q-info"><div class="qname">Uwimana Amahoro</div><div class="qsub">A-047 · 10:45 · Booked</div></div><div class="q-time">~28 min</div></div>
+                <button style="background:var(--n100);border:1.5px dashed var(--n300);border-radius:10px;padding:8px;font-size:12px;font-weight:600;color:var(--n600);cursor:pointer;width:100%;margin-top:4px">+ Add walk-in patient</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="spec-grid">
+    <div class="spec-box">
+      <h4>Facility Admin — Screen inventory</h4>
+      <ul>
+        <li>FA-01 Dashboard (this screen)</li>
+        <li>FA-02 Appointment list — filterable by dept, doctor, date, status</li>
+        <li>FA-03 Live queue manager — all departments, drag-to-reorder, promote/demote</li>
+        <li>FA-04 Doctor management — add/remove doctors, link to departments, set schedule</li>
+        <li>FA-05 Insurance management — toggle accepted insurers, update coverage dates</li>
+        <li>FA-06 Walk-in intake — search patient or create new, select dept, assign queue</li>
+        <li>FA-07 Reports — daily/weekly/monthly, downloadable CSV/PDF</li>
+        <li>FA-08 Facility profile — hours, services, contact, location (shown on patient app)</li>
+        <li>FA-09 Subscription & billing — plan, payment history, MTN MoMo</li>
+        <li>FA-10 Staff management — add receptionist accounts, set role permissions</li>
+      </ul>
+    </div>
+    <div class="spec-box">
+      <h4>Key interactions & business rules</h4>
+      <ul>
+        <li>Promote button on urgent patient — moves to top of queue, sends push to patient</li>
+        <li>Mark no-show → slot freed → system auto-notifies next waitlisted patient</li>
+        <li>Check in required for queue position to activate (patient physically present)</li>
+        <li>KPI cards clickable — drill down to filtered appointment list</li>
+        <li>Hourly flow chart: WebSocket update every 5 min, line animates smoothly</li>
+        <li>Export report: PDF includes facility header, date range, all tables and charts</li>
+        <li>Role restriction: Receptionist sees FA-03 and FA-06 only (no reports, no billing)</li>
+        <li>Department head sees only their department's appointments and queue</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!-- DASHBOARD 2: CLINICAL INTERFACE -->
+<!-- ════════════════════════════════════════ -->
+<hr class="section-sep">
+<div class="section">
+  <div class="section-title">Dashboard 2 — Clinical Interface (Doctor / Nurse)</div>
+  <div class="section-sub">Used by: Clinician, Triage Nurse, Lab Officer. Optimised for speed — doctors spend ≤5 seconds per patient card.</div>
+
+  <div class="dash-shell">
+    <div class="dash-layout" style="min-height:640px">
+      <div class="clinical-body" style="width:100%">
+        <!-- Patient list -->
+        <div class="patient-list">
+          <div class="pl-header">Today's patients <span style="background:var(--primary-light);color:var(--primary);border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700">24 total</span></div>
+          <div class="pl-search"><input placeholder="Search patient name or ID…"></div>
+          <div class="patient-item"><div class="pat-num" style="background:#FFF0EF;color:var(--danger)">!</div><div class="pat-info"><div class="pname">Niyonsaba Eric</div><div class="psub">A-048 · 11:00 · Urgent</div><div class="pat-tags"><span class="pat-tag" style="background:#FFF0EF;color:var(--danger)">URGENT</span><span class="pat-tag" style="background:var(--primary-light);color:var(--primary)">Mutuelle</span></div></div></div>
+          <div class="patient-item active"><div class="pat-num curr">2</div><div class="pat-info"><div class="pname">Uwimana Amahoro</div><div class="psub">A-047 · 10:45 · Current</div><div class="pat-tags"><span class="pat-tag" style="background:var(--primary-light);color:var(--primary)">Mutuelle</span><span class="pat-tag" style="background:#FEF3DC;color:#92590A">Fever+Headache</span></div></div></div>
+          <div class="patient-item"><div class="pat-num">3</div><div class="pat-info"><div class="pname">Hakizimana Rose</div><div class="psub">A-046 · 10:30 · Waiting</div><div class="pat-tags"><span class="pat-tag" style="background:#EBF4FF;color:#2B6CB0">RAMA</span></div></div></div>
+          <div class="patient-item"><div class="pat-num">4</div><div class="pat-info"><div class="pname">Mugisha Jean Paul</div><div class="psub">A-050 · 11:15</div></div></div>
+          <div class="patient-item"><div class="pat-num">5</div><div class="pat-info"><div class="pname">Mukamana Diane</div><div class="psub">A-051 · 11:30</div></div></div>
+          <div class="patient-item"><div class="pat-num" style="opacity:.4">6</div><div class="pat-info" style="opacity:.4"><div class="pname">Uwera Marie P.</div><div class="psub">A-052 · 12:00</div></div></div>
+        </div>
+
+        <!-- Patient detail -->
+        <div class="patient-detail">
+          <div class="pd-header">
+            <div class="pd-avatar">AU</div>
+            <div class="pd-info">
+              <h4>Uwimana Amahoro · F, 28</h4>
+              <p>+250 788 123 456 · Ticket A-047 · 10:45 appointment</p>
+              <div class="pd-chips">
+                <span class="pd-chip ins">✓ Mutuelle de Santé</span>
+                <span class="pd-chip sym">Fever · Headache · 3 days</span>
+                <span class="pd-chip wait">Checked in 10:41</span>
+              </div>
+            </div>
+            <div style="margin-left:auto;display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+              <div style="background:#FEF3DC;color:#92590A;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700">AI: Malaria 74%</div>
+              <div style="font-size:11px;color:var(--n600)">Last visit: 3 months ago</div>
+            </div>
+          </div>
+
+          <div class="detail-grid">
+            <div class="detail-card">
+              <h5>AI symptom summary</h5>
+              <p style="font-size:12px">Patient reported <strong>fever</strong> and <strong>headache</strong> for 3 days, moderate severity. AI model suggests <strong>Malaria (74%)</strong>, Typhoid (18%). No emergency flags triggered. Patient referred by symptom checker.</p>
+            </div>
+            <div class="detail-card">
+              <h5>Triage vitals</h5>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+                <div><div style="font-size:10px;color:var(--n600)">Temperature</div><div style="font-size:16px;font-weight:700;color:var(--danger)">38.7°C</div></div>
+                <div><div style="font-size:10px;color:var(--n600)">Blood pressure</div><div style="font-size:16px;font-weight:700">118/76</div></div>
+                <div><div style="font-size:10px;color:var(--n600)">Pulse</div><div style="font-size:16px;font-weight:700">92 bpm</div></div>
+                <div><div style="font-size:10px;color:var(--n600)">SpO2</div><div style="font-size:16px;font-weight:700;color:var(--success)">98%</div></div>
+              </div>
+            </div>
+            <div class="detail-card">
+              <h5>Prescription / notes</h5>
+              <textarea style="width:100%;border:1.5px solid var(--n200);border-radius:8px;padding:8px;font-size:12px;font-family:inherit;color:var(--n900);resize:none;outline:none;height:80px" placeholder="Type diagnosis and prescription notes…"></textarea>
+            </div>
+            <div class="detail-card">
+              <h5>Visit history</h5>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="font-size:12px;color:var(--n600)"><strong style="color:var(--n900)">Jun 2026</strong> — Malaria (confirmed), Artemether prescribed</div>
+                <div style="font-size:12px;color:var(--n600)"><strong style="color:var(--n900)">Jan 2026</strong> — Antenatal check, all clear</div>
+                <div style="font-size:12px;color:var(--n600)"><strong style="color:var(--n900)">Sep 2025</strong> — URI, amoxicillin 500mg</div>
+              </div>
+            </div>
+          </div>
+          <div class="action-bar">
+            <button class="action-btn ab-seen">✓ Mark as seen</button>
+            <button class="action-btn ab-refer">↗ Refer patient</button>
+            <button class="action-btn ab-noshow">✗ No-show</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="spec-grid">
+    <div class="spec-box">
+      <h4>Clinical screen inventory</h4>
+      <ul>
+        <li>CL-01 Today's patient list (left panel, sortable by queue position / urgency)</li>
+        <li>CL-02 Patient detail view (right panel, loads in < 1s)</li>
+        <li>CL-03 Triage intake (Nurse view — record vitals, set urgency level)</li>
+        <li>CL-04 Doctor schedule manager (set weekly availability per facility)</li>
+        <li>CL-05 Lab results attachment (Lab officer — attach result PDF to visit)</li>
+        <li>CL-06 Prescription record (links to pharmacy officer view)</li>
+      </ul>
+    </div>
+    <div class="spec-box">
+      <h4>Clinical UX rules</h4>
+      <ul>
+        <li>Patient list auto-advances when current patient marked "seen"</li>
+        <li>AI symptom summary collapsed by default — 1-click expand for detail</li>
+        <li>Triage flag from nurse: patient card turns red border, "URGENT" badge, promote button</li>
+        <li>Vitals entered by nurse visible before doctor opens patient card</li>
+        <li>Notes auto-save every 10 seconds — never lose draft</li>
+        <li>Refer → opens facility search filtered to right specialist type</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!-- DASHBOARD 3: SUPER ADMIN (DARK) -->
+<!-- ════════════════════════════════════════ -->
+<hr class="section-sep">
+<div class="section">
+  <div class="section-title">Dashboard 3 — MediLink Super Admin Portal</div>
+  <div class="section-sub">Internal only. Dark theme. Used by: Onboarding Admin, Compliance Officer, DevOps, ML Manager, Business Analyst.</div>
+
+  <div class="admin-dash">
+    <div class="admin-sidebar">
+      <div class="admin-logo">
+        <div class="admin-logo-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+        <div style="flex:1"><div class="admin-logo-text">Admin</div></div>
+        <span class="admin-logo-badge">INTERNAL</span>
+      </div>
+      <div class="admin-nav">
+        <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.25);letter-spacing:.8px;padding:8px 10px 4px;text-transform:uppercase">Platform</div>
+        <div class="admin-nav-item active"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Overview</div>
+        <div class="admin-nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Facilities <span class="bc">3</span></div>
+        <div class="admin-nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Users</div>
+        <div class="admin-nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg>Insurance bodies</div>
+        <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.25);letter-spacing:.8px;padding:8px 10px 4px;text-transform:uppercase">Revenue</div>
+        <div class="admin-nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Subscriptions</div>
+        <div class="admin-nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics</div>
+        <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.25);letter-spacing:.8px;padding:8px 10px 4px;text-transform:uppercase">AI / Compliance</div>
+        <div class="admin-nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>ML model mgr</div>
+        <div class="admin-nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Compliance / PDPL</div>
+        <div class="admin-nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>Audit logs</div>
+        <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.25);letter-spacing:.8px;padding:8px 10px 4px;text-transform:uppercase">System</div>
+        <div class="admin-nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Infrastructure</div>
+        <div class="admin-nav-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Security</div>
+      </div>
+    </div>
+    <div class="admin-main">
+      <div class="admin-topbar">
+        <h2>Platform overview</h2>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input class="admin-search" placeholder="Search facilities, users, logs…">
+          <div style="width:32px;height:32px;background:rgba(255,255,255,.07);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px"><div style="width:28px;height:28px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">SA</div><span style="font-size:12px;color:rgba(255,255,255,.6)">Super Admin</span></div>
+        </div>
+      </div>
+      <div class="admin-content">
+        <div class="admin-kpi-row">
+          <div class="admin-kpi"><div class="admin-kpi-label">Active facilities</div><div class="admin-kpi-val">142</div><div class="admin-kpi-up">↑ +8 this month</div></div>
+          <div class="admin-kpi"><div class="admin-kpi-label">Registered patients</div><div class="admin-kpi-val">28,400</div><div class="admin-kpi-up">↑ +1.2K this week</div></div>
+          <div class="admin-kpi"><div class="admin-kpi-label">Bookings today</div><div class="admin-kpi-val">4,127</div><div class="admin-kpi-sub">Across all facilities</div></div>
+          <div class="admin-kpi"><div class="admin-kpi-label">MRR (subscriptions)</div><div class="admin-kpi-val">RWF 8.4M</div><div class="admin-kpi-up">↑ +18% MoM</div></div>
+        </div>
+        <div class="admin-grid">
+          <div class="admin-card">
+            <h4>Facility status</h4>
+            <div class="facility-row"><div class="fac-dot active"></div><div class="fac-row-name">CHUK — Kigali</div><div class="fac-row-status frs-active">Active</div></div>
+            <div class="facility-row"><div class="fac-dot active"></div><div class="fac-row-name">King Faisal Hospital</div><div class="fac-row-status frs-active">Active</div></div>
+            <div class="facility-row"><div class="fac-dot pending"></div><div class="fac-row-name">Kibungo District Hospital</div><div class="fac-row-status frs-pending">Pending review</div></div>
+            <div class="facility-row"><div class="fac-dot pending"></div><div class="fac-row-name">Clinic Plus Kicukiro</div><div class="fac-row-status frs-pending">Pending review</div></div>
+            <div class="facility-row"><div class="fac-dot suspended"></div><div class="fac-row-name">Polyclinic Nord</div><div class="fac-row-status frs-sus">Suspended</div></div>
+          </div>
+          <div class="admin-card">
+            <h4>Pending approvals <span style="background:rgba(244,168,50,.2);color:var(--accent);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;margin-left:6px">3 new</span></h4>
+            <div class="approval-item">
+              <div class="appr-icon">🏥</div>
+              <div class="appr-info"><div class="aname">Kibungo District Hospital</div><div class="asub">RDB registered · Public facility · Submitted 2h ago</div></div>
+              <div class="appr-actions"><button class="appr-approve">Approve</button><button class="appr-reject">Reject</button></div>
+            </div>
+            <div class="approval-item">
+              <div class="appr-icon">🏨</div>
+              <div class="appr-info"><div class="aname">Clinic Plus Kicukiro</div><div class="asub">Private clinic · Documents pending · Submitted 5h ago</div></div>
+              <div class="appr-actions"><button class="appr-approve">Approve</button><button class="appr-reject">Reject</button></div>
+            </div>
+            <div class="approval-item">
+              <div class="appr-icon">👤</div>
+              <div class="appr-info"><div class="aname">Dr. Uwimana John — CHUK</div><div class="asub">Doctor role request · Medical licence #RW-2021-4821</div></div>
+              <div class="appr-actions"><button class="appr-approve">Verify</button><button class="appr-reject">Deny</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="spec-grid">
+    <div class="spec-box">
+      <h4>Super Admin screen inventory (18 screens)</h4>
+      <ul>
+        <li>SA-01 Platform overview (this screen)</li>
+        <li>SA-02 Facility management — onboard, approve, suspend, view details</li>
+        <li>SA-03 User management — all roles, force reset, role elevation log</li>
+        <li>SA-04 Insurance body management — add insurer, sync coverage data</li>
+        <li>SA-05 Subscription management — plans, pricing, renewal tracking</li>
+        <li>SA-06 Revenue analytics — MRR, ARR, churn, facility breakdown</li>
+        <li>SA-07 ML model manager — accuracy dashboard, retrain trigger, A/B test</li>
+        <li>SA-08 Disease-symptom curator — edit condition→specialist mappings</li>
+        <li>SA-09 PDPL compliance — consent log, data deletion requests queue</li>
+        <li>SA-10 Audit log viewer — all actions across all roles, filterable</li>
+        <li>SA-11 Security — failed logins, active sessions, API key manager</li>
+        <li>SA-12 System health — uptime monitor, API latency, error rate</li>
+        <li>SA-13 Support queue — patient / facility dispute tickets</li>
+        <li>SA-14 Notification center — platform-wide announcements</li>
+        <li>SA-15 USSD configuration — menu tree editor</li>
+        <li>SA-16 WhatsApp bot config — message templates, approval status</li>
+        <li>SA-17 MoH data export — anonymised national aggregate reports</li>
+        <li>SA-18 Backup & recovery — status, manual trigger, restore log</li>
+      </ul>
+    </div>
+    <div class="spec-box">
+      <h4>Admin UX rules</h4>
+      <ul>
+        <li>Dark theme — reduces eye strain for internal power users</li>
+        <li>All destructive actions (suspend, delete) require typed confirmation: type facility name to confirm</li>
+        <li>Role elevation requires 2-admin approval — cannot be self-approved</li>
+        <li>Audit log is append-only — no admin can delete or edit log entries</li>
+        <li>ML model retrain shows estimated completion time and locks retraining button until done</li>
+        <li>PDPL deletion requests have a 7-day countdown before hard delete executes</li>
+        <li>System health dashboard auto-refreshes every 60 seconds</li>
+        <li>All approval actions send email notification to requester</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!-- DASHBOARD 4: MOH PORTAL -->
+<!-- ════════════════════════════════════════ -->
+<hr class="section-sep">
+<div class="section">
+  <div class="section-title">Dashboard 4 — Ministry of Health / National Oversight Portal</div>
+  <div class="section-sub">Read-only. No individual patient data accessible. Aggregated, anonymised national statistics only.</div>
+
+  <div class="moh-dash">
+    <div class="moh-header">
+      <div class="moh-header-left">
+        <h2>Rwanda National Health Access Dashboard</h2>
+        <p>MediLink Platform · Powered by MoH · Data anonymised per PDPL Law 058/2021</p>
+      </div>
+      <div class="moh-filters">
+        <select class="moh-filter-select"><option>All districts</option><option>Gasabo</option><option>Nyarugenge</option><option>Kicukiro</option></select>
+        <select class="moh-filter-select"><option>Sep 2026</option><option>Aug 2026</option></select>
+        <button style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;color:#fff;cursor:pointer">Export PDF</button>
+      </div>
+    </div>
+    <div class="moh-body">
+      <div class="moh-kpi-row">
+        <div class="moh-kpi"><div class="moh-kpi-val" style="color:var(--primary)">142</div><div class="moh-kpi-label">Active facilities</div><div class="moh-kpi-trend" style="color:var(--success)">↑ 8 this month</div></div>
+        <div class="moh-kpi"><div class="moh-kpi-val">28,400</div><div class="moh-kpi-label">Registered patients</div><div class="moh-kpi-trend" style="color:var(--success)">↑ 12% MoM</div></div>
+        <div class="moh-kpi"><div class="moh-kpi-val" style="color:var(--success)">34 min</div><div class="moh-kpi-label">Avg wait time</div><div class="moh-kpi-trend" style="color:var(--success)">↓ 28% vs baseline</div></div>
+        <div class="moh-kpi"><div class="moh-kpi-val" style="color:var(--warning)">14%</div><div class="moh-kpi-label">No-show rate</div><div class="moh-kpi-trend" style="color:var(--danger)">↑ High — monitor</div></div>
+        <div class="moh-kpi"><div class="moh-kpi-val">91%</div><div class="moh-kpi-label">Insurance coverage</div><div class="moh-kpi-trend" style="color:var(--success)">Mutuelle dominant</div></div>
+      </div>
+      <div class="moh-map-row">
+        <div class="moh-map-card">
+          <h4>Patient flow by district — Sep 2026</h4>
+          <div class="map-placeholder">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div style="font-size:13px;font-weight:600;color:var(--primary)">Rwanda District Map</div>
+            <div style="font-size:11px;color:var(--n600)">Heat map — booking density per district</div>
+          </div>
+        </div>
+        <div class="moh-map-card">
+          <h4>Top districts by volume</h4>
+          <div class="district-list">
+            <div class="district-item"><span class="dist-name">Gasabo</span><div class="dist-bar-wrap"><div class="dist-bar-fill" style="width:90%"></div></div><span class="dist-val">9,210</span></div>
+            <div class="district-item"><span class="dist-name">Nyarugenge</span><div class="dist-bar-wrap"><div class="dist-bar-fill" style="width:78%"></div></div><span class="dist-val">7,980</span></div>
+            <div class="district-item"><span class="dist-name">Kicukiro</span><div class="dist-bar-wrap"><div class="dist-bar-fill" style="width:65%"></div></div><span class="dist-val">6,640</span></div>
+            <div class="district-item"><span class="dist-name">Huye</span><div class="dist-bar-wrap"><div class="dist-bar-fill" style="width:40%"></div></div><span class="dist-val">4,100</span></div>
+            <div class="district-item"><span class="dist-name">Musanze</span><div class="dist-bar-wrap"><div class="dist-bar-fill" style="width:32%"></div></div><span class="dist-val">3,260</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="moh-table-card">
+        <h4>Facility performance — national ranking <span>Read-only · No patient identifiers</span></h4>
+        <table class="data-table">
+          <thead><tr><th>Facility</th><th>District</th><th>Type</th><th>Avg wait (min)</th><th>Bookings/day</th><th>No-show %</th><th>Insurance accepted</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><strong>CHUK</strong></td><td>Nyarugenge</td><td>Referral hospital</td><td style="color:var(--warning)">47</td><td>312</td><td style="color:var(--danger)">18%</td><td>Mutuelle, RAMA, MMI</td><td><span class="status-pill pill-seen">Active</span></td></tr>
+            <tr><td><strong>King Faisal</strong></td><td>Gasabo</td><td>Referral hospital</td><td style="color:var(--success)">22</td><td>180</td><td style="color:var(--success)">9%</td><td>RAMA, MMI</td><td><span class="status-pill pill-seen">Active</span></td></tr>
+            <tr><td><strong>Kibungo DH</strong></td><td>Ngoma</td><td>District hospital</td><td style="color:var(--success)">18</td><td>94</td><td style="color:var(--success)">7%</td><td>Mutuelle, RAMA</td><td><span class="status-pill pill-waiting">Pending</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="spec-grid">
+    <div class="spec-box">
+      <h4>MoH portal screen inventory</h4>
+      <ul>
+        <li>MH-01 National overview (this screen)</li>
+        <li>MH-02 District drill-down — click district → all facilities in that district</li>
+        <li>MH-03 Facility performance ranking — sortable, filterable by type</li>
+        <li>MH-04 Disease/symptom trends — what conditions patients report most (anonymised)</li>
+        <li>MH-05 Insurance coverage analytics — Mutuelle vs RAMA vs MMI reach</li>
+        <li>MH-06 Wait time trends — monthly, by facility type, by district</li>
+        <li>MH-07 Data export center — PDF, CSV, for ministerial reports</li>
+      </ul>
+    </div>
+    <div class="spec-box">
+      <h4>Data privacy constraints (hard rules)</h4>
+      <ul>
+        <li>Zero individual patient data — all figures are aggregated minimum group of 10</li>
+        <li>No names, phone numbers, or booking IDs ever displayed</li>
+        <li>Export files automatically strip any field that could identify an individual</li>
+        <li>MoH user login: 2FA mandatory, session timeout 30 minutes of inactivity</li>
+        <li>All MoH data access is logged in the compliance audit trail</li>
+        <li>District health officer sees only their district's data — enforced at API level</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+// Hourly flow chart
+const flowCtx = document.getElementById('flowChart').getContext('2d');
+new Chart(flowCtx, {
+  type: 'line',
+  data: {
+    labels: ['8AM','9AM','10AM','11AM','12PM','1PM','2PM','3PM','4PM','5PM'],
+    datasets: [
+      {label:'Today',data:[12,28,45,52,38,22,41,48,35,18],borderColor:'#0A6E5E',backgroundColor:'rgba(10,110,94,.08)',borderWidth:2,fill:true,tension:.4,pointRadius:3,pointHoverRadius:5},
+      {label:'Yesterday',data:[10,24,40,48,35,20,38,44,30,15],borderColor:'#CBD5E0',backgroundColor:'transparent',borderWidth:1.5,borderDash:[4,4],fill:false,tension:.4,pointRadius:2}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:11}}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{font:{size:10}}}}}
+});
+
+// Dept doughnut chart
+const deptCtx = document.getElementById('deptChart').getContext('2d');
+new Chart(deptCtx, {
+  type: 'doughnut',
+  data: {
+    labels: ['General OPD','Paediatrics','Maternity','Cardiology','Emergency'],
+    datasets: [{data:[45,20,15,12,8],backgroundColor:['#0A6E5E','#F4A832','#1E8A4C','#2B6CB0','#D93025'],borderWidth:0,hoverOffset:4}]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:10},padding:8}}},cutout:'65%'}
+});
+</script>
+</body>
+</html>
