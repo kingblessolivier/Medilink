@@ -1,11 +1,18 @@
 # 05 - Frontend Specification
 
-Two React applications, one shared API client, one shared design token set.
+**One** React application at `web/`, serving three surfaces from one build.
 
-| App | Audience | Device | Delivery |
-|---|---|---|---|
-| `web-patient` | Patients | Low-end Android, 3G | Installable PWA |
-| `web-provider` | Reception, facility admin | Shared clinic PC or tablet | Standard web app |
+It was two, then three, and was consolidated on 2026-08-21 - see the changelog
+entry in [11-redesign-roadmap.md](11-redesign-roadmap.md). One origin to host,
+one design system rather than three copies of it. The staff surfaces are lazily
+loaded and left out of the service-worker precache, so a patient never
+downloads a reception desk.
+
+| Surface | Route | Audience | Device | Delivery |
+|---|---|---|---|---|
+| Patient | `/` | Patients | Low-end Android, 3G | Installable PWA |
+| Facility workspace | `/workspace` | Reception, facility admin | Shared clinic PC or tablet | Lazy chunk |
+| Platform admin | `/platform` | MediLink staff | Desktop | Lazy chunk |
 
 ## 1. Shared foundations
 
@@ -184,7 +191,7 @@ Same card shape:
 ## 5. PWA requirements
 
 ```json
-// web-patient/public/manifest.json
+// web/public/manifest.json
 {
   "name": "MediLink Rwanda",
   "short_name": "MediLink",
@@ -272,7 +279,7 @@ Requirements:
 ### Offline queue implementation
 
 ```ts
-// web-provider/src/lib/offlineQueue.ts
+// web/src/workspace/lib/offlineQueue.ts
 type PendingAction = {
   key: string                  // uuid, doubles as Idempotency-Key
   type: "check_in" | "call" | "serve" | "skip"
