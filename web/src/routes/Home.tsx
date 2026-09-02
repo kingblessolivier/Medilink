@@ -234,7 +234,13 @@ export function Home() {
           title={t("nearby_open")}
           action={
             nearby.data && nearby.data.count > 3 ? (
-              <Link to="/search" className="text-body font-medium text-primary">
+              // `inline-flex min-h-touch` rather than bare text: this is a
+              // standalone navigation control, not a link inside a sentence,
+              // so rule 6 applies to it. It measured 22px.
+              <Link
+                to="/search"
+                className="inline-flex min-h-touch items-center text-body font-medium text-primary"
+              >
                 {t("see_all")}
               </Link>
             ) : null
@@ -316,7 +322,10 @@ export function Home() {
           <Section
             title={t("doctors_near_you")}
             action={
-              <Link to="/doctors" className="text-body font-medium text-primary">
+              <Link
+                to="/doctors"
+                className="inline-flex min-h-touch items-center text-body font-medium text-primary"
+              >
                 {t("see_all")}
               </Link>
             }

@@ -310,7 +310,10 @@ function Header({ facility }: { facility: Detail }) {
 
   return (
     <header>
-      <Link to="/search" className="text-body font-medium text-primary">
+      <Link
+        to="/search"
+        className="inline-flex min-h-touch items-center text-body font-medium text-primary"
+      >
         {t("back")}
       </Link>
 

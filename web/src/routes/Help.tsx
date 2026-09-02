@@ -52,7 +52,7 @@ export function Help() {
         <Section title={t("help_data_title")} body={t("help_data_body")}>
           <Link
             to="/profile"
-            className="mt-2 inline-flex text-body-lg font-medium text-primary underline"
+            className="mt-2 inline-flex min-h-touch items-center text-body-lg font-medium text-primary underline"
           >
             {t("nav_profile")}
           </Link>
