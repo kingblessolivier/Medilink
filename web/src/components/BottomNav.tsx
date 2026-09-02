@@ -1,7 +1,9 @@
 import { NavLink } from "react-router-dom"
 import { useI18n } from "../i18n"
+import { useTriageStatus } from "../hooks/useTriageStatus"
 import {
   IconCalendar,
+  IconHeart,
   IconHospital,
   IconSearch,
   IconStethoscope,
@@ -33,16 +35,41 @@ import {
  * Five items maximum. Beyond that it stops being navigation and becomes a
  * menu somebody has to read.
  */
-const TABS = [
-  { to: "/", key: "tab_home", Glyph: IconHospital, end: true },
-  { to: "/search", key: "tab_facilities", Glyph: IconSearch },
-  { to: "/doctors", key: "tab_doctors", Glyph: IconStethoscope },
-  { to: "/visits", key: "tab_visits", Glyph: IconCalendar },
-  { to: "/profile", key: "tab_profile", Glyph: IconUser },
-] as const
+/**
+ * The third tab is the one that changes.
+ *
+ * Browsing every doctor in Kigali is a weak thing for a patient to do: a
+ * doctor is only reachable through the facility they practise at, and someone
+ * who feels unwell does not know which doctor they need. Symptom-first
+ * routing answers the question they actually have, so the Care Guide takes
+ * this slot whenever it is available.
+ *
+ * It is NOT simply swapped in. `/triage/status` is the authority, and it
+ * reports unavailable until a named clinician has signed off a protocol -
+ * offering a tab that leads to "not available yet" would be worse than the
+ * doctor list it replaced. So the list falls back to Doctors while the gate
+ * is shut, and the swap happens on its own the moment it opens, with no
+ * deploy.
+ *
+ * Doctors do not disappear either way: each facility page carries its own
+ * doctors tab, which is where that relationship actually lives.
+ */
+function tabsFor(careGuideAvailable: boolean) {
+  return [
+    { to: "/", key: "tab_home", Glyph: IconHospital, end: true },
+    { to: "/search", key: "tab_facilities", Glyph: IconSearch },
+    careGuideAvailable
+      ? { to: "/care-guide", key: "tab_care_guide", Glyph: IconHeart }
+      : { to: "/doctors", key: "tab_doctors", Glyph: IconStethoscope },
+    { to: "/visits", key: "tab_visits", Glyph: IconCalendar },
+    { to: "/profile", key: "tab_profile", Glyph: IconUser },
+  ] as const
+}
 
 export function BottomNav() {
   const { t } = useI18n()
+  const { available } = useTriageStatus()
+  const TABS = tabsFor(available)
 
   return (
     /* Hidden from `md` up. A thumb reaches the bottom of a phone; on a
