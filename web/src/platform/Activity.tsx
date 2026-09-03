@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "../api/client"
 import {
@@ -63,6 +63,36 @@ export function PlatformActivity() {
 
   const totals = activity.data?.totals
   const facilities = activity.data?.facilities ?? []
+
+  /* Roll the facility rows up by district.
+   *
+   * Sorted by live load, then by how many facilities the district has: an
+   * administrator scanning this wants the busy places first, and a tie between
+   * two quiet districts is best broken by which one MediLink covers more of.
+   */
+  const districts = useMemo(() => {
+    const byDistrict = new Map<
+      string,
+      { district: string; facilities: number; reporting: number; waiting: number; seen: number; booked: number }
+    >()
+    for (const f of facilities) {
+      const key = f.district || "Unknown"
+      const row =
+        byDistrict.get(key) ??
+        { district: key, facilities: 0, reporting: 0, waiting: 0, seen: 0, booked: 0 }
+      row.facilities += 1
+      if (f.reports_queue) row.reporting += 1
+      row.waiting += f.waiting
+      row.seen += f.seen
+      row.booked += f.booked
+      byDistrict.set(key, row)
+    }
+    return [...byDistrict.values()].sort(
+      (a, b) =>
+        b.waiting + b.seen + b.booked - (a.waiting + a.seen + a.booked) ||
+        b.facilities - a.facilities,
+    )
+  }, [facilities])
   const idle = facilities.filter(
     (f) => !f.waiting && !f.seen && !f.booked,
   ).length
@@ -150,6 +180,73 @@ export function PlatformActivity() {
           </div>
         )}
       </section>
+
+      {/* --------------------------------------------------- by district */}
+      {districts.length > 0 && (
+        <section className="ml-section">
+          <h2 className="text-h3 mb-1">By district</h2>
+          {/* The nearest thing this product has to the national oversight the
+              dashboards spec asks for (MH-02, MH-03), served to the people who
+              can actually sign in.
+
+              A separate Ministry portal is NOT built and is not a small piece
+              of work: there is no such principal - the three kinds are
+              patient, staff and admin - so a fourth surface would have nobody
+              to log into it, and its distinctive screens want disease and
+              symptom trends that only exist behind the clinician gate.
+
+              What is real is here: which districts MediLink actually covers,
+              how many of those facilities publish a queue, and where people
+              are waiting right now. */}
+          <p className="mb-4 text-body text-n700">
+            Coverage and live load per district. A facility only contributes
+            waiting and seen counts if it publishes its queue.
+          </p>
+
+          <div className="ml-scroll-x rounded-lg border border-n200 bg-white">
+            <table className="ml-table">
+              <thead>
+                <tr>
+                  <th scope="col">District</th>
+                  <th scope="col">Facilities</th>
+                  <th scope="col">Publishing queue</th>
+                  <th scope="col">Waiting</th>
+                  <th scope="col">Seen</th>
+                  <th scope="col">Booked</th>
+                </tr>
+              </thead>
+              <tbody>
+                {districts.map((d) => (
+                  <tr key={d.district}>
+                    <td className="font-medium">{d.district}</td>
+                    <td className="tabular-nums">{d.facilities}</td>
+                    <td className="tabular-nums">
+                      {/* The number that matters most on this table: a
+                          district full of facilities that publish nothing
+                          looks identical to one with no facilities at all,
+                          from a patient's side of the app. */}
+                      {d.reporting === 0 ? (
+                        <span className="text-n600">None</span>
+                      ) : (
+                        `${d.reporting} of ${d.facilities}`
+                      )}
+                    </td>
+                    <td className="tabular-nums">
+                      {d.waiting > 0 ? (
+                        <Chip tone="warning">{d.waiting}</Chip>
+                      ) : (
+                        <span className="text-n600">0</span>
+                      )}
+                    </td>
+                    <td className="tabular-nums">{d.seen}</td>
+                    <td className="tabular-nums">{d.booked}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {/* -------------------------------------------------- by facility */}
       <section className="ml-section">
