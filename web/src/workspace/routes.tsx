@@ -15,6 +15,7 @@ import {
 import { useQueueActions } from "./useQueueActions"
 import { Reception } from "./Reception"
 import { WorkspaceDashboard } from "./Dashboard"
+import { WorkspaceClinic } from "./Clinic"
 import { WorkspaceAppointments } from "./Appointments"
 import { WorkspaceDoctors } from "./Doctors"
 import { WorkspaceServices } from "./Services"
@@ -46,6 +47,7 @@ const SECTIONS: NavSection[] = [
       { to: "/workspace", label: "Reception", icon: <IconUsers size={17} />, end: true },
       { to: "/workspace/dashboard", label: "Dashboard", icon: <IconChart size={17} /> },
       { to: "/workspace/appointments", label: "Appointments", icon: <IconCalendar size={17} /> },
+      { to: "/workspace/clinic", label: "Clinic", icon: <IconStethoscope size={17} /> },
       { to: "/workspace/patients", label: "Find a patient", icon: <IconSearch size={17} /> },
     ],
   },
@@ -80,6 +82,8 @@ export function WorkspaceRoutes() {
             needs the queue in front of them, and the desk is what most people
             signing in are here to work. The overview is one click away. */}
         <Route path="/dashboard" element={<WorkspaceDashboard />} />
+        {/* CL-01 and CL-02. Read-only: clinicians cannot manage the queue. */}
+        <Route path="/clinic" element={<WorkspaceClinic />} />
         <Route
           path="/appointments"
           element={
