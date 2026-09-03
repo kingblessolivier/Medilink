@@ -161,6 +161,21 @@
      and it is what 76 call sites already say. */
   .ml-btn-sm { @apply ml-control-sm; }
 
+  /* A link in the footer's link columns.
+     
+     Same bargain as `.ml-control-sm`, in the other direction. These sit in
+     tight columns where a mis-tap is easy, so under a thumb they take the full
+     44px target. Under a mouse they do not need it, and paying 44px per row
+     for twelve links turned the footer into 1165px on a phone and left the
+     desktop columns floating in dead space. */
+  .ml-footer-link {
+    @apply inline-flex items-center py-1 text-body-lg text-n700
+           hover:text-primary hover:underline;
+  }
+  @media (pointer: coarse) {
+    .ml-footer-link { @apply min-h-touch py-0; }
+  }
+
   .ml-btn-icon { @apply min-h-touch w-touch px-0; }
 
   /* ----------------------------------------------------------------- inputs */

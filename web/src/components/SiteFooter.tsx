@@ -35,7 +35,7 @@ export function SiteFooter() {
     // `mt-auto` is not used: the page is not a flex column, and a footer that
     // floats to the bottom of a short viewport reads as a fixed bar. It ends
     // the content instead.
-    <footer className="mt-12 border-t border-n200 bg-n100">
+    <footer className="mt-12 border-t border-n200 bg-white">
       {/* `pb-24` on a phone, not `py-8`. The bottom nav is fixed and floats
           OVER this - and the pb-24 that routes carry is on the route content,
           which the footer sits outside of. Without its own clearance the last
@@ -48,38 +48,42 @@ export function SiteFooter() {
             the opposite of what an emergency affordance should feel like on
             a page nobody is panicking on. Constrained, it is still the first
             and most contrasting thing in the footer. */}
-        <a
-          href={`tel:${emergency}`}
-          className="inline-flex w-full max-w-sm items-center gap-3 rounded-lg border border-danger/30 bg-danger/10 p-3 text-n900 no-underline transition-colors hover:bg-danger/10/70"
-        >
-          <span className="ml-icon-plate bg-danger text-white">
-            <IconPhone size={18} />
-          </span>
-          <span className="min-w-0">
-            <span className="block text-body text-n700">
-              {t("footer_emergency_label")}
+        {/* The call block and the "where" link belong on one line from `sm`
+            up. Stacked, the block sat at max-w-sm with the rest of an 88rem
+            shell empty beside it, and the link underneath read as an
+            afterthought rather than as the second option. */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
+          <a
+            href={`tel:${emergency}`}
+            className="inline-flex w-full max-w-sm items-center gap-3 rounded-lg border border-danger/30 bg-danger/10 p-3 text-n900 no-underline transition-colors hover:border-danger/50"
+          >
+            <span className="ml-icon-plate bg-danger text-white">
+              <IconPhone size={18} />
             </span>
-            <span className="block text-body-lg font-semibold text-danger">
-              {t("footer_emergency_action", { number: emergency })}
+            <span className="min-w-0">
+              <span className="block text-body text-n700">
+                {t("footer_emergency_label")}
+              </span>
+              <span className="block text-body-lg font-semibold text-danger">
+                {t("footer_emergency_action", { number: emergency })}
+              </span>
             </span>
-          </span>
-        </a>
+          </a>
 
-        {/* Calling stays the primary action - it is the fastest useful thing
-            somebody can do. This is the second one, for a person who can
-            travel and needs to know where: S-13 lists facilities that
-            actually run an emergency service, nearest first. */}
-        <p className="mt-2">
+          {/* Calling stays the primary action - it is the fastest useful
+              thing somebody can do. This is the second one, for a person who
+              can travel and needs to know where: S-13 lists facilities that
+              actually run an emergency service, nearest first. */}
           <Link
             to="/emergency"
-            className="inline-flex min-h-touch items-center text-body font-medium text-primary"
+            className="inline-flex min-h-touch items-center text-body font-medium text-primary hover:underline"
           >
             {t("emergency_nearest")}
           </Link>
-        </p>
+        </div>
 
-        <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
+        <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="col-span-2 lg:col-span-1">
             <p className="text-h3 text-primary">MediLink</p>
             <p className="mt-1 max-w-prose text-body text-n700">
               {t("footer_tagline")}
@@ -90,7 +94,7 @@ export function SiteFooter() {
             <p className="text-label uppercase tracking-wide text-n600">
               {t("footer_explore")}
             </p>
-            <ul className="mt-3 space-y-2">
+            <ul className="mt-2">
               <FooterLink to="/search">{t("nav_facilities")}</FooterLink>
               <FooterLink to="/doctors">{t("nav_doctors")}</FooterLink>
               {/* The brief lists Services in the primary nav, but that is
@@ -102,11 +106,17 @@ export function SiteFooter() {
             </ul>
           </nav>
 
+          {/* Account (2 links) and Support (3) share one grid cell on a
+              phone, so the row balances against Explore's 5 instead of
+              leaving an empty cell and a 130px gap under it. `lg:contents`
+              dissolves this wrapper at the four-column breakpoint, where each
+              nav is a column in its own right again. */}
+          <div className="flex flex-col gap-8 lg:contents">
           <nav aria-label={t("footer_your_account")}>
             <p className="text-label uppercase tracking-wide text-n600">
               {t("footer_your_account")}
             </p>
-            <ul className="mt-3 space-y-2">
+            <ul className="mt-2">
               <FooterLink to="/visits">{t("nav_visits")}</FooterLink>
               <FooterLink to="/profile">{t("nav_profile")}</FooterLink>
             </ul>
@@ -120,12 +130,13 @@ export function SiteFooter() {
             <p className="text-label uppercase tracking-wide text-n600">
               {t("footer_support")}
             </p>
-            <ul className="mt-3 space-y-2">
+            <ul className="mt-2">
               <FooterLink to="/help">{t("help_title")}</FooterLink>
               <FooterLink to="/about">{t("about_title")}</FooterLink>
               <FooterLink to="/privacy">{t("footer_privacy_link")}</FooterLink>
             </ul>
           </nav>
+          </div>
         </div>
 
         {/* Says what this is and, more importantly, what it is not. */}
@@ -140,12 +151,10 @@ export function SiteFooter() {
 function FooterLink({ to, children }: { to: string; children: React.ReactNode }) {
   return (
     <li>
-      {/* min-h-touch: these sit close together, and a column of footer links on a phone
-          is where mis-taps happen. */}
-      <Link
-        to={to}
-        className="inline-flex min-h-touch items-center text-body-lg text-n700 hover:text-primary hover:underline"
-      >
+      {/* `ml-footer-link` carries the touch target, and only on a coarse
+          pointer - see design/base.css for why paying 44px a row here cost
+          more than it bought. */}
+      <Link to={to} className="ml-footer-link">
         {children}
       </Link>
     </li>
