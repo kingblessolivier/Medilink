@@ -76,3 +76,27 @@ class TriageSessionSerializer(serializers.Serializer):
 class AnswerSerializer(serializers.Serializer):
     question = serializers.CharField(max_length=64)
     option = serializers.CharField(max_length=64)
+
+
+class CheckRequestSerializer(serializers.Serializer):
+    """What a patient typed. Never stored - matched, then dropped."""
+
+    text = serializers.CharField(max_length=300, allow_blank=False, trim_whitespace=True)
+
+
+class CheckResultSerializer(serializers.Serializer):
+    """The whole answer, in one response.
+
+    `matched` distinguishes "we recognised nothing you said" from "we
+    recognised it and it points nowhere". Collapsing those two would let an
+    empty result read as a clean bill of health.
+    """
+
+    protocol_version = serializers.CharField()
+    approved_by = serializers.CharField()
+    disclaimer = TranslationSerializer()
+    escalate_emergency = serializers.BooleanField()
+    emergency_advice = TranslationSerializer(allow_null=True)
+    conditions = RankedConditionSerializer(many=True)
+    recommendation = serializers.CharField(allow_null=True)
+    matched = serializers.BooleanField()

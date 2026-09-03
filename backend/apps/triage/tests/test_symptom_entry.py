@@ -254,6 +254,13 @@ def test_every_entry_needs_all_three_languages():
 
 
 def test_duplicate_entries_for_one_question_are_rejected():
+    """Identical on question AND implies - the case the rule protects.
+
+    Two entries that differ in `implies` are allowed and tested below: they
+    start at the same routing question while standing in for different
+    symptoms, which is how the one-step check reads "fever" and "stomach
+    pain" as different things.
+    """
     with pytest.raises(ProtocolError, match="duplicate entry"):
         _protocol(
             symptom_entries=[
@@ -326,3 +333,22 @@ def test_review_renders_phrases_in_the_language_asked_for():
 
     document = review.render(_protocol(), lang="rw")
     assert "ijisho ribabaza" in document
+
+
+def test_two_entries_for_one_question_are_allowed_when_they_imply_different_things():
+    protocol = _protocol(
+        symptom_entries=[
+            {
+                "question": "where",
+                "implies": ["tooth"],
+                "phrases": {"rw": ["a"], "en": ["fever"], "fr": ["fievre"]},
+            },
+            {
+                "question": "where",
+                "implies": ["eye"],
+                "phrases": {"rw": ["d"], "en": ["stomach"], "fr": ["ventre"]},
+            },
+        ]
+    )
+
+    assert len(protocol.symptom_entries) == 2

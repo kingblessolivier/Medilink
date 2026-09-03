@@ -1214,6 +1214,26 @@ export interface paths {
         patch: operations["staff_team_partial_update"];
         trace?: never;
     };
+    "/api/v1/triage/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check symptoms in one step
+         * @description Free text in, ranked conditions and a service out. No session, no questionnaire and no sign-in. The text is matched against the signed protocol's phrase list and dropped; it is never stored.
+         */
+        post: operations["triage_check_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/triage/sessions": {
         parameters: {
             query?: never;
@@ -1504,6 +1524,27 @@ export interface components {
             eta_minutes: number | null;
             eta_confidence: string | null;
             people_ahead: number;
+        };
+        /** @description What a patient typed. Never stored - matched, then dropped. */
+        CheckRequest: {
+            text: string;
+        };
+        /**
+         * @description The whole answer, in one response.
+         *
+         *     `matched` distinguishes "we recognised nothing you said" from "we
+         *     recognised it and it points nowhere". Collapsing those two would let an
+         *     empty result read as a clean bill of health.
+         */
+        CheckResult: {
+            protocol_version: string;
+            approved_by: string;
+            disclaimer: components["schemas"]["Translation"];
+            escalate_emergency: boolean;
+            emergency_advice: components["schemas"]["Translation"] | null;
+            conditions: components["schemas"]["RankedCondition"][];
+            recommendation: string | null;
+            matched: boolean;
         };
         /**
          * @description * `full` - full
@@ -4030,6 +4071,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TeamMember"];
+                };
+            };
+        };
+    };
+    triage_check_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CheckRequest"];
+                "multipart/form-data": components["schemas"]["CheckRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckResult"];
                 };
             };
         };

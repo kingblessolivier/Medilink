@@ -105,5 +105,65 @@
       },
       "service": "general_consultation"
     }
+  ],
+  "symptom_entries": [
+    {
+      "question": "example_red_flag",
+      "red_flag": true,
+      "_warning": "PLACEHOLDER red-flag phrases. A clinician writes the real list.",
+      "phrases": {
+        "rw": [
+          "sinshobora guhumeka",
+          "bimbabaza mu gatuza"
+        ],
+        "en": [
+          "cannot breathe",
+          "chest pain"
+        ],
+        "fr": [
+          "je ne peux pas respirer",
+          "douleur thoracique"
+        ]
+      }
+    },
+    {
+      "question": "example_routing_question",
+      "implies": [
+        "option_a"
+      ],
+      "_warning": "PLACEHOLDER. A clinician writes the phrases and what they imply.",
+      "phrases": {
+        "rw": [
+          "umuriro",
+          "umutwe urandya"
+        ],
+        "en": [
+          "fever",
+          "headache"
+        ],
+        "fr": [
+          "fievre",
+          "mal de tete"
+        ]
+      }
+    },
+    {
+      "question": "example_routing_question",
+      "implies": [
+        "option_b"
+      ],
+      "_warning": "PLACEHOLDER.",
+      "phrases": {
+        "rw": [
+          "inda irandya"
+        ],
+        "en": [
+          "stomach pain"
+        ],
+        "fr": [
+          "mal au ventre"
+        ]
+      }
+    }
   ]
 }

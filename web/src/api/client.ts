@@ -32,6 +32,7 @@ import type {
   AppointmentAction,
   FacilityReport,
   TeamMember,
+  TriageCheck,
   TeamMemberCreated,
   ScheduleTemplate,
   ScheduleTemplateList,
@@ -513,6 +514,10 @@ export const api = {
 
   staffTeamUpdate: (id: number, body: { role?: string; active?: boolean }) =>
     request<TeamMember>(`/staff/team/${id}`, { method: "PATCH", body }),
+
+  /** One-step Care Guide check. Public - no session, no sign-in. */
+  triageCheck: (text: string) =>
+    request<TriageCheck>("/triage/check", { method: "POST", body: { text } }),
 
   facilityProviders: (slug: string) =>
     request<ProviderList>(`/facilities/${slug}/providers`),

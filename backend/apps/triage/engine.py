@@ -25,6 +25,7 @@ from dataclasses import dataclass
 
 from django.core.cache import cache
 
+from . import lexicon
 from .protocol import Condition, Protocol, Question
 
 SESSION_PREFIX = "triage:"
@@ -278,4 +279,81 @@ def rank_conditions(
             share=score / total,
         )
         for score, condition in scored[:limit]
+    )
+
+
+# --------------------------------------------------------------------------
+# The direct check
+#
+# One box, one answer: a patient types how they feel and gets conditions and a
+# service back, with no questionnaire in between. Stateless - nothing is
+# stored, and the text itself is dropped the moment it has been matched.
+#
+# RED-FLAG SCREENING SURVIVED THE SIMPLIFICATION, and it had to. In the menu
+# flow every red-flag question is asked before anything else, so no phrase can
+# route a patient past emergency screening. Deleting the questions would have
+# deleted that guarantee with them. So an entry may itself be marked
+# `red_flag`, and one match escalates immediately - no conditions, no service,
+# just emergency guidance. Somebody who types "I cannot breathe" must not
+# receive a ranked list to think about.
+# --------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class CheckResult:
+    escalate: bool
+    conditions: tuple[RankedCondition, ...]
+    recommendation: str
+    matched: bool  # did anything in the lexicon match at all?
+
+
+def check(protocol: Protocol, text: str, *, limit: int = 3) -> CheckResult:
+    """Match free text, then rank conditions from what it implied."""
+    entries = lexicon.match_all(protocol, text)
+
+    if any(entry.red_flag for entry in entries):
+        return CheckResult(
+            escalate=True, conditions=(), recommendation="", matched=True
+        )
+
+    implied = {option for entry in entries for option in entry.implies}
+    if not implied:
+        # Nothing recognised. Saying so is the honest outcome - a service
+        # picked from no signal is a guess wearing a recommendation's clothes.
+        return CheckResult(
+            escalate=False, conditions=(), recommendation="", matched=bool(entries)
+        )
+
+    # Reuse the session ranker rather than growing a second scoring path: one
+    # of them would drift, and it would be this one.
+    state = SessionState(
+        session_id="",
+        protocol_version=protocol.version,
+        answers={f"implied_{i}": option for i, option in enumerate(sorted(implied))},
+        asked=[],
+    )
+    ranked = rank_conditions(protocol, state, limit=limit)
+
+    # The service still comes from the protocol, never from the condition
+    # list: the first ranked condition's own `service`, falling back to the
+    # options the text implied.
+    recommendation = ""
+    for condition in protocol.conditions:
+        if ranked and condition.code == ranked[0].code and condition.service:
+            recommendation = condition.service
+            break
+    if not recommendation:
+        for question in protocol.questions.values():
+            for option in question.options:
+                if option.code in implied and option.recommend_service:
+                    recommendation = option.recommend_service
+                    break
+            if recommendation:
+                break
+
+    return CheckResult(
+        escalate=False,
+        conditions=ranked,
+        recommendation=recommendation,
+        matched=True,
     )
