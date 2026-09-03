@@ -16,7 +16,13 @@ from pathlib import Path
 
 from django.conf import settings
 
-SUPPORTED_SCHEMA = 1
+SUPPORTED_SCHEMA = 2
+
+# Schema 1 protocols still load. They simply carry no conditions, and the
+# engine returns none - which is exactly how this behaved before conditions
+# existed, so an existing signed protocol does not become invalid because the
+# software learned a new trick.
+ACCEPTED_SCHEMAS = (1, 2)
 
 
 class ProtocolError(Exception):
@@ -65,6 +71,36 @@ class SymptomEntry:
 
 
 @dataclass(frozen=True)
+class Condition:
+    """A condition the protocol can rank, and the answers that suggest it.
+
+    THIS IS NOT A DIAGNOSIS AND THE SHAPE OF IT MATTERS. `weights` maps an
+    option code to a number a clinician chose - "this answer makes this
+    condition more likely, by this much" - and the engine adds up the ones a
+    patient actually selected. There is no model, no training set and no
+    inference: the whole thing is a table somebody signed.
+
+    That is deliberate rather than a shortcut. A gradient-boosted classifier
+    trained on a public symptom-disease dataset produces a number nobody can
+    explain, cannot be reviewed by the clinician who has to put their
+    registration number against it, and carries the prevalence of whatever
+    population it was collected from. In Kigali that last part is not a
+    detail: a model that has never seen malaria will not rank it.
+
+    `service` is what the patient should actually DO about it, and it stays
+    the primary output. The condition list is context for the conversation
+    they are about to have at a facility.
+    """
+
+    code: str
+    names: dict  # {"rw": ..., "en": ..., "fr": ...}
+    weights: dict  # {option_code: float}
+    service: str = ""
+    # Shown under the condition. Clinician-authored, per language.
+    advice: dict = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class Protocol:
     version: str
     source: str
@@ -76,6 +112,8 @@ class Protocol:
     # Optional. A protocol with none is menu-only, which is the behaviour
     # every existing protocol had before free-text entry existed.
     symptom_entries: tuple = ()
+    # Optional, schema 2. Empty on a schema 1 protocol.
+    conditions: tuple = ()
 
     def question(self, code: str) -> Question | None:
         return self.questions.get(code)
@@ -105,9 +143,10 @@ def _require_translations(data: dict, where: str) -> dict:
 
 def parse(raw: dict, source: str = "<memory>") -> Protocol:
     schema = raw.get("schema")
-    if schema != SUPPORTED_SCHEMA:
+    if schema not in ACCEPTED_SCHEMAS:
         raise ProtocolError(
-            f"{source}: unsupported schema {schema!r}, expected {SUPPORTED_SCHEMA}"
+            f"{source}: unsupported schema {schema!r}, expected one of "
+            f"{list(ACCEPTED_SCHEMAS)}"
         )
 
     version = _require(raw, "version", source)
@@ -175,6 +214,40 @@ def parse(raw: dict, source: str = "<memory>") -> Protocol:
 
     symptom_entries = _parse_symptom_entries(raw, questions, source)
 
+    # ------------------------------------------------------------ conditions
+    #
+    # Optional. Every weight must name an option that exists, because a weight
+    # pointing at a typo is a condition that can never be ranked - and it
+    # would fail silently, which on a protocol somebody has signed is the
+    # worst way for it to fail.
+    known_options = {
+        option.code for question in questions.values() for option in question.options
+    }
+    conditions: list[Condition] = []
+    for entry in raw.get("conditions", ()):
+        code = _require(entry, "code", source)
+        where = f"{source}.conditions[{code}]"
+        weights = _require(entry, "weights", where)
+        if not isinstance(weights, dict) or not weights:
+            raise ProtocolError(f"{where}: 'weights' must be a non-empty object")
+        unknown = sorted(set(weights) - known_options)
+        if unknown:
+            raise ProtocolError(f"{where}: weights name unknown options {unknown}")
+        try:
+            weights = {k: float(v) for k, v in weights.items()}
+        except (TypeError, ValueError) as exc:
+            raise ProtocolError(f"{where}: weights must be numbers") from exc
+
+        conditions.append(
+            Condition(
+                code=code,
+                names=_require_translations(_require(entry, "names", where), f"{where}.names"),
+                weights=weights,
+                service=entry.get("service", ""),
+                advice=entry.get("advice", {}),
+            )
+        )
+
     return Protocol(
         version=version,
         source=source,
@@ -184,6 +257,7 @@ def parse(raw: dict, source: str = "<memory>") -> Protocol:
         questions=questions,
         first_question=first_question,
         symptom_entries=symptom_entries,
+        conditions=tuple(conditions),
     )
 
 

@@ -57,6 +57,19 @@ def _render(protocol, state, record) -> dict:
         "recommendation": state.recommendation or None,
         "finished": state.finished,
         "next_question": None,
+        # Schema 2. Empty on a schema 1 protocol, and empty on an escalated
+        # session - see engine.rank_conditions for why the second one matters.
+        "conditions": [
+            {
+                "code": c.code,
+                "names": c.names,
+                "advice": c.advice or None,
+                # A share of the score that matched, 0..1 - NOT a probability
+                # of having the condition. The client must not relabel it.
+                "share": round(c.share, 3),
+            }
+            for c in engine.rank_conditions(protocol, state)
+        ],
     }
 
     if question is not None:
