@@ -1,5 +1,7 @@
+import secrets
 from datetime import date, datetime, time, timedelta
 
+from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
@@ -18,7 +20,13 @@ from apps.patients.audit import record as log_access
 from apps.patients.models import PatientAccessLog
 from apps.scheduling.models import Appointment, ScheduleTemplate
 
-from .permissions import IsFacilityStaff, IsQueueManager, active_staff
+from .models import StaffMember
+from .permissions import (
+    IsFacilityAdmin,
+    IsFacilityStaff,
+    IsQueueManager,
+    active_staff,
+)
 from .reports import facility_report
 from .serializers import (
     AppointmentStatusSerializer,
@@ -38,6 +46,10 @@ from .serializers import (
     StaffMeSerializer,
     StaffServiceCoverageSerializer,
     StaffServiceCoverageWriteSerializer,
+    TeamMemberCreatedSerializer,
+    TeamMemberSerializer,
+    TeamMemberUpdateSerializer,
+    TeamMemberWriteSerializer,
 )
 
 
@@ -991,3 +1003,147 @@ def patient_lookup(request):
 
 def _mask_phone(phone: str) -> str:
     return f"{phone[:6]}...{phone[-3:]}" if len(phone) > 9 else phone
+
+
+# --------------------------------------------------------------------------
+# FA-10: staff accounts
+#
+# The one staff surface that GRANTS access rather than using it, which is why
+# it is gated on IsFacilityAdmin rather than IsQueueManager - a receptionist
+# works the queue all day and must not be able to mint accounts.
+#
+# Facility comes from the caller's own StaffMember and is never accepted from
+# the payload, so there is no shape of request that creates or edits an
+# account at another clinic.
+# --------------------------------------------------------------------------
+
+
+def _team_row(member, *, me):
+    return {
+        "id": member.id,
+        "username": member.user.username,
+        "full_name": member.user.first_name or "",
+        "role": member.role,
+        "role_label": member.get_role_display(),
+        "active": member.active,
+        "is_self": member.id == me.id,
+    }
+
+
+# One decorator per method: spectacular cannot guess a serializer for a
+# function view that both lists and creates, and it reports that as an error
+# rather than a warning.
+@extend_schema(
+    methods=["GET"],
+    summary="Staff accounts at this facility",
+    responses={200: TeamMemberSerializer(many=True)},
+    tags=["Workspace"],
+)
+@extend_schema(
+    methods=["POST"],
+    summary="Create a staff account at this facility",
+    request=TeamMemberWriteSerializer,
+    responses={201: TeamMemberCreatedSerializer},
+    tags=["Workspace"],
+)
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated, IsFacilityAdmin])
+def team(request):
+    me = active_staff(request)
+
+    if request.method == "GET":
+        members = (
+            StaffMember.objects.filter(facility_id=me.facility_id)
+            .select_related("user")
+            .order_by("user__username")
+        )
+        return Response([_team_row(m, me=me) for m in members])
+
+    payload = TeamMemberWriteSerializer(data=request.data)
+    payload.is_valid(raise_exception=True)
+    data = payload.validated_data
+
+    if User.objects.filter(username__iexact=data["username"]).exists():
+        raise ValidationError({"username": "That username is already taken."})
+
+    # 16 characters from a URL-safe alphabet. Generated, not chosen: an
+    # administrator inventing passwords for colleagues picks the clinic name
+    # and a digit.
+    temporary_password = secrets.token_urlsafe(12)
+
+    with transaction.atomic():
+        user = User.objects.create_user(
+            username=data["username"],
+            password=temporary_password,
+            first_name=data["full_name"],
+        )
+        member = StaffMember.objects.create(
+            user=user,
+            facility_id=me.facility_id,
+            role=data["role"],
+            active=True,
+        )
+
+    row = _team_row(member, me=me)
+    row["temporary_password"] = temporary_password
+    return Response(row, status=201)
+
+
+@extend_schema(
+    summary="Change a colleague's role, or switch their access off",
+    request=TeamMemberUpdateSerializer,
+    responses={200: TeamMemberSerializer},
+    tags=["Workspace"],
+)
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated, IsFacilityAdmin])
+def team_member(request, pk):
+    me = active_staff(request)
+
+    # Scoped by facility in the lookup itself. 404 rather than 403 so an
+    # enumerated id does not confirm that an account exists elsewhere.
+    try:
+        member = StaffMember.objects.select_related("user").get(
+            pk=pk, facility_id=me.facility_id
+        )
+    except StaffMember.DoesNotExist as exc:
+        raise NotFound("No such staff account at this facility.") from exc
+
+    payload = TeamMemberUpdateSerializer(data=request.data)
+    payload.is_valid(raise_exception=True)
+    data = payload.validated_data
+
+    # An administrator must not be able to lock themselves out, nor demote
+    # themselves out of the only role that can undo it. Both are one careless
+    # tap, and both leave a facility with no way back in but a developer.
+    if member.id == me.id:
+        if data.get("active") is False:
+            raise ValidationError(
+                {"active": "You cannot switch off your own account."}
+            )
+        if "role" in data and data["role"] != StaffMember.Role.ADMIN:
+            raise ValidationError(
+                {"role": "You cannot remove your own administrator role."}
+            )
+
+    # The last active administrator is the same lockout by a slower route.
+    if data.get("active") is False and member.role == StaffMember.Role.ADMIN:
+        remaining = (
+            StaffMember.objects.filter(
+                facility_id=me.facility_id,
+                role=StaffMember.Role.ADMIN,
+                active=True,
+            )
+            .exclude(pk=member.pk)
+            .count()
+        )
+        if remaining == 0:
+            raise ValidationError(
+                {"active": "This is the only active administrator at this facility."}
+            )
+
+    for field, value in data.items():
+        setattr(member, field, value)
+    member.save(update_fields=list(data.keys()))
+
+    return Response(_team_row(member, me=me))

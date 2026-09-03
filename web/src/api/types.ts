@@ -92,6 +92,8 @@ export type CheckInResponse = Schemas["CheckInResponse"]
 export type StaffAppointment = Schemas["StaffAppointment"]
 export type StaffAppointmentList = Schemas["StaffAppointmentList"]
 export type FacilityReport = Schemas["FacilityReport"]
+export type TeamMember = Schemas["TeamMember"]
+export type TeamMemberCreated = Schemas["TeamMemberCreated"]
 export type ScheduleTemplate = Schemas["ScheduleTemplate"]
 export type ScheduleTemplateList = Schemas["ScheduleTemplateList"]
 /** Create or update one bookable session. Snake_case: this is the wire. */

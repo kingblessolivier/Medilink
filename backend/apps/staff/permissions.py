@@ -39,6 +39,27 @@ class IsQueueManager(IsFacilityStaff):
         return request.user.staffmember.can_manage_queue
 
 
+class IsFacilityAdmin(IsFacilityStaff):
+    """Facility administrators only.
+
+    Stricter than IsQueueManager on purpose: a receptionist may move the queue
+    all day and must not be able to create accounts or change roles. The
+    dashboards spec says the same thing from the other side - "Receptionist
+    sees FA-03 and FA-06 only".
+
+    This guards the one staff surface that can grant access rather than use
+    it, so it checks the role directly rather than reusing can_manage_queue,
+    which deliberately includes receptionists.
+    """
+
+    message = "Only a facility administrator can manage staff accounts."
+
+    def has_permission(self, request, view):
+        if not super().has_permission(request, view):
+            return False
+        return request.user.staffmember.role == request.user.staffmember.Role.ADMIN
+
+
 class FacilityScopedMixin:
     """Restrict a queryset to the caller's own facility."""
 

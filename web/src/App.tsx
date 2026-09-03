@@ -1,4 +1,5 @@
 import { lazy, Suspense, type ReactNode } from "react"
+import { ApiRequestError } from "./api/client"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import {
   BrowserRouter,
@@ -109,7 +110,29 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      retry: 2,
+      /**
+       * Retry the network, never the answer.
+       *
+       * A flat `retry: 2` retries everything, including the replies that can
+       * only ever come back the same: 401, 403, 404. The cost is not wasted
+       * requests, it is the screen - a query retries twice with backoff, so
+       * the component sits in its loading skeleton for seconds before the
+       * error branch runs, and a refusal reads as a page that never finished
+       * loading. A receptionist opening the admin-only staff screen saw a
+       * blank panel rather than "Administrators only".
+       *
+       * 408 and 429 are excluded from the exclusion: those DO change on their
+       * own, and are worth trying again.
+       */
+      retry: (failureCount, error) => {
+        if (error instanceof ApiRequestError) {
+          const worthRetrying = error.status === 408 || error.status === 429
+          if (error.status >= 400 && error.status < 500 && !worthRetrying) {
+            return false
+          }
+        }
+        return failureCount < 2
+      },
     },
   },
 })

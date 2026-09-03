@@ -44,4 +44,7 @@ urlpatterns = [
     path("staff/facility/hours", views.replace_opening_hours, name="staff-hours"),
     # Scoped to this facility's own patients, logged, and throttled.
     path("staff/patients", views.patient_lookup, name="staff-patients"),
+    # FA-10. Administrators only - see IsFacilityAdmin.
+    path("staff/team", views.team, name="staff-team"),
+    path("staff/team/<int:pk>", views.team_member, name="staff-team-member"),
 ]

@@ -16,6 +16,9 @@ STAFF_ENDPOINTS = [
     ("post", "/api/v1/queue/entries/{entry_id}/skip"),
     ("post", "/api/v1/queue/entries/{entry_id}/cancel"),
     ("get", "/api/v1/staff/me"),
+    # FA-10. Admin-only, and the only staff surface that grants access.
+    ("get", "/api/v1/staff/team"),
+    ("post", "/api/v1/staff/team"),
 ]
 
 
