@@ -73,7 +73,9 @@ export function BottomNav() {
        the same links already in the top bar. */
     <nav
       aria-label={t("nav_primary")}
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-n200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+      // Opaque for the same reason as the top bar: content scrolling
+      // underneath a translucent tab bar ghosts through behind the labels.
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-n200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden"
     >
       <ul className="mx-auto flex max-w-2xl">
         {TABS.map(({ to, key, Glyph, ...rest }) => (

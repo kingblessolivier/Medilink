@@ -118,7 +118,16 @@ export function TopNav({
   const items = itemsFor(session, pathname, t)
 
   return (
-    <header ref={barRef} className="sticky top-0 z-30 border-b border-n200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+    <header
+      ref={barRef}
+      // Opaque, not frosted. It was bg-white/80 with a backdrop blur, and on
+      // a scrolled page the content underneath ghosted through as grey smears
+      // behind the nav labels - one sat right behind "Ahabanza" and read as a
+      // stray active-state pill. A translucent bar buys a texture nobody asked
+      // for and costs contrast on the one element that has to stay readable on
+      // every screen.
+      className="sticky top-0 z-30 border-b border-n200 bg-white"
+    >
       <div className="ml-shell flex items-center gap-4 py-3">
         {/* The home link was 68x16 - the wordmark's own text box. It is on
             every screen and it is how you get back, so it gets a real target
