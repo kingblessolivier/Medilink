@@ -108,6 +108,12 @@ class Condition:
     code: str
     names: dict  # {"rw": ..., "en": ..., "fr": ...}
     weights: dict  # {option_code: float}
+    # Every one of these must be present or the condition does not score at
+    # all. Without it a condition cannot express "only when a child is
+    # involved": "a child who is unwell" carried a small fever weight so a
+    # feverish child would rank higher, and that weight leaked onto every
+    # adult with a fever, who was then shown a paediatric suggestion.
+    requires: tuple = ()
     service: str = ""
     # Shown under the condition. Clinician-authored, per language.
     advice: dict = field(default_factory=dict)
@@ -251,9 +257,17 @@ def parse(raw: dict, source: str = "<memory>") -> Protocol:
         except (TypeError, ValueError) as exc:
             raise ProtocolError(f"{where}: weights must be numbers") from exc
 
+        requires = tuple(entry.get("requires", ()))
+        unknown_requires = sorted(set(requires) - known_options)
+        if unknown_requires:
+            raise ProtocolError(
+                f"{where}: requires names unknown options {unknown_requires}"
+            )
+
         conditions.append(
             Condition(
                 code=code,
+                requires=requires,
                 names=_require_translations(_require(entry, "names", where), f"{where}.names"),
                 weights=weights,
                 service=entry.get("service", ""),

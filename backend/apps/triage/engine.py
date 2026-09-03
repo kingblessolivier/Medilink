@@ -258,6 +258,9 @@ def rank_conditions(
     chosen = set(state.answers.values())
     scored: list[tuple[float, Condition]] = []
     for condition in protocol.conditions:
+        # All-or-nothing gate before any arithmetic.
+        if not set(condition.requires) <= chosen:
+            continue
         score = sum(
             weight for option, weight in condition.weights.items() if option in chosen
         )

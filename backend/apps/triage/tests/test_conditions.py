@@ -189,3 +189,62 @@ def test_a_schema_1_protocol_still_loads_and_ranks_nothing():
 
     assert loaded.conditions == ()
     assert rank_conditions(loaded, state(fever="fever_yes")) == ()
+
+
+# ------------------------------------------------------------------ requires
+
+
+REQUIRES_PROTOCOL = {
+    **PROTOCOL,
+    "conditions": [
+        {
+            "code": "adult_fever",
+            "names": {"rw": "x", "en": "Adult fever", "fr": "x"},
+            "weights": {"fever_yes": 4},
+        },
+        {
+            "code": "child_illness",
+            "names": {"rw": "x", "en": "Child illness", "fr": "x"},
+            # Gated: the fever weight exists so a feverish child ranks higher,
+            # and must not leak onto an adult who only has a fever.
+            "requires": ["fever_no"],
+            "weights": {"fever_no": 5, "fever_yes": 1},
+        },
+    ],
+}
+
+
+def test_a_condition_does_not_score_unless_its_requirements_are_present():
+    """The false positive this gate exists for.
+
+    Before `requires`, a small supporting weight on a shared symptom leaked:
+    an adult who typed "fever and headache" was shown "a child who is
+    unwell", because the paediatric condition carried a fever weight so that
+    a feverish child would rank higher.
+    """
+    ranked = rank_conditions(parse(REQUIRES_PROTOCOL, "test"), state(fever="fever_yes"))
+
+    assert [c.code for c in ranked] == ["adult_fever"]
+
+
+def test_a_gated_condition_scores_when_its_requirement_is_met():
+    ranked = rank_conditions(parse(REQUIRES_PROTOCOL, "test"), state(fever="fever_no"))
+
+    assert [c.code for c in ranked] == ["child_illness"]
+
+
+def test_requires_naming_an_unknown_option_is_refused():
+    broken = {
+        **PROTOCOL,
+        "conditions": [
+            {
+                "code": "c",
+                "names": {"rw": "x", "en": "x", "fr": "x"},
+                "weights": {"fever_yes": 1},
+                "requires": ["nope"],
+            }
+        ],
+    }
+
+    with pytest.raises(ProtocolError, match="unknown options"):
+        parse(broken, source="test")
