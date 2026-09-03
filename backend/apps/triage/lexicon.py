@@ -112,3 +112,30 @@ def unreachable_entries(protocol: Protocol) -> list[SymptomEntry]:
     """
     reachable = set(protocol.questions)
     return [e for e in protocol.symptom_entries if e.question not in reachable]
+
+
+def match_all(protocol: Protocol, text: str) -> tuple[SymptomEntry, ...]:
+    """Every entry whose phrase list matches, not just the strongest.
+
+    `match` picks one winner because the menu flow needs a single starting
+    question. The direct check needs the opposite: somebody who types "fever
+    and headache for three days" has said two things, and scoring only the
+    longer phrase would discard half of what they told us.
+
+    Order is declaration order, so a clinician reading the file top to bottom
+    can predict the result. Matching is the same deterministic substring pass -
+    same input, same output, forever.
+    """
+    haystack = _padded(normalise(text))
+    if not haystack.strip():
+        return ()
+
+    found: list[SymptomEntry] = []
+    for entry in protocol.symptom_entries:
+        for phrase in entry.all_phrases:
+            needle = _padded(normalise(phrase))
+            if needle.strip() and needle in haystack:
+                found.append(entry)
+                break
+
+    return tuple(found)

@@ -60,6 +60,19 @@ class SymptomEntry:
 
     question: str
     phrases: dict  # {"rw": [...], "en": [...], "fr": [...]}
+    # Schema 2, both optional.
+    #
+    # `implies` lists the option codes this phrase stands in for, so a patient
+    # who types "fever and headache" scores the same conditions as one who
+    # answered those two questions from the menu. It is what lets the direct
+    # check work without a questionnaire.
+    #
+    # `red_flag` means the phrase alone is enough to escalate. It exists
+    # because the direct check has no questions to screen with: in the menu
+    # flow every red-flag question is asked before anything else, and removing
+    # the questions would have removed the screening with them.
+    implies: tuple = ()
+    red_flag: bool = False
 
     @property
     def all_phrases(self) -> tuple[str, ...]:
@@ -278,7 +291,7 @@ def _parse_symptom_entries(
     if not isinstance(entries_raw, list):
         raise ProtocolError(f"{source}.symptom_entries: expected a list")
 
-    seen: set[str] = set()
+    seen: set[tuple] = set()
     entries: list[SymptomEntry] = []
 
     for entry in entries_raw:
@@ -290,12 +303,32 @@ def _parse_symptom_entries(
             raise ProtocolError(
                 f"{where}: question '{question}' is not defined in this protocol"
             )
-        if question in seen:
+        implies = tuple(entry.get("implies", ()))
+        unknown_implies = sorted(
+            set(implies)
+            - {o.code for q in questions.values() for o in q.options}
+        )
+        if unknown_implies:
+            raise ProtocolError(
+                f"{where}: 'implies' names unknown options {unknown_implies}"
+            )
+
+        # Uniqueness is on (question, implies), not on question alone.
+        #
+        # It was question alone, to stop the menu matcher depending on which
+        # of two identical entries came first. Schema 2 gives an entry
+        # `implies`, and two entries can now legitimately start at the same
+        # routing question while standing in for different symptoms - "fever"
+        # and "stomach pain" both open the routing branch and mean different
+        # things. Entries that agree on BOTH are still refused, which is the
+        # case the original rule was actually protecting against.
+        signature = (question, implies)
+        if signature in seen:
             raise ProtocolError(
                 f"{where}: duplicate entry - merge the phrase lists instead, "
                 "so the matcher cannot depend on which one is declared first"
             )
-        seen.add(question)
+        seen.add(signature)
 
         phrases_raw = _require(entry, "phrases", where)
         if not isinstance(phrases_raw, dict):
@@ -321,7 +354,14 @@ def _parse_symptom_entries(
                 raise ProtocolError(f"{where}.phrases.{language}: blank phrase")
             phrases[language] = tuple(value)
 
-        entries.append(SymptomEntry(question=question, phrases=phrases))
+        entries.append(
+            SymptomEntry(
+                question=question,
+                phrases=phrases,
+                implies=implies,
+                red_flag=bool(entry.get("red_flag", False)),
+            )
+        )
 
     return tuple(entries)
 
@@ -391,7 +431,7 @@ def _reject_unreachable(questions: dict, first_question: str, source: str) -> No
     always reachable - the engine asks them before anything else, regardless
     of what links to them.
     """
-    seen: set[str] = set()
+    seen: set[tuple] = set()
     queue = [e for e in _entry_points(questions, first_question) if e in questions]
     while queue:
         code = queue.pop()

@@ -19,6 +19,8 @@ from .models import TriageOutcome
 from .protocol import ProtocolError, load
 from .serializers import (
     AnswerSerializer,
+    CheckRequestSerializer,
+    CheckResultSerializer,
     StartSessionSerializer,
     TriageSessionSerializer,
     TriageStatusSerializer,
@@ -224,3 +226,56 @@ def answer_question(request, session_id):
         engine.discard(state.session_id)
 
     return Response(body)
+
+
+@extend_schema(
+    summary="Check symptoms in one step",
+    description=(
+        "Free text in, ranked conditions and a service out. No session, no "
+        "questionnaire and no sign-in. The text is matched against the signed "
+        "protocol's phrase list and dropped; it is never stored."
+    ),
+    request=CheckRequestSerializer,
+    responses=CheckResultSerializer,
+    tags=["Care Guide"],
+)
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def check(request):
+    """One box, one answer.
+
+    Red-flag screening is not optional here. The menu flow screens with
+    questions asked before anything else; this flow has no questions, so an
+    entry may be marked `red_flag` and one match escalates on its own - no
+    conditions, no service, just emergency guidance.
+    """
+    try:
+        protocol, record = _protocol()
+    except TriageUnavailable as exc:
+        return _unavailable(exc)
+
+    payload = CheckRequestSerializer(data=request.data)
+    payload.is_valid(raise_exception=True)
+
+    result = engine.check(protocol, payload.validated_data["text"])
+
+    return Response(
+        {
+            "protocol_version": protocol.version,
+            "approved_by": record.approved_by,
+            "disclaimer": protocol.disclaimer,
+            "escalate_emergency": result.escalate,
+            "emergency_advice": protocol.emergency_advice if result.escalate else None,
+            "conditions": [
+                {
+                    "code": c.code,
+                    "names": c.names,
+                    "advice": c.advice or None,
+                    "share": round(c.share, 3),
+                }
+                for c in result.conditions
+            ],
+            "recommendation": result.recommendation or None,
+            "matched": result.matched,
+        }
+    )
