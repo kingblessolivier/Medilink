@@ -2003,6 +2003,20 @@ export interface components {
             /** Format: double */
             lng: number;
         };
+        /**
+         * @description One condition the answers pointed at.
+         *
+         *     `share` is this condition's portion of the total matched score, 0..1. It
+         *     is NOT a probability of having the condition, and the field is named for
+         *     what it is so a client cannot honestly render it as one.
+         */
+        RankedCondition: {
+            code: string;
+            names: components["schemas"]["Translation"];
+            advice: components["schemas"]["Translation"] | null;
+            /** Format: double */
+            share: number;
+        };
         Register: {
             username: string;
             password: string;
@@ -2395,6 +2409,7 @@ export interface components {
             escalate_emergency: boolean;
             emergency_advice: components["schemas"]["Translation"] | null;
             recommendation: string | null;
+            conditions: components["schemas"]["RankedCondition"][];
             finished: boolean;
             next_question: components["schemas"]["TriageQuestion"] | null;
         };

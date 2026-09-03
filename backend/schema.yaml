@@ -3822,6 +3822,31 @@ components:
       required:
       - lat
       - lng
+    RankedCondition:
+      type: object
+      description: |-
+        One condition the answers pointed at.
+
+        `share` is this condition's portion of the total matched score, 0..1. It
+        is NOT a probability of having the condition, and the field is named for
+        what it is so a client cannot honestly render it as one.
+      properties:
+        code:
+          type: string
+        names:
+          $ref: '#/components/schemas/Translation'
+        advice:
+          allOf:
+          - $ref: '#/components/schemas/Translation'
+          nullable: true
+        share:
+          type: number
+          format: double
+      required:
+      - advice
+      - code
+      - names
+      - share
     Register:
       type: object
       properties:
@@ -4793,6 +4818,10 @@ components:
         recommendation:
           type: string
           nullable: true
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/RankedCondition'
         finished:
           type: boolean
         next_question:
@@ -4801,6 +4830,7 @@ components:
           nullable: true
       required:
       - approved_by
+      - conditions
       - disclaimer
       - emergency_advice
       - escalate_emergency

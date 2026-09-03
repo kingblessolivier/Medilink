@@ -25,7 +25,7 @@ from dataclasses import dataclass
 
 from django.core.cache import cache
 
-from .protocol import Protocol, Question
+from .protocol import Condition, Protocol, Question
 
 SESSION_PREFIX = "triage:"
 SESSION_TTL_SECONDS = 30 * 60
@@ -210,3 +210,72 @@ def answer(
 
     save(state)
     return state
+
+
+# --------------------------------------------------------------------------
+# Condition ranking (schema 2)
+#
+# WHAT THIS IS, precisely, because the words around this feature are loaded.
+# It adds up clinician-authored weights for the options a patient actually
+# selected, and returns the conditions that scored, in order. There is no
+# model and no training data. The whole computation is a signed table plus
+# addition, which is what makes it reviewable by the person whose registration
+# number is attached to it.
+#
+# WHAT IT IS NOT is a diagnosis, and two properties keep it from drifting into
+# one. Ranking never changes the recommended service - that still comes from
+# the protocol's own routing, so the thing a patient is told to DO is
+# unaffected by the list. And an escalated session returns no conditions at
+# all: when a red flag has fired the only correct output is "go now", and a
+# list of possibilities underneath it invites somebody to weigh them up.
+#
+# The percentage is a SHARE OF THE SCORE THAT MATCHED, not a probability. It
+# says "of what your answers pointed at, this was most of it" - not "you have
+# a 74% chance of this". Those are different claims and only one of them is
+# supportable without prevalence data this protocol does not carry.
+# --------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class RankedCondition:
+    code: str
+    names: dict
+    advice: dict
+    score: float
+    share: float  # 0..1, this condition's portion of the total score
+
+
+def rank_conditions(
+    protocol: Protocol, state: SessionState, *, limit: int = 3
+) -> tuple[RankedCondition, ...]:
+    """Rank the protocol's conditions against the answers given so far."""
+    # A red flag outranks everything. Offering possibilities to somebody who
+    # has just been told to go to hospital gives them something to weigh.
+    if state.escalated:
+        return ()
+
+    chosen = set(state.answers.values())
+    scored: list[tuple[float, Condition]] = []
+    for condition in protocol.conditions:
+        score = sum(
+            weight for option, weight in condition.weights.items() if option in chosen
+        )
+        if score > 0:
+            scored.append((score, condition))
+
+    if not scored:
+        return ()
+
+    total = sum(score for score, _ in scored)
+    scored.sort(key=lambda pair: (-pair[0], pair[1].code))
+
+    return tuple(
+        RankedCondition(
+            code=condition.code,
+            names=condition.names,
+            advice=condition.advice,
+            score=score,
+            share=score / total,
+        )
+        for score, condition in scored[:limit]
+    )

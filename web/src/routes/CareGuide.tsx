@@ -14,9 +14,22 @@ import { IconChevronRight } from "../ui/icons"
  *
  * Four rules govern this screen, and none of them are negotiable.
  *
- * 1. IT NEVER DIAGNOSES. It suggests which service to attend. The word
- *    "diagnosis" does not appear, and neither does any condition name - the
- *    protocol only ever returns a service code.
+ * 1. IT NEVER DIAGNOSES, and that rule survived a change in what it shows.
+ *    It used to return a service code and nothing else. A signed schema-2
+ *    protocol may now also carry CONDITIONS, and the result screen ranks the
+ *    ones a patient's answers pointed at.
+ *
+ *    Three things keep that from being a diagnosis. The service to attend is
+ *    still the primary output and is still decided by the protocol's routing,
+ *    so the list cannot redirect care. The number beside each condition is its
+ *    share of the score that matched - "% of what matched", never "% chance
+ *    you have this", because the protocol carries no prevalence data that
+ *    would support the second claim. And an escalated session returns no
+ *    conditions at all: once a red flag has fired the only correct output is
+ *    "go now", and possibilities underneath it invite somebody to weigh them.
+ *
+ *    The weights are a table a clinician signed, not a model. See
+ *    apps/triage/engine.py, rank_conditions.
  * 2. THE DISCLAIMER IS ON EVERY STEP, in the patient's own language, served
  *    by the backend alongside each response rather than written here. A
  *    clinician approves the wording; the client does not get to paraphrase it.
@@ -120,6 +133,7 @@ export function CareGuide() {
     return (
       <Result
         recommendation={session.recommendation}
+        conditions={session.conditions ?? []}
         disclaimer={say(session.disclaimer)}
         onRestart={() => {
           setSession(null)
@@ -391,16 +405,20 @@ function Emergency({
 
 function Result({
   recommendation,
+  conditions,
   disclaimer,
   onRestart,
   onFind,
 }: {
   recommendation: string | null
+  conditions: TriageSession["conditions"]
   disclaimer: string
   onRestart: () => void
   onFind: (service: string) => void
 }) {
   const { t, lang } = useI18n()
+  const say = (text: Translation | null | undefined) =>
+    text ? (text[lang] ?? text.en) : ""
 
   // The protocol returns a service CODE. Its patient-facing name comes from
   // the backend, which holds all three languages - t() would return the key
@@ -449,6 +467,50 @@ function Result({
         </>
       ) : (
         <Notice tone="info">{t("care_guide_no_recommendation")}</Notice>
+      )}
+
+      {/* What the answers pointed at, UNDER the service to attend.
+          
+          The order on the screen is the argument: the actionable thing first,
+          the possibilities second. `share` is the portion of the matched
+          score, not a probability of having the condition, and the label says
+          so - "% of what matched" rather than "% match", which would be a
+          claim the protocol carries no prevalence data to support.
+          
+          Absent entirely when the session escalated: the backend returns no
+          conditions once a red flag has fired, because the only correct
+          output then is "go now". */}
+      {conditions.length > 0 && (
+        <section className="mt-6">
+          <h2 className="text-h3">{t("care_guide_conditions_title")}</h2>
+          <p className="mt-1 text-body text-n700">
+            {t("care_guide_conditions_note")}
+          </p>
+          <ul className="mt-3 space-y-2">
+            {conditions.map((condition) => (
+              <li
+                key={condition.code}
+                className="rounded-lg border border-n200 bg-white p-4"
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="min-w-0 text-body-lg font-medium text-n900">
+                    {say(condition.names)}
+                  </p>
+                  <p className="shrink-0 text-body tabular-nums text-n600">
+                    {t("care_guide_condition_share", {
+                      percent: Math.round(condition.share * 100),
+                    })}
+                  </p>
+                </div>
+                {condition.advice && (
+                  <p className="mt-1 text-body text-n700">
+                    {say(condition.advice)}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       <div className="mt-3 flex flex-wrap gap-2">

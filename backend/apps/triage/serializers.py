@@ -41,6 +41,20 @@ class TriageQuestionSerializer(serializers.Serializer):
     options = TriageOptionSerializer(many=True)
 
 
+class RankedConditionSerializer(serializers.Serializer):
+    """One condition the answers pointed at.
+
+    `share` is this condition's portion of the total matched score, 0..1. It
+    is NOT a probability of having the condition, and the field is named for
+    what it is so a client cannot honestly render it as one.
+    """
+
+    code = serializers.CharField()
+    names = TranslationSerializer()
+    advice = TranslationSerializer(allow_null=True)
+    share = serializers.FloatField()
+
+
 class TriageSessionSerializer(serializers.Serializer):
     session_id = serializers.CharField()
     protocol_version = serializers.CharField()
@@ -52,6 +66,9 @@ class TriageSessionSerializer(serializers.Serializer):
     escalate_emergency = serializers.BooleanField()
     emergency_advice = TranslationSerializer(allow_null=True)
     recommendation = serializers.CharField(allow_null=True)
+    # Ranked conditions, most-supported first. Empty unless the signed
+    # protocol declares conditions AND the session has not escalated.
+    conditions = RankedConditionSerializer(many=True)
     finished = serializers.BooleanField()
     next_question = TriageQuestionSerializer(allow_null=True)
 
