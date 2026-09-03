@@ -31,6 +31,8 @@ import type {
   StaffAppointmentList,
   AppointmentAction,
   FacilityReport,
+  TeamMember,
+  TeamMemberCreated,
   ScheduleTemplate,
   ScheduleTemplateList,
   ScheduleTemplateWrite,
@@ -498,6 +500,19 @@ export const api = {
 
   staffReports: (days = 30) =>
     request<FacilityReport>("/staff/reports", { params: { days } }),
+
+  // FA-10. Administrators only; the API refuses anyone else.
+  staffTeam: () => request<TeamMember[]>("/staff/team"),
+
+  staffTeamCreate: (body: {
+    username: string
+    full_name: string
+    role: string
+  }) =>
+    request<TeamMemberCreated>("/staff/team", { method: "POST", body }),
+
+  staffTeamUpdate: (id: number, body: { role?: string; active?: boolean }) =>
+    request<TeamMember>(`/staff/team/${id}`, { method: "PATCH", body }),
 
   facilityProviders: (slug: string) =>
     request<ProviderList>(`/facilities/${slug}/providers`),

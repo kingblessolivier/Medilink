@@ -16,6 +16,7 @@ import { useQueueActions } from "./useQueueActions"
 import { Reception } from "./Reception"
 import { WorkspaceDashboard } from "./Dashboard"
 import { WorkspaceClinic } from "./Clinic"
+import { WorkspaceTeam } from "./Team"
 import { WorkspaceAppointments } from "./Appointments"
 import { WorkspaceDoctors } from "./Doctors"
 import { WorkspaceServices } from "./Services"
@@ -59,6 +60,7 @@ const SECTIONS: NavSection[] = [
       { to: "/workspace/services", label: "Services", icon: <IconHospital size={17} /> },
       { to: "/workspace/insurance", label: "Insurance", icon: <IconShield size={17} /> },
       { to: "/workspace/reports", label: "Reports", icon: <IconChart size={17} /> },
+      { to: "/workspace/team", label: "Staff accounts", icon: <IconUsers size={17} /> },
       { to: "/workspace/settings", label: "Settings", icon: <IconInfo size={17} /> },
     ],
   },
@@ -84,6 +86,9 @@ export function WorkspaceRoutes() {
         <Route path="/dashboard" element={<WorkspaceDashboard />} />
         {/* CL-01 and CL-02. Read-only: clinicians cannot manage the queue. */}
         <Route path="/clinic" element={<WorkspaceClinic />} />
+        {/* FA-10. Administrators only - the API refuses everyone else, and
+            the screen says which refusal it got. */}
+        <Route path="/team" element={<WorkspaceTeam />} />
         <Route
           path="/appointments"
           element={

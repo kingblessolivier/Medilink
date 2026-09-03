@@ -1764,6 +1764,87 @@ paths:
               schema:
                 $ref: '#/components/schemas/ScheduleTemplate'
           description: ''
+  /api/v1/staff/team:
+    get:
+      operationId: staff_team_list
+      summary: Staff accounts at this facility
+      tags:
+      - Workspace
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamMember'
+          description: ''
+    post:
+      operationId: staff_team_create
+      summary: Create a staff account at this facility
+      tags:
+      - Workspace
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamMemberWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeamMemberWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeamMemberWrite'
+        required: true
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMemberCreated'
+          description: ''
+  /api/v1/staff/team/{id}:
+    patch:
+      operationId: staff_team_partial_update
+      summary: Change a colleague's role, or switch their access off
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Workspace
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTeamMemberUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTeamMemberUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTeamMemberUpdate'
+      security:
+      - patientJWT: []
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMember'
+          description: ''
   /api/v1/triage/sessions:
     post:
       operationId: triage_sessions_create
@@ -3243,6 +3324,14 @@ components:
           type: string
           default: ''
           maxLength: 200
+    PatchedTeamMemberUpdate:
+      type: object
+      description: Change a colleague's role, or switch their access off.
+      properties:
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        active:
+          type: boolean
     Patient:
       type: object
       properties:
@@ -3840,6 +3929,16 @@ components:
       - median_minutes
       - sample_size
       - this_week_minutes
+    RoleEnum:
+      enum:
+      - receptionist
+      - admin
+      - clinician
+      type: string
+      description: |-
+        * `receptionist` - Receptionist
+        * `admin` - Facility administrator
+        * `clinician` - Clinician
     ScheduleTemplate:
       type: object
       description: |-
@@ -4458,6 +4557,93 @@ components:
       required:
       - key
       - ok
+    TeamMember:
+      type: object
+      description: |-
+        One colleague at this facility.
+
+        No email, no password, no last-login IP. This list answers "who can get
+        in, and as what" - anything beyond that is a second question, and staff
+        records are personal data too.
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        full_name:
+          type: string
+        role:
+          type: string
+        role_label:
+          type: string
+        active:
+          type: boolean
+        is_self:
+          type: boolean
+      required:
+      - active
+      - full_name
+      - id
+      - is_self
+      - role
+      - role_label
+      - username
+    TeamMemberCreated:
+      type: object
+      description: |-
+        The create response, which carries the temporary password ONCE.
+
+        It is generated rather than chosen: an administrator inventing passwords
+        for their colleagues picks the clinic name and a digit. It is returned in
+        this response and never stored in readable form or shown again - the
+        workspace tells the administrator to hand it over and have it changed.
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        full_name:
+          type: string
+        role:
+          type: string
+        role_label:
+          type: string
+        active:
+          type: boolean
+        is_self:
+          type: boolean
+        temporary_password:
+          type: string
+      required:
+      - active
+      - full_name
+      - id
+      - is_self
+      - role
+      - role_label
+      - temporary_password
+      - username
+    TeamMemberWrite:
+      type: object
+      description: |-
+        Create one staff account at the caller's own facility.
+
+        `facility` is deliberately absent. It comes from the caller's own
+        StaffMember and can never be supplied, so an administrator cannot create
+        an account somewhere else by editing the payload.
+      properties:
+        username:
+          type: string
+          pattern: ^[a-z0-9][a-z0-9._-]{2,29}$
+        full_name:
+          type: string
+          default: ''
+          maxLength: 150
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+      required:
+      - role
+      - username
     TokenObtainPair:
       type: object
       properties:

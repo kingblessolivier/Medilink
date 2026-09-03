@@ -1179,6 +1179,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/staff/team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Staff accounts at this facility */
+        get: operations["staff_team_list"];
+        put?: never;
+        /** Create a staff account at this facility */
+        post: operations["staff_team_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/team/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change a colleague's role, or switch their access off */
+        patch: operations["staff_team_partial_update"];
+        trace?: never;
+    };
     "/api/v1/triage/sessions": {
         parameters: {
             query?: never;
@@ -1786,6 +1821,11 @@ export interface components {
             /** @default  */
             note: string;
         };
+        /** @description Change a colleague's role, or switch their access off. */
+        PatchedTeamMemberUpdate: {
+            role?: components["schemas"]["RoleEnum"];
+            active?: boolean;
+        };
         Patient: {
             readonly id: number;
             readonly phone: string;
@@ -2003,6 +2043,13 @@ export interface components {
             enough_data: boolean;
         };
         /**
+         * @description * `receptionist` - Receptionist
+         *     * `admin` - Facility administrator
+         *     * `clinician` - Clinician
+         * @enum {string}
+         */
+        RoleEnum: "receptionist" | "admin" | "clinician";
+        /**
          * @description One recurring weekly session.
          *
          *     Read shape. `upcoming` is the count of appointments already booked against
@@ -2212,6 +2259,17 @@ export interface components {
             coverage: components["schemas"]["CoverageEnum"];
             note: string;
         };
+        /**
+         * @description Optional free text describing how the patient feels.
+         *
+         *     Capped hard. This is matched against a phrase list and then discarded, so
+         *     there is no reason to accept an essay - and an unbounded field that is
+         *     normalised character by character is a cheap way to burn CPU on a public
+         *     endpoint.
+         */
+        StartSession: {
+            symptom_text?: string;
+        };
         Sync: {
             actions: components["schemas"]["SyncAction"][];
         };
@@ -2236,6 +2294,53 @@ export interface components {
             entry_id?: number;
             ticket_code?: string;
             error?: string;
+        };
+        /**
+         * @description One colleague at this facility.
+         *
+         *     No email, no password, no last-login IP. This list answers "who can get
+         *     in, and as what" - anything beyond that is a second question, and staff
+         *     records are personal data too.
+         */
+        TeamMember: {
+            id: number;
+            username: string;
+            full_name: string;
+            role: string;
+            role_label: string;
+            active: boolean;
+            is_self: boolean;
+        };
+        /**
+         * @description The create response, which carries the temporary password ONCE.
+         *
+         *     It is generated rather than chosen: an administrator inventing passwords
+         *     for their colleagues picks the clinic name and a digit. It is returned in
+         *     this response and never stored in readable form or shown again - the
+         *     workspace tells the administrator to hand it over and have it changed.
+         */
+        TeamMemberCreated: {
+            id: number;
+            username: string;
+            full_name: string;
+            role: string;
+            role_label: string;
+            active: boolean;
+            is_self: boolean;
+            temporary_password: string;
+        };
+        /**
+         * @description Create one staff account at the caller's own facility.
+         *
+         *     `facility` is deliberately absent. It comes from the caller's own
+         *     StaffMember and can never be supplied, so an administrator cannot create
+         *     an account somewhere else by editing the payload.
+         */
+        TeamMemberWrite: {
+            username: string;
+            /** @default  */
+            full_name: string;
+            role: components["schemas"]["RoleEnum"];
         };
         TokenObtainPair: {
             username: string;
@@ -3843,7 +3948,7 @@ export interface operations {
             };
         };
     };
-    triage_sessions_create: {
+    staff_team_list: {
         parameters: {
             query?: never;
             header?: never;
@@ -3851,6 +3956,83 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamMember"][];
+                };
+            };
+        };
+    };
+    staff_team_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TeamMemberWrite"];
+                "application/x-www-form-urlencoded": components["schemas"]["TeamMemberWrite"];
+                "multipart/form-data": components["schemas"]["TeamMemberWrite"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamMemberCreated"];
+                };
+            };
+        };
+    };
+    staff_team_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedTeamMemberUpdate"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedTeamMemberUpdate"];
+                "multipart/form-data": components["schemas"]["PatchedTeamMemberUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamMember"];
+                };
+            };
+        };
+    };
+    triage_sessions_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["StartSession"];
+                "application/x-www-form-urlencoded": components["schemas"]["StartSession"];
+                "multipart/form-data": components["schemas"]["StartSession"];
+            };
+        };
         responses: {
             200: {
                 headers: {

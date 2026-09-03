@@ -2,6 +2,8 @@ from datetime import date, datetime
 
 from rest_framework import serializers
 
+from .models import StaffMember
+
 
 class StaffFacilitySerializer(serializers.Serializer):
     id = serializers.IntegerField()
@@ -366,3 +368,70 @@ class PatientLookupSerializer(serializers.Serializer):
     count = serializers.IntegerField()
     query = serializers.CharField(allow_blank=True)
     results = PatientMatchSerializer(many=True)
+
+
+# --------------------------------------------------------------------------
+# Workspace: staff accounts (FA-10)
+# --------------------------------------------------------------------------
+
+
+class TeamMemberSerializer(serializers.Serializer):
+    """One colleague at this facility.
+
+    No email, no password, no last-login IP. This list answers "who can get
+    in, and as what" - anything beyond that is a second question, and staff
+    records are personal data too.
+    """
+
+    id = serializers.IntegerField()
+    username = serializers.CharField()
+    full_name = serializers.CharField(allow_blank=True)
+    role = serializers.CharField()
+    role_label = serializers.CharField()
+    active = serializers.BooleanField()
+    is_self = serializers.BooleanField()
+
+
+class TeamMemberWriteSerializer(serializers.Serializer):
+    """Create one staff account at the caller's own facility.
+
+    `facility` is deliberately absent. It comes from the caller's own
+    StaffMember and can never be supplied, so an administrator cannot create
+    an account somewhere else by editing the payload.
+    """
+
+    username = serializers.RegexField(
+        r"^[a-z0-9][a-z0-9._-]{2,29}$",
+        error_messages={
+            "invalid": (
+                "Use 3-30 characters: lowercase letters, digits, dot, dash or "
+                "underscore, starting with a letter or digit."
+            )
+        },
+    )
+    full_name = serializers.CharField(max_length=150, allow_blank=True, default="")
+    role = serializers.ChoiceField(choices=StaffMember.Role.choices)
+
+
+class TeamMemberCreatedSerializer(TeamMemberSerializer):
+    """The create response, which carries the temporary password ONCE.
+
+    It is generated rather than chosen: an administrator inventing passwords
+    for their colleagues picks the clinic name and a digit. It is returned in
+    this response and never stored in readable form or shown again - the
+    workspace tells the administrator to hand it over and have it changed.
+    """
+
+    temporary_password = serializers.CharField()
+
+
+class TeamMemberUpdateSerializer(serializers.Serializer):
+    """Change a colleague's role, or switch their access off."""
+
+    role = serializers.ChoiceField(choices=StaffMember.Role.choices, required=False)
+    active = serializers.BooleanField(required=False)
+
+    def validate(self, attrs):
+        if not attrs:
+            raise serializers.ValidationError("Nothing to change.")
+        return attrs
