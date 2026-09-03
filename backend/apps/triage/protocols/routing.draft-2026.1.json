@@ -1,0 +1,805 @@
+{
+  "schema": 2,
+  "version": "draft-2026.1",
+  "_status": "DRAFT FOR CLINICAL REVIEW - NOT APPROVED, NOT IN USE.",
+  "_what_this_is": "A first draft of real routing content, written so that a clinician edits and signs rather than authoring from a blank file. It is NOT clinically reviewed and must not be served to patients until it is. The version deliberately says 'draft', so pointing the gate at it requires somebody to type the word 'draft' into a production setting - which is the moment they should stop.",
+  "_what_a_reviewer_must_do": [
+    "1. Check every red-flag phrase. These are the only thing standing between a patient with a danger sign and a list of possibilities. Missing one is the worst failure this file can have.",
+    "2. Check every condition's weights. They encode 'this symptom makes this condition more likely, by this much'. They are a clinician's judgement, not a measurement, and the current numbers are a starting point for argument.",
+    "3. Check every service mapping. A condition routed to the wrong service sends somebody to the wrong desk.",
+    "4. Have the Kinyarwanda and French reviewed by a native speaker. The English was written first and the other two follow it; some phrasing will be literal where it should be idiomatic.",
+    "5. Decide what is missing. This covers common presentations only. Anything absent simply does not match, and the patient is told so."
+  ],
+  "_deliberately_absent": "No condition here names a specific pathogen where a clinical test is what distinguishes it. 'Fever needing assessment' rather than 'malaria', because the app cannot do a blood film and telling somebody they have malaria when they have typhoid is the harm this whole design exists to avoid.",
+  "disclaimer": {
+    "rw": "Ibi si isuzuma ry'indwara. Bikwereka gusa serivisi ikwiye ko wasura. Niba wumva umeze nabi cyane, jya kwa muganga ako kanya.",
+    "en": "This is not a diagnosis. It only suggests which service to attend. If you feel very unwell, go to a health facility now.",
+    "fr": "Ceci n'est pas un diagnostic. Il indique seulement quel service consulter. Si votre etat est grave, rendez-vous immediatement dans un centre de sante."
+  },
+  "emergency_advice": {
+    "rw": "Jya ku bitaro byihuse cyangwa uhamagare ubutabazi ako kanya. Ntutegereze.",
+    "en": "Go to the nearest emergency department now, or call emergency services. Do not wait.",
+    "fr": "Rendez-vous immediatement aux urgences ou appelez les secours. N'attendez pas."
+  },
+  "first_question": "danger",
+  "questions": [
+    {
+      "code": "danger",
+      "red_flag": true,
+      "text": {
+        "rw": "Ufite kimwe muri ibi bimenyetso bikomeye?",
+        "en": "Do you have any of these danger signs?",
+        "fr": "Presentez-vous l'un de ces signes de danger ?"
+      },
+      "options": [
+        {
+          "code": "danger_yes",
+          "escalate_emergency": true,
+          "text": {
+            "rw": "Yego",
+            "en": "Yes",
+            "fr": "Oui"
+          }
+        },
+        {
+          "code": "danger_no",
+          "next_question": "symptoms",
+          "text": {
+            "rw": "Oya",
+            "en": "No",
+            "fr": "Non"
+          }
+        }
+      ]
+    },
+    {
+      "code": "symptoms",
+      "text": {
+        "rw": "Ni ikihe kimenyetso gikomeye cyane kuri wowe?",
+        "en": "What is troubling you most?",
+        "fr": "Qu'est-ce qui vous gene le plus ?"
+      },
+      "options": [
+        {
+          "code": "sym_fever",
+          "recommend_service": "general_consultation",
+          "text": {
+            "rw": "Umuriro",
+            "en": "Fever",
+            "fr": "Fievre"
+          }
+        },
+        {
+          "code": "sym_cough",
+          "recommend_service": "general_consultation",
+          "text": {
+            "rw": "Inkorora",
+            "en": "Cough",
+            "fr": "Toux"
+          }
+        },
+        {
+          "code": "sym_headache",
+          "recommend_service": "general_consultation",
+          "text": {
+            "rw": "Kubabara umutwe",
+            "en": "Headache",
+            "fr": "Mal de tete"
+          }
+        },
+        {
+          "code": "sym_diarrhoea",
+          "recommend_service": "general_consultation",
+          "text": {
+            "rw": "Impiswi",
+            "en": "Diarrhoea",
+            "fr": "Diarrhee"
+          }
+        },
+        {
+          "code": "sym_vomiting",
+          "recommend_service": "general_consultation",
+          "text": {
+            "rw": "Kuruka",
+            "en": "Vomiting",
+            "fr": "Vomissements"
+          }
+        },
+        {
+          "code": "sym_abdominal",
+          "recommend_service": "general_consultation",
+          "text": {
+            "rw": "Kubabara mu nda",
+            "en": "Stomach pain",
+            "fr": "Douleur au ventre"
+          }
+        },
+        {
+          "code": "sym_urinary",
+          "recommend_service": "general_consultation",
+          "text": {
+            "rw": "Kubabara wihagarika",
+            "en": "Pain passing urine",
+            "fr": "Douleur en urinant"
+          }
+        },
+        {
+          "code": "sym_tooth",
+          "recommend_service": "dental",
+          "text": {
+            "rw": "Kubabara iryinyo",
+            "en": "Tooth pain",
+            "fr": "Mal de dents"
+          }
+        },
+        {
+          "code": "sym_eye",
+          "recommend_service": "ophthalmology",
+          "text": {
+            "rw": "Ikibazo cy'amaso",
+            "en": "Eye problem",
+            "fr": "Probleme aux yeux"
+          }
+        },
+        {
+          "code": "sym_skin",
+          "recommend_service": "general_consultation",
+          "text": {
+            "rw": "Uruhu rwononekaye",
+            "en": "Skin rash or sore",
+            "fr": "Eruption ou plaie cutanee"
+          }
+        },
+        {
+          "code": "sym_joint",
+          "recommend_service": "physiotherapy",
+          "text": {
+            "rw": "Kubabara ingingo cyangwa umugongo",
+            "en": "Joint or back pain",
+            "fr": "Douleur articulaire ou dorsale"
+          }
+        },
+        {
+          "code": "sym_pregnancy",
+          "recommend_service": "antenatal",
+          "text": {
+            "rw": "Ikibazo cyo gutwita",
+            "en": "Pregnancy concern",
+            "fr": "Preoccupation liee a la grossesse"
+          }
+        },
+        {
+          "code": "sym_child",
+          "recommend_service": "paediatrics",
+          "text": {
+            "rw": "Umwana urwaye",
+            "en": "A child is unwell",
+            "fr": "Un enfant est malade"
+          }
+        },
+        {
+          "code": "sym_injury",
+          "recommend_service": "general_consultation",
+          "text": {
+            "rw": "Gukomereka",
+            "en": "Injury or wound",
+            "fr": "Blessure"
+          }
+        },
+        {
+          "code": "sym_mental",
+          "recommend_service": "mental_health",
+          "text": {
+            "rw": "Guhangayika cyangwa agahinda",
+            "en": "Anxiety or low mood",
+            "fr": "Anxiete ou tristesse"
+          }
+        }
+      ]
+    }
+  ],
+  "symptom_entries": [
+    {
+      "_note": "RED FLAGS. Reviewed first, and the only entries that escalate. A match here stops everything: no conditions, no clinic, just emergency guidance.",
+      "question": "danger",
+      "red_flag": true,
+      "phrases": {
+        "rw": [
+          "sinshobora guhumeka",
+          "mpumeka nabi",
+          "bimbabaza mu gatuza",
+          "amaraso menshi",
+          "ndataye ubwenge",
+          "yataye ubwenge",
+          "afite ibicurane bikomeye",
+          "kugagara",
+          "ijosi rikomeye",
+          "nanyoye uburozi",
+          "umwana ntiyanywa"
+        ],
+        "en": [
+          "cannot breathe",
+          "can't breathe",
+          "difficulty breathing",
+          "chest pain",
+          "heavy bleeding",
+          "bleeding a lot",
+          "unconscious",
+          "fainted",
+          "convulsions",
+          "fitting",
+          "seizure",
+          "stiff neck",
+          "swallowed poison",
+          "child not drinking",
+          "child cannot drink"
+        ],
+        "fr": [
+          "je ne peux pas respirer",
+          "difficulte a respirer",
+          "douleur thoracique",
+          "saignement abondant",
+          "inconscient",
+          "evanoui",
+          "convulsions",
+          "nuque raide",
+          "a avale du poison",
+          "enfant ne boit pas"
+        ]
+      }
+    },
+    {
+      "question": "symptoms",
+      "implies": [
+        "sym_fever"
+      ],
+      "phrases": {
+        "rw": [
+          "umuriro",
+          "mfite umuriro",
+          "ndashyuha",
+          "umubiri urashyuha"
+        ],
+        "en": [
+          "fever",
+          "high temperature",
+          "hot body",
+          "feverish"
+        ],
+        "fr": [
+          "fievre",
+          "temperature",
+          "je suis brulant"
+        ]
+      }
+    },
+    {
+      "question": "symptoms",
+      "implies": [
+        "sym_cough"
+      ],
+      "phrases": {
+        "rw": [
+          "inkorora",
+          "ndakorora",
+          "gukorora"
+        ],
+        "en": [
+          "cough",
+          "coughing",
+          "chest cold"
+        ],
+        "fr": [
+          "toux",
+          "je tousse"
+        ]
+      }
+    },
+    {
+      "question": "symptoms",
+      "implies": [
+        "sym_headache"
+      ],
+      "phrases": {
+        "rw": [
+          "umutwe urandya",
+          "kubabara umutwe",
+          "umutwe urambabaza"
+        ],
+        "en": [
+          "headache",
+          "head hurts",
+          "head pain"
+        ],
+        "fr": [
+          "mal de tete",
+          "cephalee"
+        ]
+      }
+    },
+    {
+      "question": "symptoms",
+      "implies": [
+        "sym_diarrhoea"
+      ],
+      "phrases": {
+        "rw": [
+          "impiswi",
+          "ndahitwa",
+          "kwituma amazi"
+        ],
+        "en": [
+          "diarrhoea",
+          "diarrhea",
+          "loose stool",
+          "running stomach"
+        ],
+        "fr": [
+          "diarrhee",
+          "selles liquides"
+        ]
+      }
+    },
+    {
+      "question": "symptoms",
+      "implies": [
+        "sym_vomiting"
+      ],
+      "phrases": {
+        "rw": [
+          "ndaruka",
+          "kuruka",
+          "kwiruka"
+        ],
+        "en": [
+          "vomiting",
+          "throwing up",
+          "nausea"
+        ],
+        "fr": [
+          "vomissements",
+          "je vomis",
+          "nausee"
+        ]
+      }
+    },
+    {
+      "question": "symptoms",
+      "implies": [
+        "sym_abdominal"
+      ],
+      "phrases": {
+        "rw": [
+          "inda irandya",
+          "kubabara mu nda",
+          "inda irambabaza"
+        ],
+        "en": [
+          "stomach pain",
+          "belly pain",
+          "abdominal pain",
+          "stomach ache"
+        ],
+        "fr": [
+          "mal au ventre",
+          "douleur abdominale"
+        ]
+      }
+    },
+    {
+      "question": "symptoms",
+      "implies": [
+        "sym_urinary"
+      ],
+      "phrases": {
+        "rw": [
+          "kubabara wihagarika",
+          "kwihagarika bibabaza"
+        ],
+        "en": [
+          "pain passing urine",
+          "burning when i urinate",
+          "painful urination"
+        ],
+        "fr": [
+          "douleur en urinant",
+          "brulure en urinant"
+        ]
+      }
+    },
+    {
+      "question": "symptoms",
+      "implies": [
+        "sym_tooth"
+      ],
+      "phrases": {
+        "rw": [
+          "iryinyo rirandya",
+          "kubabara iryinyo",
+          "amenyo arandya"
+        ],
+        "en": [
+          "tooth pain",
+          "toothache",
+          "my tooth hurts",
+          "dental pain"
+        ],
+        "fr": [
+          "mal de dents",
+          "douleur dentaire"
+        ]
+      }
+    },
+    {
+      "question": "symptoms",
+      "implies": [
+        "sym_eye"
+      ],
+      "phrases": {
+        "rw": [
+          "amaso arandya",
+          "sinshobora kubona neza",
+          "amaso atukura"
+        ],
+        "en": [
+          "eye pain",
+          "my eye hurts",
+          "cannot see well",
+          "red eye",
+          "blurred vision"
+        ],
+        "fr": [
+          "mal aux yeux",
+          "je vois flou",
+          "oeil rouge"
+        ]
+      }
+    },
+    {
+      "question": "symptoms",
+      "implies": [
+        "sym_skin"
+      ],
+      "phrases": {
+        "rw": [
+          "uruhu rwanjye",
+          "ibisebe",
+          "kwishimagura"
+        ],
+        "en": [
+          "rash",
+          "skin sore",
+          "itching",
+          "skin problem"
+        ],
+        "fr": [
+          "eruption",
+          "demangeaisons",
+          "plaie cutanee"
+        ]
+      }
+    },
+    {
+      "question": "symptoms",
+      "implies": [
+        "sym_joint"
+      ],
+      "phrases": {
+        "rw": [
+          "umugongo urandya",
+          "ingingo zirandya",
+          "kubabara amavi"
+        ],
+        "en": [
+          "back pain",
+          "joint pain",
+          "knee pain",
+          "my back hurts"
+        ],
+        "fr": [
+          "mal de dos",
+          "douleur articulaire",
+          "mal aux genoux"
+        ]
+      }
+    },
+    {
+      "question": "symptoms",
+      "implies": [
+        "sym_pregnancy"
+      ],
+      "phrases": {
+        "rw": [
+          "ndatwite",
+          "gutwita",
+          "kwipimisha inda"
+        ],
+        "en": [
+          "i am pregnant",
+          "pregnancy",
+          "antenatal",
+          "expecting"
+        ],
+        "fr": [
+          "je suis enceinte",
+          "grossesse",
+          "prenatal"
+        ]
+      }
+    },
+    {
+      "question": "symptoms",
+      "implies": [
+        "sym_child"
+      ],
+      "phrases": {
+        "rw": [
+          "umwana wanjye",
+          "umwana arwaye",
+          "uruhinja"
+        ],
+        "en": [
+          "my child",
+          "my baby",
+          "child is sick",
+          "baby is unwell"
+        ],
+        "fr": [
+          "mon enfant",
+          "mon bebe",
+          "enfant malade"
+        ]
+      }
+    },
+    {
+      "question": "symptoms",
+      "implies": [
+        "sym_injury"
+      ],
+      "phrases": {
+        "rw": [
+          "narakomeretse",
+          "igikomere",
+          "nagwiriwe"
+        ],
+        "en": [
+          "injury",
+          "wound",
+          "i was hurt",
+          "cut myself",
+          "fell down"
+        ],
+        "fr": [
+          "blessure",
+          "plaie",
+          "je suis tombe"
+        ]
+      }
+    },
+    {
+      "question": "symptoms",
+      "implies": [
+        "sym_mental"
+      ],
+      "phrases": {
+        "rw": [
+          "ndahangayitse",
+          "agahinda kenshi",
+          "sintekereza neza"
+        ],
+        "en": [
+          "anxious",
+          "depressed",
+          "stressed",
+          "cannot sleep",
+          "low mood"
+        ],
+        "fr": [
+          "anxieux",
+          "deprime",
+          "stresse",
+          "je ne dors pas"
+        ]
+      }
+    }
+  ],
+  "conditions": [
+    {
+      "_note": "Named for the presentation, not the pathogen. Distinguishing malaria from typhoid needs a blood test, and this app cannot do one.",
+      "code": "febrile_illness",
+      "names": {
+        "rw": "Umuriro ukeneye gusuzumwa",
+        "en": "Fever needing assessment",
+        "fr": "Fievre a evaluer"
+      },
+      "weights": {
+        "sym_fever": 4,
+        "sym_headache": 2,
+        "sym_vomiting": 1
+      },
+      "service": "general_consultation",
+      "advice": {
+        "rw": "Umuriro ukwiye gupimwa. Amavuriro menshi afite laboratwari isuzuma mu minota mike.",
+        "en": "A fever should be tested. Most facilities can run a blood test in minutes.",
+        "fr": "Une fievre doit etre testee. La plupart des centres font une analyse en quelques minutes."
+      }
+    },
+    {
+      "code": "respiratory_infection",
+      "names": {
+        "rw": "Indwara y'ubuhumekero",
+        "en": "Chest or throat infection",
+        "fr": "Infection respiratoire"
+      },
+      "weights": {
+        "sym_cough": 4,
+        "sym_fever": 2
+      },
+      "service": "general_consultation",
+      "advice": {
+        "rw": "Inkorora imaze iminsi irenga irindwi, cyangwa iherekejwe n'umuriro, ikwiye gusuzumwa.",
+        "en": "A cough lasting more than a week, or with fever, should be checked.",
+        "fr": "Une toux de plus d'une semaine, ou avec fievre, doit etre examinee."
+      },
+      "requires": [
+        "sym_cough"
+      ]
+    },
+    {
+      "code": "gastrointestinal_illness",
+      "names": {
+        "rw": "Indwara yo mu nda",
+        "en": "Stomach or bowel illness",
+        "fr": "Trouble digestif"
+      },
+      "weights": {
+        "sym_diarrhoea": 4,
+        "sym_vomiting": 3,
+        "sym_abdominal": 2
+      },
+      "service": "general_consultation",
+      "advice": {
+        "rw": "Nywa amazi menshi. Niba impiswi zimaze iminsi ibiri, cyangwa hari amaraso, jya kwa muganga.",
+        "en": "Drink plenty of fluids. If diarrhoea lasts more than two days, or there is blood, go to a facility.",
+        "fr": "Buvez beaucoup. Si la diarrhee dure plus de deux jours, ou s'il y a du sang, consultez."
+      }
+    },
+    {
+      "code": "urinary_infection",
+      "names": {
+        "rw": "Indwara y'inzira z'inkari",
+        "en": "Urinary infection",
+        "fr": "Infection urinaire"
+      },
+      "weights": {
+        "sym_urinary": 5,
+        "sym_abdominal": 1,
+        "sym_fever": 1
+      },
+      "service": "general_consultation",
+      "requires": [
+        "sym_urinary"
+      ]
+    },
+    {
+      "code": "dental_problem",
+      "names": {
+        "rw": "Ikibazo cy'amenyo",
+        "en": "Dental problem",
+        "fr": "Probleme dentaire"
+      },
+      "weights": {
+        "sym_tooth": 5
+      },
+      "service": "dental"
+    },
+    {
+      "code": "eye_condition",
+      "names": {
+        "rw": "Ikibazo cy'amaso",
+        "en": "Eye condition",
+        "fr": "Affection oculaire"
+      },
+      "weights": {
+        "sym_eye": 5
+      },
+      "service": "ophthalmology"
+    },
+    {
+      "code": "skin_condition",
+      "names": {
+        "rw": "Ikibazo cy'uruhu",
+        "en": "Skin condition",
+        "fr": "Affection cutanee"
+      },
+      "weights": {
+        "sym_skin": 5
+      },
+      "service": "general_consultation"
+    },
+    {
+      "code": "musculoskeletal_pain",
+      "names": {
+        "rw": "Kubabara ingingo n'imikaya",
+        "en": "Joint or muscle pain",
+        "fr": "Douleur articulaire ou musculaire"
+      },
+      "weights": {
+        "sym_joint": 5
+      },
+      "service": "physiotherapy"
+    },
+    {
+      "code": "pregnancy_care",
+      "names": {
+        "rw": "Kwitaho gutwita",
+        "en": "Pregnancy care",
+        "fr": "Suivi de grossesse"
+      },
+      "weights": {
+        "sym_pregnancy": 6
+      },
+      "service": "antenatal",
+      "advice": {
+        "rw": "Kwipimisha inda ni ubuntu mu mavuriro ya Leta.",
+        "en": "Antenatal care is free at public facilities.",
+        "fr": "Le suivi prenatal est gratuit dans les etablissements publics."
+      },
+      "requires": [
+        "sym_pregnancy"
+      ]
+    },
+    {
+      "code": "child_illness",
+      "names": {
+        "rw": "Uburwayi bw'umwana",
+        "en": "A child who is unwell",
+        "fr": "Enfant malade"
+      },
+      "weights": {
+        "sym_child": 6,
+        "sym_fever": 1,
+        "sym_diarrhoea": 1
+      },
+      "service": "paediatrics",
+      "advice": {
+        "rw": "Abana barwara vuba. Niba umwana atanywa, asinzira cyane, cyangwa afite umuriro mwinshi, jya kwa muganga ako kanya.",
+        "en": "Children deteriorate quickly. If a child will not drink, is very sleepy, or has a high fever, go now.",
+        "fr": "Les enfants se degradent vite. S'il ne boit pas, est tres somnolent ou a une forte fievre, allez-y tout de suite."
+      },
+      "requires": [
+        "sym_child"
+      ],
+      "_note": "`requires` gates this entirely on a child being involved. Without it the small fever and diarrhoea weights - there so a feverish child ranks higher - leaked onto every adult with a fever, who was then shown a paediatric suggestion."
+    },
+    {
+      "code": "injury_wound",
+      "names": {
+        "rw": "Igikomere",
+        "en": "Injury or wound",
+        "fr": "Blessure"
+      },
+      "weights": {
+        "sym_injury": 5
+      },
+      "service": "general_consultation"
+    },
+    {
+      "code": "mental_health_concern",
+      "names": {
+        "rw": "Ubuzima bwo mu mutwe",
+        "en": "Mental health concern",
+        "fr": "Sante mentale"
+      },
+      "weights": {
+        "sym_mental": 6
+      },
+      "service": "mental_health",
+      "advice": {
+        "rw": "Guhangayika no kugira agahinda ni ibintu bivurwa. Ntabwo ari ikimenyetso cy'intege nke.",
+        "en": "Anxiety and low mood are treatable. Asking for help is not weakness.",
+        "fr": "L'anxiete et la depression se soignent. Demander de l'aide n'est pas une faiblesse."
+      }
+    }
+  ]
+}

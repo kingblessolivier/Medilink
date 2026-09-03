@@ -155,6 +155,29 @@ Then complete the remaining items in
 [docs/08 section 8](../../../docs/08-security-and-compliance.md): Ministry of
 Health and Rwanda FDA consultation, and the disclaimer wording review.
 
+## `routing.draft-2026.1.json` - a draft to review, not to serve
+
+There is now a **draft** alongside the structural example. It contains real
+content: fifteen symptoms, twelve conditions with weights, red-flag phrases,
+and service mappings, in Kinyarwanda, English and French.
+
+It exists so a clinician edits and argues with something rather than authoring
+from a blank file. It is **not reviewed and not approved**, and its version
+says `draft-2026.1` on purpose - enabling it means typing the word "draft"
+into a production setting, which is the moment to stop.
+
+What a reviewer has to do is listed in the file itself under
+`_what_a_reviewer_must_do`. The two things worth repeating here:
+
+* **The red-flag phrase list is the safety-critical part.** It is the only
+  thing between a patient with a danger sign and a list of possibilities. A
+  missing phrase is the worst failure this file can have.
+* **No condition names a pathogen that a test distinguishes.** It says "fever
+  needing assessment", not "malaria" - the app cannot do a blood film, and
+  telling somebody they have malaria when they have typhoid is the harm the
+  whole design exists to avoid. A reviewer may disagree; that is their call to
+  make and to sign.
+
 ## Seeing the flow without clinical content
 
 To watch the mechanism work - red-flag escalation, routing, the hand-off to
