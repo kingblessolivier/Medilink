@@ -6,6 +6,7 @@ this directory for the reasoning, and services.py for the rules.
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.db import transaction
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.decorators import (
@@ -14,16 +15,19 @@ from rest_framework.decorators import (
     permission_classes,
     throttle_classes,
 )
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.patients.auth import PatientJWTAuthentication
 from apps.patients.models import Patient
 
 from .serializers import (
     LoginSerializer,
+    PasswordChangeSerializer,
     RegisterSerializer,
     SessionSerializer,
     SignInResponseSerializer,
@@ -36,6 +40,33 @@ from .services import (
     session_for_user,
     sign_in,
 )
+
+
+class PasswordChangeThrottle(UserRateThrottle):
+    scope = "signin"
+
+    def get_rate(self):
+        return getattr(settings, "REST_FRAMEWORK", {}).get("DEFAULT_THROTTLE_RATES", {}).get(self.scope)
+
+
+@extend_schema(request=PasswordChangeSerializer, responses=SignInResponseSerializer, summary="Change your staff password")
+@api_view(["POST"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+@throttle_classes([PasswordChangeThrottle])
+def change_password(request):
+    payload = PasswordChangeSerializer(data=request.data, context={"request": request})
+    payload.is_valid(raise_exception=True)
+    with transaction.atomic():
+        user = User.objects.select_for_update().get(pk=request.user.pk)
+        if not user.check_password(payload.validated_data["current_password"]):
+            raise ValidationError({"current_password": "Your current password is incorrect."})
+        if user.check_password(payload.validated_data["new_password"]):
+            raise ValidationError({"new_password": "Choose a different password."})
+        user.set_password(payload.validated_data["new_password"])
+        user.save(update_fields=["password"])
+    refresh = RefreshToken.for_user(user)
+    return Response({"access": str(refresh.access_token), "refresh": str(refresh), "session": session_for_user(user)})
 
 
 class SignInThrottle(AnonRateThrottle):

@@ -23,6 +23,7 @@ export function useNearbyFacilities(
   coords: Coordinates | null,
   filters: NearbyFilters = {},
   district?: string | null,
+  live = false,
 ) {
   const origin = coords
     ? { lat: coords.lat, lng: coords.lng }
@@ -31,7 +32,7 @@ export function useNearbyFacilities(
       : null
 
   return useQuery({
-    queryKey: ["nearby", origin, filters],
+    queryKey: ["nearby", origin, filters, live],
     queryFn: () =>
       api.nearby({
         ...origin!,
@@ -40,10 +41,13 @@ export function useNearbyFacilities(
         specialty: filters.specialty,
         open_now: filters.openNow,
         radius: filters.radius,
+        live_queue: live || undefined,
       }),
     enabled: origin !== null,
     // A facility list does not change minute to minute.
-    staleTime: 60_000,
+    staleTime: live ? 0 : 60_000,
+    refetchInterval: live ? 20_000 : false,
+    refetchOnWindowFocus: live,
     // Keep for a day so the offline fallback has something to show.
     gcTime: 24 * 60 * 60 * 1000,
     retry: 2,

@@ -1,4 +1,10 @@
+from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.utils import get_md5_hash_password
 
 from apps.patients.models import normalise_phone
 
@@ -9,6 +15,26 @@ class LoginSerializer(serializers.Serializer):
     # decided in services.sign_in, not here.
     username = serializers.CharField(max_length=150, trim_whitespace=True)
     password = serializers.CharField(max_length=128, trim_whitespace=False)
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    current_password = serializers.CharField(max_length=128, trim_whitespace=False, write_only=True)
+    new_password = serializers.CharField(max_length=128, min_length=8, trim_whitespace=False, write_only=True)
+
+    def validate_new_password(self, value):
+        validate_password(value, self.context["request"].user)
+        return value
+
+
+class RevokingRefreshSerializer(TokenRefreshSerializer):
+    def validate(self, attrs):
+        token = self.token_class(attrs["refresh"])
+        user_id = token.payload.get(api_settings.USER_ID_CLAIM)
+        if user_id is not None:
+            user = User.objects.filter(pk=user_id, is_active=True).first()
+            if user is None or token.get(api_settings.REVOKE_TOKEN_CLAIM) != get_md5_hash_password(user.password):
+                raise AuthenticationFailed("Sign in again after changing your password.")
+        return super().validate(attrs)
 
 
 class RegisterSerializer(serializers.Serializer):

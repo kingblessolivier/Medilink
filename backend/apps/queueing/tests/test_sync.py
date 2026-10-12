@@ -14,6 +14,18 @@ from apps.queueing.models import QueueEntry
 SYNC = "/api/v1/queue/sync"
 
 
+@pytest.mark.django_db
+@pytest.mark.parametrize("ownership", [{"facility_id": 999999}, {"actor_username": "someone-else"}])
+def test_sync_rejects_actions_owned_by_another_account(staff_client, facility, general, ownership):
+    queued = action("foreign-owner", "check_in", minutes_ago=1,
+                    payload={"service": general.code, "walk_in_name": "Wrong owner"})
+    response = staff_client.post(SYNC, {"actions": [{**queued, **ownership}]}, format="json")
+    assert response.status_code == 200
+    assert response.json()["applied"] == 0
+    assert response.json()["results"][0]["ok"] is False
+    assert not QueueEntry.objects.exists()
+
+
 def action(key, kind, *, minutes_ago, payload):
     return {
         "key": key,

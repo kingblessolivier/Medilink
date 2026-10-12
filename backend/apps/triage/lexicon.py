@@ -43,6 +43,26 @@ from .protocol import Protocol, SymptomEntry
 # space. "Mal aux dents" and "mal aux dents." must match the same phrase, and
 # a patient typing on a phone keyboard will not produce clean punctuation.
 _NON_WORD = re.compile(r"[^\w]+", re.UNICODE)
+_CLAUSE_BREAK = re.compile(r"[.!?;]|\b(?:and|but|however|mais|pourtant|ariko)\b", re.I)
+_NEGATION = re.compile(r"\b(?:no|not|without|denies|denied|pas|sans|aucun|aucune|nta|ntabwo|sinfite)\b")
+
+
+def _affirmed(phrase: str, text: str) -> bool:
+    """Match a phrase only when its local clause does not explicitly deny it."""
+    needle = _padded(normalise(phrase))
+    if not needle.strip():
+        return False
+    for clause in _CLAUSE_BREAK.split(text):
+        haystack = _padded(normalise(clause))
+        start = 0
+        while (position := haystack.find(needle, start)) >= 0:
+            preceding = " ".join(haystack[:position].split()[-7:])
+            # "not only fever" and "not just fever" affirm the symptom.
+            preceding = re.sub(r"\bnot (?:only|just)\b", "", preceding)
+            if not _NEGATION.search(preceding):
+                return True
+            start = position + len(needle) - 1
+    return False
 
 
 def normalise(text: str) -> str:
@@ -78,9 +98,8 @@ def match(protocol: Protocol, text: str) -> tuple[str, str] | None:
 
     for order, entry in enumerate(protocol.symptom_entries):
         for phrase in entry.all_phrases:
-            needle = _padded(normalise(phrase))
-            if needle.strip() and needle in haystack:
-                candidate = (len(needle.strip()), -order, entry.question, phrase)
+            if _affirmed(phrase, text):
+                candidate = (len(normalise(phrase)), -order, entry.question, phrase)
                 if best is None or candidate > best:
                     best = candidate
 
@@ -133,8 +152,7 @@ def match_all(protocol: Protocol, text: str) -> tuple[SymptomEntry, ...]:
     found: list[SymptomEntry] = []
     for entry in protocol.symptom_entries:
         for phrase in entry.all_phrases:
-            needle = _padded(normalise(phrase))
-            if needle.strip() and needle in haystack:
+            if _affirmed(phrase, text):
                 found.append(entry)
                 break
 

@@ -208,6 +208,8 @@ class QueueEntryPublicSerializer(serializers.ModelSerializer):
 
 
 class SyncActionSerializer(serializers.Serializer):
+    facility_id = serializers.IntegerField(min_value=1, required=False)
+    actor_username = serializers.CharField(max_length=150, required=False)
     key = serializers.CharField(max_length=64)
     type = serializers.ChoiceField(
         choices=["check_in", "call", "serve", "skip", "cancel"]

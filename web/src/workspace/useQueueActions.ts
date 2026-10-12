@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import { ApiRequestError, api } from "../api/client"
+import { ApiRequestError, api, tokens } from "../api/client"
+import { useSession } from "../hooks/useAuth"
 import {
   dequeue,
   enqueue,
@@ -24,6 +25,10 @@ import {
  * and is later replayed through /queue/sync cannot create a duplicate entry.
  */
 export function useQueueActions() {
+  const session = useSession()
+  const owner = useMemo(() => session?.kind === "staff" && session.facility
+    ? { facilityId: session.facility.id, username: session.username }
+    : null, [session?.kind, session?.facility?.id, session?.username])
   const queryClient = useQueryClient()
   const [online, setOnline] = useState(navigator.onLine)
   const [pendingCount, setPendingCount] = useState(0)
@@ -31,8 +36,8 @@ export function useQueueActions() {
   const [lastError, setLastError] = useState<string | null>(null)
 
   const refreshCount = useCallback(async () => {
-    setPendingCount((await pending()).length)
-  }, [])
+    setPendingCount(owner ? (await pending(owner)).length : 0)
+  }, [owner])
 
   const invalidateBoard = useCallback(
     () => queryClient.invalidateQueries({ queryKey: ["board"] }),
@@ -40,7 +45,10 @@ export function useQueueActions() {
   )
 
   const flush = useCallback(async () => {
-    const backlog = await pending()
+    if (!owner) return
+    const credential = tokens.access
+    const backlog = await pending(owner)
+    if (credential !== tokens.access) return
     if (backlog.length === 0 || !navigator.onLine) return
 
     setSyncing(true)
@@ -64,7 +72,7 @@ export function useQueueActions() {
       setSyncing(false)
       await refreshCount()
     }
-  }, [invalidateBoard, refreshCount])
+  }, [invalidateBoard, refreshCount, owner])
 
   useEffect(() => {
     refreshCount()
@@ -91,7 +99,10 @@ export function useQueueActions() {
       payload: Record<string, unknown>,
       attempt: (key: string, recordedAt: string) => Promise<unknown>,
     ) => {
+      if (!owner) throw new Error("Sign in as facility staff before recording an action.")
+      const credential = tokens.access
       const action: PendingAction = {
+        owner,
         key: newKey(),
         type,
         clientRecordedAt: new Date().toISOString(),
@@ -99,6 +110,7 @@ export function useQueueActions() {
       }
 
       await enqueue(action)
+      if (credential !== tokens.access) return action
       await refreshCount()
       setLastError(null)
 
@@ -122,7 +134,7 @@ export function useQueueActions() {
 
       return action
     },
-    [invalidateBoard, refreshCount],
+    [invalidateBoard, refreshCount, owner],
   )
 
   const checkIn = useCallback(

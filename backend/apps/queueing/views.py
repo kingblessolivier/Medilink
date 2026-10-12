@@ -280,6 +280,12 @@ def sync(request):
     results = []
     for action in actions:
         key, kind = action["key"], action["type"]
+        if (
+            action.get("facility_id", staff.facility_id) != staff.facility_id
+            or action.get("actor_username", request.user.username) != request.user.username
+        ):
+            results.append({"key": key, "ok": False, "error": "This action belongs to another staff account or facility."})
+            continue
         try:
             if kind == "check_in":
                 data = CheckInSerializer(data=action["payload"])

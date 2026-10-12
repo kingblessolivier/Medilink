@@ -253,6 +253,9 @@ def check(request):
         protocol, record = _protocol()
     except TriageUnavailable as exc:
         return _unavailable(exc)
+    except ProtocolError:
+        logger.exception("triage_protocol_invalid")
+        return _unavailable("The Care Guide is temporarily unavailable.")
 
     payload = CheckRequestSerializer(data=request.data)
     payload.is_valid(raise_exception=True)

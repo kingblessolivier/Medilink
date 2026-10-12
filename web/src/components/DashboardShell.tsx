@@ -1,5 +1,5 @@
-import { NavLink } from "react-router-dom"
-import type { ReactNode } from "react"
+import { NavLink, useLocation } from "react-router-dom"
+import { useEffect, useState, type ReactNode } from "react"
 import { useI18n } from "../i18n"
 import { IconChevronRight } from "../ui/icons"
 
@@ -43,6 +43,10 @@ export function DashboardShell({
   children: ReactNode
 }) {
   const { t } = useI18n()
+  const [expanded, setExpanded] = useState(false)
+  const location = useLocation()
+  useEffect(() => setExpanded(false), [location.pathname])
+  const current = sections.flatMap(section => section.items).find(item => item.to === location.pathname)?.label ?? title
 
   return (
     <div className="lg:grid lg:grid-cols-[16rem_minmax(0,1fr)]">
@@ -60,17 +64,18 @@ export function DashboardShell({
           )}
         </div>
 
-        {/* Below `lg` the sections flatten into one scrolling row. A phone
-            has no room for a sidebar, and a receptionist on a tablet should
-            not lose half the width to navigation. */}
-        <nav className="px-2 py-2 lg:px-3 lg:py-2">
-          <div className="flex gap-1 overflow-x-auto lg:block lg:space-y-5 lg:overflow-visible">
+        <button type="button" aria-expanded={expanded} aria-controls="dashboard-sections" onClick={() => setExpanded(value => !value)} className="flex min-h-touch w-full items-center justify-between gap-3 px-4 text-left font-medium text-primary lg:hidden">
+          <span className="min-w-0 break-words">{current}</span>
+          <IconChevronRight size={20} className={expanded ? "rotate-90 shrink-0" : "shrink-0"} />
+        </button>
+        <nav id="dashboard-sections" className={(expanded ? "block " : "hidden ") + "px-2 py-2 lg:block lg:px-3 lg:py-2"}>
+          <div className="space-y-5">
             {sections.map((section) => (
-              <div key={section.label} className="contents lg:block">
+              <div key={section.label}>
                 {/* The group label is desktop-only: in the flattened row it
                     would be an unclickable item sitting in a list of
                     clickable ones. */}
-                <p className="ml-label hidden px-2 pb-1.5 lg:block">
+                <p className="ml-label px-2 pb-1.5">
                   {section.label}
                 </p>
 
@@ -80,7 +85,7 @@ export function DashboardShell({
                     to={to}
                     end={end}
                     className={({ isActive }) =>
-                      "group flex min-h-touch items-center gap-2.5 whitespace-nowrap rounded-md px-2.5 text-body-lg transition-colors lg:min-h-0 lg:py-2 " +
+                      "group flex min-h-touch items-center gap-2.5 whitespace-nowrap rounded-md px-2.5 text-body-lg transition-colors lg:py-2 " +
                       (isActive
                         ? "bg-primary-light font-medium text-primary"
                         : "text-n700 hover:bg-n100 hover:text-n900")
