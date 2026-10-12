@@ -21,6 +21,8 @@ import { PlatformFacilities } from "./Facilities"
 import { PlatformProviders } from "./Providers"
 import { PlatformAccess } from "./Access"
 import { PlatformActivity } from "./Activity"
+import { Security } from "../workspace/Security"
+import { useI18n } from "../i18n"
 
 /**
  * The platform portal.
@@ -64,12 +66,14 @@ const SECTIONS: NavSection[] = [
 ]
 
 export function PlatformRoutes() {
+  const { t } = useI18n()
   const { session } = useAuth()
   const who = session.state === "signed_in" ? session.session.display_name : ""
 
   return (
-    <DashboardShell title="Platform" subtitle={who} sections={SECTIONS}>
+    <DashboardShell title="Platform" subtitle={who} sections={[...SECTIONS, { label: t("security_title"), items: [{ to: "/platform/security", label: t("security_title"), icon: <IconShield size={17} /> }] }]}>
       <Routes>
+        <Route path="/security" element={<Security />} />
         <Route path="/" element={<Overview />} />
         <Route path="/activity" element={<PlatformActivity />} />
         <Route path="/facilities" element={<PlatformFacilities />} />

@@ -21,9 +21,11 @@ vi.mock("idb-keyval", () => ({
 
 const { dequeue, enqueue, newKey, pending, pendingCount, toWire } =
   await import("./offlineQueue")
+const owner = { facilityId: 8, username: "reception" }
 
 function action(minutesAgo: number, name: string) {
   return {
+    owner,
     key: newKey(),
     type: "check_in" as const,
     clientRecordedAt: new Date(Date.now() - minutesAgo * 60_000).toISOString(),
@@ -40,10 +42,10 @@ describe("offlineQueue", () => {
     const first = action(10, "A")
     await enqueue(first)
 
-    expect(await pendingCount()).toBe(1)
+    expect(await pendingCount(owner)).toBe(1)
 
     await dequeue(first.key)
-    expect(await pendingCount()).toBe(0)
+    expect(await pendingCount(owner)).toBe(0)
   })
 
   it("returns actions oldest first, whatever order they were queued in", async () => {
@@ -53,7 +55,7 @@ describe("offlineQueue", () => {
     await enqueue(action(25, "First"))
     await enqueue(action(1, "Third"))
 
-    const names = (await pending()).map(
+    const names = (await pending(owner)).map(
       (a) => (a.payload as { walk_in_name: string }).walk_in_name,
     )
 
@@ -71,7 +73,20 @@ describe("offlineQueue", () => {
     store.set("medilink.something-else", { not: "an action" })
     await enqueue(action(5, "A"))
 
-    expect(await pendingCount()).toBe(1)
+    expect(await pendingCount(owner)).toBe(1)
+  })
+  it("keeps another facility's work private and intact", async () => {
+    const other = { facilityId: 9, username: "other-desk" }
+    await enqueue(action(3, "A"))
+    await enqueue({ ...action(1, "B"), owner: other })
+    expect((await pending(owner)).map(a => a.payload.walk_in_name)).toEqual(["A"])
+    expect((await pending(other)).map(a => a.payload.walk_in_name)).toEqual(["B"])
+    expect(await pending({ facilityId: 8, username: "new-desk" })).toEqual([])
+  })
+  it("quarantines legacy ownerless actions instead of replaying them", async () => {
+    store.set("pending:legacy", { key: "legacy", payload: { walk_in_name: "Private" } })
+    expect(await pending(owner)).toEqual([])
+    expect(store.has("pending:legacy")).toBe(true)
   })
 })
 
@@ -85,6 +100,7 @@ describe("the wire shape", () => {
    */
   it("uses the field names the server actually requires", () => {
     const stored = {
+      owner,
       key: newKey(),
       type: "check_in" as const,
       clientRecordedAt: "2026-08-24T09:15:00.000Z",
@@ -94,6 +110,8 @@ describe("the wire shape", () => {
     const wire = toWire(stored)
 
     expect(wire).toEqual({
+      facility_id: owner.facilityId,
+      actor_username: owner.username,
       key: stored.key,
       type: "check_in",
       client_recorded_at: "2026-08-24T09:15:00.000Z",
@@ -108,6 +126,7 @@ describe("the wire shape", () => {
     const recorded = "2026-08-24T08:00:00.000Z"
 
     const wire = toWire({
+      owner,
       key: newKey(),
       type: "check_in",
       clientRecordedAt: recorded,

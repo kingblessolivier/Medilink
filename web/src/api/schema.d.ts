@@ -125,6 +125,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Change your staff password */
+        post: operations["auth_password_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/register": {
         parameters: {
             query?: never;
@@ -1802,6 +1819,10 @@ export interface components {
          * @enum {string}
          */
         OwnershipEnum: "public" | "private" | "faith_based";
+        PasswordChange: {
+            current_password: string;
+            new_password: string;
+        };
         PatchedAdminInsurerWrite: {
             code?: string;
             name?: string;
@@ -2097,6 +2118,10 @@ export interface components {
             last_week_minutes: number | null;
             enough_data: boolean;
         };
+        RevokingRefresh: {
+            refresh: string;
+            readonly access: string;
+        };
         /**
          * @description * `receptionist` - Receptionist
          *     * `admin` - Facility administrator
@@ -2329,6 +2354,8 @@ export interface components {
             actions: components["schemas"]["SyncAction"][];
         };
         SyncAction: {
+            facility_id?: number;
+            actor_username?: string;
             key: string;
             type: components["schemas"]["TypeEnum"];
             /** Format: date-time */
@@ -2407,10 +2434,6 @@ export interface components {
             access: string;
             refresh: string;
             patient: components["schemas"]["Patient"];
-        };
-        TokenRefresh: {
-            readonly access: string;
-            refresh: string;
         };
         Translation: {
             rw: string;
@@ -2692,6 +2715,31 @@ export interface operations {
             };
         };
     };
+    auth_password_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordChange"];
+                "application/x-www-form-urlencoded": components["schemas"]["PasswordChange"];
+                "multipart/form-data": components["schemas"]["PasswordChange"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignInResponse"];
+                };
+            };
+        };
+    };
     auth_register_create: {
         parameters: {
             query?: never;
@@ -2770,9 +2818,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TokenRefresh"];
-                "application/x-www-form-urlencoded": components["schemas"]["TokenRefresh"];
-                "multipart/form-data": components["schemas"]["TokenRefresh"];
+                "application/json": components["schemas"]["RevokingRefresh"];
+                "application/x-www-form-urlencoded": components["schemas"]["RevokingRefresh"];
+                "multipart/form-data": components["schemas"]["RevokingRefresh"];
             };
         };
         responses: {
@@ -2781,7 +2829,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TokenRefresh"];
+                    "application/json": components["schemas"]["RevokingRefresh"];
                 };
             };
         };

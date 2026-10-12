@@ -176,9 +176,14 @@ def answer(
     if state.finished:
         return state
 
+    if state.protocol_version != protocol.version:
+        raise TriageError("The protocol changed. Please start again.")
     question = protocol.question(question_code)
     if question is None:
         raise TriageError("Unknown question.")
+    expected = next_question(protocol, state)
+    if expected is None or expected.code != question_code:
+        raise TriageError("Answer the current question before continuing.")
 
     option = next((o for o in question.options if o.code == option_code), None)
     if option is None:

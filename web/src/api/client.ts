@@ -102,10 +102,11 @@ async function refreshAccess(): Promise<boolean> {
     body: JSON.stringify({ refresh }),
   })
   if (!response.ok) {
-    tokens.clear()
+    if (tokens.refresh === refresh) tokens.clear()
     return false
   }
   const body = await response.json()
+  if (tokens.refresh !== refresh) return false
   tokens.save(body.access, body.refresh ?? refresh)
   return true
 }
@@ -182,6 +183,7 @@ export const api = {
     specialty?: string
     open_now?: boolean
     limit?: number
+    live_queue?: boolean
   }) => request<NearbyResponse>("/facilities/nearby", { params, auth: false }),
 
   facility: (slug: string) =>
@@ -452,6 +454,8 @@ export const api = {
     }),
 
   session: () => request<Session>("/auth/session"),
+  changePassword: (body: import("./schema").components["schemas"]["PasswordChange"]) =>
+    request<SignInResponse>("/auth/password", { method: "POST", body }),
 
   // ------------------------------------------------------------- workspace
 

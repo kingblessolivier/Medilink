@@ -28,6 +28,10 @@ export default defineConfig({
         ],
         runtimeCaching: [
           {
+            urlPattern: ({ url }) => url.pathname === "/api/v1/facilities/nearby" && url.searchParams.get("live_queue") === "true",
+            handler: "NetworkOnly",
+          },
+          {
             // The workspace and platform chunks, once somebody has actually
             // reached one of those surfaces.
             urlPattern: /\/assets\/routes-.*\.js$/,

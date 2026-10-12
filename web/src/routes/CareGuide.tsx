@@ -6,6 +6,8 @@ import { useI18n } from "../i18n"
 import { useTriageStatus } from "../hooks/useTriageStatus"
 import { useGeolocation } from "../hooks/useGeolocation"
 import { useNearbyFacilities } from "../hooks/useNearbyFacilities"
+import { useOnline } from "../hooks/useOnline"
+import { DistrictPicker } from "../components/DistrictPicker"
 import type { Translation, TriageCheck } from "../api/types"
 import { Badge, Card, ListSkeleton, Notice } from "../ui"
 import { IconClock, IconPhone, IconPin, IconStethoscope } from "../ui/icons"
@@ -241,7 +243,17 @@ function WhereToGo({
   lang: string
 }) {
   const { t } = useI18n()
-  const nearby = useNearbyFacilities(coords, { service })
+  const online = useOnline()
+  const [now, setNow] = useState(Date.now)
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 15_000)
+    return () => window.clearInterval(timer)
+  }, [])
+  const [district, setDistrict] = useState<string | undefined>()
+  const { state: fallbackGeo, locate } = useGeolocation()
+  const origin = coords ?? (fallbackGeo.status === "ready" ? { lat: fallbackGeo.lat, lng: fallbackGeo.lng } : null)
+  const nearby = useNearbyFacilities(origin, { service }, district, true)
+  const fresh = online && !nearby.isError && nearby.dataUpdatedAt > 0 && now - nearby.dataUpdatedAt <= 120_000
   const facilities = (nearby.data?.results ?? []).slice(0, 3)
 
   if (nearby.isLoading) {
@@ -251,7 +263,9 @@ function WhereToGo({
       </div>
     )
   }
-  if (facilities.length === 0) return null
+  if (!origin && !district) return <div className="mt-6"><DistrictPicker message={t("location_denied")} onPick={setDistrict} onRetry={locate} /></div>
+  if (nearby.isError) return <div className="mt-6"><Notice tone="warning">{t("error_generic")}</Notice><button className="ml-btn-secondary mt-3" onClick={() => void nearby.refetch()}>{t("retry")}</button></div>
+  if (facilities.length === 0) return <p className="mt-6 text-n700">{t("cg_no_facilities")}</p>
 
   return (
     <section className="mt-8">
@@ -283,7 +297,7 @@ function WhereToGo({
                     unknown - the status alone is not a number, and rendering
                     "about null min" would be the exact failure this product
                     refuses everywhere else. */}
-                {facility.wait?.status === "available" &&
+                {fresh && facility.wait?.status === "available" &&
                 (facility.wait.people_waiting != null ||
                   facility.wait.minutes != null) ? (
                   <Badge tone="accent">
@@ -297,6 +311,8 @@ function WhereToGo({
                   <Badge tone="unknown">{t("queue_eta_unknown")}</Badge>
                 )}
               </p>
+
+              {nearby.dataUpdatedAt > 0 && <p className="mt-1 text-sm text-n600">{t("queue_checked_at", { time: new Date(nearby.dataUpdatedAt).toLocaleTimeString(lang === "rw" ? "rw-RW" : lang === "fr" ? "fr-FR" : "en-GB", { hour: "2-digit", minute: "2-digit" }) })}</p>}
 
               {facility.insurers.length > 0 && (
                 <div className="mt-3">

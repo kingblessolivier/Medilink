@@ -3,9 +3,11 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { api, tokens } from "../api/client"
 import type { Patient, Session } from "../api/types"
 
@@ -41,9 +43,17 @@ type AuthValue = {
 const AuthContext = createContext<AuthValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const client = useQueryClient()
+  const generation = useRef(0)
   const [session, setSession] = useState<AuthState>({ state: "loading" })
 
   const reload = useCallback(async () => {
+    const attempt = ++generation.current
+    setSession({ state: "loading" })
+    // Cancel before clearing so an old request cannot refill another user's cache.
+    await client.cancelQueries()
+    client.clear()
+    if (attempt !== generation.current) return
     if (!tokens.access) {
       setSession({ state: "anonymous" })
       return
@@ -52,23 +62,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const current = await api.session()
       const patient =
         current.kind === "patient" ? await api.me().catch(() => null) : null
+      if (attempt !== generation.current) return
       setSession({ state: "signed_in", session: current, patient })
     } catch {
+      if (attempt !== generation.current) return
       // An expired or malformed token. Clearing it stops an infinite retry
       // against a credential that will never work again.
       tokens.clear()
       setSession({ state: "anonymous" })
     }
-  }, [])
+  }, [client])
 
   useEffect(() => {
     void reload()
+    const changed = (event: StorageEvent) => {
+      if (event.key === "medilink.access" || event.key === null) void reload()
+    }
+    window.addEventListener("storage", changed)
+    return () => window.removeEventListener("storage", changed)
   }, [reload])
 
   const signOut = useCallback(() => {
+    ++generation.current
+    void client.cancelQueries()
+    client.clear()
     tokens.clear()
     setSession({ state: "anonymous" })
-  }, [])
+  }, [client])
 
   const setPatient = useCallback((patient: Patient) => {
     setSession((current) =>

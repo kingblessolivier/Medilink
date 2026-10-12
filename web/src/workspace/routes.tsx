@@ -25,6 +25,8 @@ import { WorkspaceSchedule } from "./Schedule"
 import { WorkspaceInsurance } from "./Insurance"
 import { WorkspaceSettings } from "./Settings"
 import { WorkspacePatients } from "./Patients"
+import { Security } from "./Security"
+import { useI18n } from "../i18n"
 
 /**
  * The facility workspace.
@@ -43,30 +45,31 @@ import { WorkspacePatients } from "./Patients"
  */
 const SECTIONS: NavSection[] = [
   {
-    label: "Today",
+    label: "ws_today_now",
     items: [
-      { to: "/workspace", label: "Reception", icon: <IconUsers size={17} />, end: true },
-      { to: "/workspace/dashboard", label: "Dashboard", icon: <IconChart size={17} /> },
-      { to: "/workspace/appointments", label: "Appointments", icon: <IconCalendar size={17} /> },
-      { to: "/workspace/clinic", label: "Clinic", icon: <IconStethoscope size={17} /> },
-      { to: "/workspace/patients", label: "Find a patient", icon: <IconSearch size={17} /> },
+      { to: "/workspace", label: "nav_reception", icon: <IconUsers size={17} />, end: true },
+      { to: "/workspace/dashboard", label: "ws_nav_dashboard", icon: <IconChart size={17} /> },
+      { to: "/workspace/appointments", label: "nav_appointments", icon: <IconCalendar size={17} /> },
+      { to: "/workspace/clinic", label: "nav_clinic", icon: <IconStethoscope size={17} /> },
+      { to: "/workspace/patients", label: "nav_find_patient", icon: <IconSearch size={17} /> },
     ],
   },
   {
-    label: "Facility",
+    label: "nav_facilities",
     items: [
-      { to: "/workspace/schedule", label: "Schedule", icon: <IconClock size={17} /> },
-      { to: "/workspace/doctors", label: "Doctors", icon: <IconStethoscope size={17} /> },
-      { to: "/workspace/services", label: "Services", icon: <IconHospital size={17} /> },
-      { to: "/workspace/insurance", label: "Insurance", icon: <IconShield size={17} /> },
-      { to: "/workspace/reports", label: "Reports", icon: <IconChart size={17} /> },
-      { to: "/workspace/team", label: "Staff accounts", icon: <IconUsers size={17} /> },
-      { to: "/workspace/settings", label: "Settings", icon: <IconInfo size={17} /> },
+      { to: "/workspace/schedule", label: "nav_schedule", icon: <IconClock size={17} /> },
+      { to: "/workspace/doctors", label: "nav_doctors", icon: <IconStethoscope size={17} /> },
+      { to: "/workspace/services", label: "nav_services", icon: <IconHospital size={17} /> },
+      { to: "/workspace/insurance", label: "nav_insurance", icon: <IconShield size={17} /> },
+      { to: "/workspace/reports", label: "nav_reports", icon: <IconChart size={17} /> },
+      { to: "/workspace/team", label: "nav_staff_accounts", icon: <IconUsers size={17} /> },
+      { to: "/workspace/settings", label: "nav_settings", icon: <IconInfo size={17} /> },
     ],
   },
 ]
 
 export function WorkspaceRoutes() {
+  const { t } = useI18n()
   const { session } = useAuth()
   const actions = useQueueActions()
 
@@ -74,11 +77,12 @@ export function WorkspaceRoutes() {
 
   return (
     <DashboardShell
-      title="Workspace"
+      title={t("nav_workspace")}
       subtitle={session.session.facility?.name ?? ""}
-      sections={SECTIONS}
+      sections={[...SECTIONS.map(section => ({ ...section, label: t(section.label), items: section.items.map(item => ({ ...item, label: t(item.label) })) })), { label: t("security_title"), items: [{ to: "/workspace/security", label: t("security_title"), icon: <IconShield size={17} /> }] }]}
     >
       <Routes>
+        <Route path="/security" element={<Security />} />
         <Route path="/" element={<Reception actions={actions} />} />
         {/* FA-01. Not the workspace landing: a receptionist opening this app
             needs the queue in front of them, and the desk is what most people

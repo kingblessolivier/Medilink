@@ -30,6 +30,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query"
+import { useState } from "react"
 import { api, type FacilityReport } from "../api/client"
 import { useI18n } from "../i18n"
 import { useServiceTypes } from "../hooks/useNearbyFacilities"
@@ -38,12 +39,15 @@ import { IconCalendar, IconCheck, IconClock, IconAlert } from "../ui/icons"
 
 export function WorkspaceDashboard() {
   const { t, lang } = useI18n()
+  const [days, setDays] = useState(30)
   const serviceTypes = useServiceTypes()
 
   const report = useQuery<FacilityReport>({
-    queryKey: ["staff", "reports"],
-    queryFn: () => api.staffReports(),
-    staleTime: 60_000,
+    queryKey: ["staff", "reports", days],
+    queryFn: () => api.staffReports(days),
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   })
 
   if (report.isLoading) return <TableSkeleton rows={4} />
@@ -78,6 +82,9 @@ export function WorkspaceDashboard() {
   return (
     <div>
       <h1 className="text-h1 text-n900">{t("ws_today_overview")}</h1>
+      <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label={t("ws_report_window", { days })}>
+        {[7, 30, 90].map(period => <button key={period} type="button" aria-pressed={days === period} onClick={() => setDays(period)} className={days === period ? "ml-btn-primary min-h-touch" : "ml-btn-secondary min-h-touch"}>{t("ws_report_window", { days: period })}</button>)}
+      </div>
       <p className="mt-1 text-body text-n700">
         {t("ws_report_window", { days: r.days })}
       </p>
@@ -130,7 +137,7 @@ export function WorkspaceDashboard() {
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         {/* Right now, at the desk. */}
-        <div className="ml-card p-4">
+        <section className="border-t border-n200 py-4">
           <h2 className="ml-label">{t("ws_today_now")}</h2>
           <dl className="mt-3 grid grid-cols-3 gap-3 text-center">
             {[
@@ -144,11 +151,11 @@ export function WorkspaceDashboard() {
               </div>
             ))}
           </dl>
-        </div>
+        </section>
 
         {/* Demand by service. One hue, ordered - see the note above on why
             this is not the donut the mock draws. */}
-        <div className="ml-card p-4">
+        <section className="border-t border-n200 py-4">
           <h2 className="ml-label">{t("ws_by_department")}</h2>
           {demand.length === 0 ? (
             <p className="mt-3 text-body text-n700">{t("ws_no_demand")}</p>
@@ -166,7 +173,7 @@ export function WorkspaceDashboard() {
                 ))}
             </ul>
           )}
-        </div>
+        </section>
       </div>
     </div>
   )

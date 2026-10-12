@@ -17,7 +17,10 @@ import type { SyncAction } from "../../api/types"
 
 export type PendingActionType = "check_in" | "call" | "serve" | "skip" | "cancel"
 
+export type QueueOwner = { facilityId: number; username: string }
+
 export type PendingAction = {
+  owner: QueueOwner
   key: string // uuid; doubles as the Idempotency-Key
   type: PendingActionType
   clientRecordedAt: string // ISO - the server sorts on this
@@ -38,16 +41,18 @@ export async function dequeue(key: string): Promise<void> {
   await del(PREFIX + key)
 }
 
-export async function pending(): Promise<PendingAction[]> {
+export async function pending(owner: QueueOwner): Promise<PendingAction[]> {
   const all = await entries<string, PendingAction>()
   return all
     .filter(([k]) => typeof k === "string" && k.startsWith(PREFIX))
     .map(([, v]) => v)
+    // Legacy ownerless work is retained for review, never guessed into a facility.
+    .filter((a) => a.owner?.facilityId === owner.facilityId && a.owner?.username === owner.username)
     .sort((a, b) => a.clientRecordedAt.localeCompare(b.clientRecordedAt))
 }
 
-export async function pendingCount(): Promise<number> {
-  return (await pending()).length
+export async function pendingCount(owner: QueueOwner): Promise<number> {
+  return (await pending(owner)).length
 }
 
 /** A pending action in the shape POST /queue/sync requires.
@@ -63,6 +68,8 @@ export async function pendingCount(): Promise<number> {
  */
 export function toWire(action: PendingAction): SyncAction {
   return {
+    facility_id: action.owner.facilityId,
+    actor_username: action.owner.username,
     key: action.key,
     type: action.type,
     client_recorded_at: action.clientRecordedAt,

@@ -3,6 +3,8 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from apps.accounts.serializers import RevokingRefreshSerializer
+
 api_v1 = [
     path("", include("apps.facilities.urls")),
     path("", include("apps.insurance.urls")),
@@ -19,7 +21,7 @@ api_v1 = [
     path("", include("apps.accounts.urls")),
     # Staff sign-in. Patients use the OTP endpoints in apps.patients.urls.
     path("auth/token", TokenObtainPairView.as_view(), name="token-obtain"),
-    path("auth/token/refresh", TokenRefreshView.as_view(), name="token-refresh"),
+    path("auth/token/refresh", TokenRefreshView.as_view(serializer_class=RevokingRefreshSerializer), name="token-refresh"),
 ]
 
 urlpatterns = [

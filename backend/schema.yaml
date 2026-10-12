@@ -200,6 +200,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/TokenPair'
           description: ''
+  /api/v1/auth/password:
+    post:
+      operationId: auth_password_create
+      summary: Change your staff password
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignInResponse'
+          description: ''
   /api/v1/auth/register:
     post:
       operationId: auth_register_create
@@ -288,20 +315,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TokenRefresh'
+              $ref: '#/components/schemas/RevokingRefresh'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/TokenRefresh'
+              $ref: '#/components/schemas/RevokingRefresh'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/TokenRefresh'
+              $ref: '#/components/schemas/RevokingRefresh'
         required: true
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenRefresh'
+                $ref: '#/components/schemas/RevokingRefresh'
           description: ''
   /api/v1/districts:
     get:
@@ -3282,6 +3309,21 @@ components:
         * `public` - Public
         * `private` - Private
         * `faith_based` - Faith-based
+    PasswordChange:
+      type: object
+      properties:
+        current_password:
+          type: string
+          writeOnly: true
+          maxLength: 128
+        new_password:
+          type: string
+          writeOnly: true
+          maxLength: 128
+          minLength: 8
+      required:
+      - current_password
+      - new_password
     PatchedAdminInsurerWrite:
       type: object
       properties:
@@ -4035,6 +4077,17 @@ components:
       - median_minutes
       - sample_size
       - this_week_minutes
+    RevokingRefresh:
+      type: object
+      properties:
+        refresh:
+          type: string
+        access:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - refresh
     RoleEnum:
       enum:
       - receptionist
@@ -4615,6 +4668,12 @@ components:
     SyncAction:
       type: object
       properties:
+        facility_id:
+          type: integer
+          minimum: 1
+        actor_username:
+          type: string
+          maxLength: 150
         key:
           type: string
           maxLength: 64
@@ -4782,17 +4841,6 @@ components:
       required:
       - access
       - patient
-      - refresh
-    TokenRefresh:
-      type: object
-      properties:
-        access:
-          type: string
-          readOnly: true
-        refresh:
-          type: string
-      required:
-      - access
       - refresh
     Translation:
       type: object
